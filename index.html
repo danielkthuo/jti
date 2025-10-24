@@ -938,7 +938,74 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+/ ============ ADD THE INSTALL PROMPT CODE HERE ============
 
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent the mini-infobar from appearing on mobile
+  e.preventDefault();
+  // Stash the event so it can be triggered later
+  deferredPrompt = e;
+  // Show your custom install prompt
+  showInstallPromo();
+});
+
+function showInstallPromo() {
+  // Don't show if already installed or if we're on iOS (which handles PWA differently)
+  if (window.matchMedia('(display-mode: standalone)').matches || 
+      navigator.standalone ||
+      /iPad|iPhone|iPod/.test(navigator.userAgent)) {
+    return;
+  }
+  
+  const installPromo = document.createElement('div');
+  installPromo.id = 'installPromo';
+  installPromo.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    border-left: 4px solid var(--gold);
+    max-width: 300px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  `;
+  installPromo.innerHTML = `
+    <p style="margin: 0 0 10px 0; color: #333; font-size: 14px;">
+      <i class="fas fa-download" style="color: var(--gold); margin-right: 5px;"></i>
+      <strong>Install App</strong><br>
+      Get better experience with our training app
+    </p>
+    <button onclick="installApp()" style="background: var(--dark-green); color: white; border: none; padding: 8px 15px; border-radius: 5px; margin-right: 10px; font-size: 12px; cursor: pointer;">Install Now</button>
+    <button onclick="this.parentElement.remove()" style="background: transparent; border: none; color: #666; font-size: 12px; cursor: pointer;">Not now</button>
+  `;
+  document.body.appendChild(installPromo);
+}
+
+async function installApp() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to the install prompt: ${outcome}`);
+    if (outcome === 'accepted') {
+      document.getElementById('installPromo')?.remove();
+      // You can track installs here if needed
+    }
+    deferredPrompt = null;
+  }
+}
+
+// Also add event listener to hide promo when app is already installed
+window.addEventListener('appinstalled', (evt) => {
+  console.log('App was installed successfully!');
+  document.getElementById('installPromo')?.remove();
+});
+
+// ============ END OF INSTALL PROMPT CODE ============
     
     // DOM Elements
     const authModal = document.getElementById('authModal');
