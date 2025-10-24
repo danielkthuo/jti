@@ -3,38 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Module 1 - Introduction to Computers | JOSHCAB TRAINING INSTITUTE</title>
+    <title>Computer Basics for Beginners | JOSHCAB TRAINING INSTITUTE</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-    <!-- Auth Manager -->
-    <script src="auth-manager.js"></script>
-    <!-- Add to head section -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1a2b4a">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="JOSHCAB INSTITUTE">
-<link rel="apple-touch-icon" href="icons/icon-192x192.png">
     <style>
-        /* Add your module styles here */
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; }
-        .module-header { background: #1a2b4a; color: white; padding: 20px; border-radius: 10px; }
-        .content { background: #f5f7fa; padding: 20px; margin-top: 20px; border-radius: 10px; }
-        .access-denied { text-align: center; padding: 50px; color: #e74c3c; }
-    </style>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
+        /* Base Styles */
         :root {
             --primary: #1a73e8;
             --primary-dark: #0d47a1;
@@ -48,213 +20,254 @@
             --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
         body {
             background-color: var(--light);
             color: var(--dark);
             line-height: 1.6;
+            max-width: 100%;
+            overflow-x: hidden;
         }
         
         .container {
-            max-width: 100%;
-            padding: 15px;
-        }
-        
-        /* Auth Modal Styles */
-        .auth-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
             width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
+            padding: 0 15px;
         }
         
-        .auth-modal.active {
-            display: flex;
-        }
-        
-        .auth-container {
-            background-color: white;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 400px;
-            padding: 30px;
-            box-shadow: var(--shadow);
-        }
-        
-        .auth-tabs {
-            display: flex;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .auth-tab {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            cursor: pointer;
-            font-weight: 500;
-            color: #777;
-        }
-        
-        .auth-tab.active {
-            color: var(--primary);
-            border-bottom: 2px solid var(--primary);
-        }
-        
-        .auth-form {
-            display: none;
-        }
-        
-        .auth-form.active {
-            display: block;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-        
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-        
-        .auth-btn {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        
-        .auth-btn:hover {
-            background-color: var(--primary-dark);
-        }
-        
-        .auth-error {
-            color: var(--danger);
-            font-size: 14px;
-            margin-top: 10px;
-            text-align: center;
-            display: none;
-        }
-        
-        /* Header Styles - Compact Version */
+        /* Header Styles */
         header {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
-            padding: 12px 15px;
+            padding: 15px 0;
             box-shadow: var(--shadow);
             margin-bottom: 20px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
         }
         
         .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .header-left {
+            max-width: 1200px;
+            margin: 0 auto;
             display: flex;
             flex-direction: column;
-            align-items: flex-start;
-            flex: 1;
+            align-items: center;
+            text-align: center;
+            padding: 0 15px;
         }
         
         .institute-name {
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             font-weight: bold;
-            margin-bottom: 2px;
+            margin-bottom: 5px;
         }
         
         .module-title {
-            font-size: 0.9rem;
+            font-size: 1.1rem;
             opacity: 0.9;
-        }
-        
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background-color: rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 0.8rem;
-        }
-        
-        .auth-buttons {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .auth-button {
-            padding: 6px 12px;
-            border: 1px solid white;
-            border-radius: 15px;
-            background: transparent;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.8rem;
-        }
-        
-        .auth-button:hover {
-            background-color: white;
-            color: var(--primary);
+            margin-bottom: 10px;
         }
         
         .whatsapp-contact {
             background-color: var(--secondary);
             color: white;
-            padding: 6px 10px;
-            border-radius: 15px;
+            padding: 8px 15px;
+            border-radius: 20px;
             display: inline-flex;
             align-items: center;
             text-decoration: none;
             font-weight: bold;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            font-size: 0.8rem;
+            margin-top: 5px;
         }
         
         .whatsapp-contact svg {
-            width: 16px;
-            height: 16px;
-            margin-right: 5px;
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+        }
+        
+        /* Card Styles */
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 0;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            max-width: 100%;
+        }
+        
+        .card-header {
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-header h2 {
+            color: var(--primary);
+            margin: 0;
+            padding: 0;
+            border: none;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-header i {
+            transition: transform 0.3s ease;
+        }
+        
+        .card-content {
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .card-content.active {
+            padding: 20px;
+            max-height: 10000px;
+        }
+        
+        h3 {
+            color: var(--primary-dark);
+            margin: 20px 0 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        h4 {
+            color: var(--primary);
+            margin: 15px 0 8px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        /* Content Box Styles */
+        .definition-box {
+            background-color: #e8f0fe;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .exercise-box {
+            background-color: #fff8e1;
+            border-left: 4px solid var(--accent);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .qa-box {
+            background-color: #e8f5e9;
+            border-left: 4px solid var(--success);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .info-box {
+            background-color: #f3e5f5;
+            border-left: 4px solid #9c27b0;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .warning-box {
+            background-color: #ffebee;
+            border-left: 4px solid var(--danger);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        /* Image and Diagram Styles */
+        .illustration {
+            width: 100%;
+            max-width: 500px;
+            margin: 15px auto;
+            display: block;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+        
+        .diagram {
+            width: 100%;
+            max-width: 600px;
+            margin: 15px auto;
+            display: block;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+        
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .icon-item {
+            text-align: center;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .icon-item svg {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 8px;
+        }
+        
+        /* Table Styles */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+        
+        .comparison-table th, .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        
+        .comparison-table th {
+            background-color: #f2f2f2;
+            font-weight: 600;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background-color: #f9f9f9;
         }
         
         /* Progress Section */
@@ -297,132 +310,6 @@
             color: #666;
         }
         
-        /* Card Styles */
-        .card {
-            background-color: white;
-            border-radius: 10px;
-            padding: 0;
-            margin-bottom: 20px;
-            box-shadow: var(--shadow);
-            overflow: hidden;
-        }
-        
-        .card-header {
-            padding: 20px;
-            background-color: #f9f9f9;
-            border-bottom: 1px solid #eee;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .card-header h2 {
-            color: var(--primary);
-            margin: 0;
-            padding: 0;
-            border: none;
-            font-size: 1.3rem;
-        }
-        
-        .card-header i {
-            transition: transform 0.3s ease;
-        }
-        
-        .card-content {
-            padding: 0 20px;
-            max-height: 0;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .card-content.active {
-            padding: 20px;
-            max-height: 5000px;
-        }
-        
-        h3 {
-            color: var(--primary-dark);
-            margin: 15px 0 10px;
-        }
-        
-        p {
-            margin-bottom: 15px;
-        }
-        
-        ul, ol {
-            margin-left: 20px;
-            margin-bottom: 15px;
-        }
-        
-        li {
-            margin-bottom: 8px;
-        }
-        
-        .definition-box {
-            background-color: #e8f0fe;
-            border-left: 4px solid var(--primary);
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 0 8px 8px 0;
-        }
-        
-        .exercise-box {
-            background-color: #fff8e1;
-            border-left: 4px solid var(--accent);
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 0 8px 8px 0;
-        }
-        
-        .qa-box {
-            background-color: #e8f5e9;
-            border-left: 4px solid var(--success);
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 0 8px 8px 0;
-        }
-        
-        .icon-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 15px;
-            margin: 15px 0;
-        }
-        
-        .icon-item {
-            text-align: center;
-            padding: 10px;
-            background-color: #f9f9f9;
-            border-radius: 8px;
-        }
-        
-        .icon-item svg {
-            width: 40px;
-            height: 40px;
-            margin-bottom: 8px;
-        }
-        
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-        }
-        
-        .comparison-table th, .comparison-table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-        
-        .comparison-table th {
-            background-color: #f2f2f2;
-        }
-        
-        .comparison-table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        
         .completion-check {
             margin-top: 15px;
             padding-top: 15px;
@@ -434,6 +321,7 @@
             align-items: center;
             gap: 10px;
             cursor: pointer;
+            font-weight: 500;
         }
         
         .completion-check input[type="checkbox"] {
@@ -441,12 +329,16 @@
             height: 20px;
         }
         
+        /* Footer */
         footer {
             text-align: center;
             padding: 20px;
             margin-top: 30px;
             color: #666;
             font-size: 0.9rem;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
         }
         
         .module-end {
@@ -455,16 +347,20 @@
             font-size: 1.2rem;
             margin: 30px 0;
             color: var(--primary);
+            padding: 15px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
         }
         
         /* Responsive adjustments */
         @media (max-width: 480px) {
             .institute-name {
-                font-size: 1.1rem;
+                font-size: 1.3rem;
             }
             
             .module-title {
-                font-size: 0.8rem;
+                font-size: 1rem;
             }
             
             .card-header {
@@ -484,106 +380,132 @@
             }
             
             .comparison-table {
-                font-size: 0.9rem;
+                font-size: 0.8rem;
             }
             
             .comparison-table th, .comparison-table td {
                 padding: 8px;
             }
-            
-            .header-right {
-                flex-direction: column;
-                gap: 5px;
-            }
-            
-            .auth-button {
-                padding: 4px 8px;
-                font-size: 0.7rem;
-            }
-            
-            .whatsapp-contact {
-                padding: 4px 8px;
-                font-size: 0.7rem;
-            }
+        }
+        
+        /* Code block styling */
+        .code-block {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        /* Step-by-step instructions */
+        .step {
+            display: flex;
+            margin-bottom: 15px;
+            align-items: flex-start;
+        }
+        
+        .step-number {
+            background-color: var(--primary);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+            font-weight: bold;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        /* Process diagram */
+        .process-diagram {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .process-step {
+            width: 120px;
+            text-align: center;
+            margin: 10px;
+        }
+        
+        .process-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+        }
+        
+        .process-arrow {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        
+        /* Fire safety table */
+        .fire-safety-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        .fire-safety-table th, .fire-safety-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .fire-safety-table th {
+            background-color: #f2f2f2;
+        }
+        
+        .fire-safety-table .fire-type {
+            background-color: #ffebee;
+            font-weight: bold;
+        }
+        
+        .fire-safety-table .checkmark {
+            color: var(--success);
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <!-- Auth Modal -->
-    <div class="auth-modal" id="authModal">
-        <div class="auth-container">
-            <div class="auth-tabs">
-                <div class="auth-tab active" data-tab="login">Login</div>
-                <div class="auth-tab" data-tab="signup">Sign Up</div>
-            </div>
-            
-            <div class="auth-form active" id="loginForm">
-                <div class="form-group">
-                    <label for="loginEmail">Email</label>
-                    <input type="email" id="loginEmail" placeholder="Enter your email">
-                </div>
-                <div class="form-group">
-                    <label for="loginPassword">Password</label>
-                    <input type="password" id="loginPassword" placeholder="Enter your password">
-                </div>
-                <button class="auth-btn" id="loginBtn">Login</button>
-                <div class="auth-error" id="loginError"></div>
-            </div>
-            
-            <div class="auth-form" id="signupForm">
-                <div class="form-group">
-                    <label for="signupName">Full Name</label>
-                    <input type="text" id="signupName" placeholder="Enter your full name">
-                </div>
-                <div class="form-group">
-                    <label for="signupEmail">Email</label>
-                    <input type="email" id="signupEmail" placeholder="Enter your email">
-                </div>
-                <div class="form-group">
-                    <label for="signupPassword">Password</label>
-                    <input type="password" id="signupPassword" placeholder="Create a password">
-                </div>
-                <button class="auth-btn" id="signupBtn">Sign Up</button>
-                <div class="auth-error" id="signupError"></div>
-            </div>
-        </div>
-    </div>
-    
     <div class="container">
-        <!-- Compact Header -->
+        <!-- Header -->
         <header>
             <div class="header-content">
-                <div class="header-left">
-                    <div class="institute-name">JOSHCAB TRAINING INSTITUTE</div>
-                    <div class="module-title">Module 1 – Introduction to Computers</div>
-                </div>
-                
-                <div class="header-right">
-                    <a href="https://wa.me/254734080808" class="whatsapp-contact">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
-                            <path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893-.001-3.189-1.262-6.189-3.553-8.449"/>
-                        </svg>
-                        Contact
-                    </a>
-                    
-                    <div class="user-info" id="userInfo" style="display: none;">
-                        <div class="user-avatar" id="userAvatar">JD</div>
-                        <button class="auth-button" id="logoutBtn">Logout</button>
-                        <button class="auth-button" onclick="window.location.href='index.html'">Dashboard</button>
-
-                    </div>
-                    
-                    <div class="auth-buttons" id="authButtons">
-                        <button class="auth-button" id="showLoginBtn">Login</button>
-                        <button class="auth-button" id="showSignupBtn">Sign Up</button>
-                    </div>
-                </div>
+                <div class="institute-name">JOSHCAB TRAINING INSTITUTE</div>
+                <div class="module-title">Module 1 - Introduction to Computers</div>
+                <a href="https://wa.me/254734080808" class="whatsapp-contact">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18">
+                        <path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893-.001-3.189-1.262-6.189-3.553-8.449"/>
+                    </svg>
+                    Contact via WhatsApp
+                </a>
             </div>
         </header>
         
         <!-- Progress Section -->
         <div class="progress-container">
-            <h3>Your Progress</h3>
+            <h3>Your Learning Progress</h3>
             <div class="progress-bar">
                 <div class="progress" id="progressBar" style="width: 0%"></div>
             </div>
@@ -593,7 +515,7 @@
             </div>
             <div class="completion-status">
                 <i class="fas fa-info-circle"></i>
-                <span>Your progress is automatically saved and will be available on any device</span>
+                <span>Complete each section and mark as reviewed to track your progress</span>
             </div>
         </div>
         
@@ -603,7 +525,7 @@
                 <h2><i class="fas fa-info-circle"></i> Module Overview</h2>
                 <i class="fas fa-chevron-down"></i>
             </div>
-            <div class="card-content" id="overview">
+            <div class="card-content active" id="overview">
                 <p>This module introduces learners to information and communication technology (ICT). It creates a foundation for fundamentals for computer hardware, operating systems and application software.</p>
                 <p>It discusses computer input and output devices, data processing and data storage. Computer software is and general overview of ICT is discussed.</p>
                 
@@ -648,24 +570,8 @@
                     <li>Office calculator</li>
                     <li>Point of Sale systems</li>
                 </ul>
-                 <!-- Right Side: Photo -->
-                   <img src="icons/part.svg" alt="parts of computer Photo">
-                 <div class="completion-check">
-                    <label>
-                        <input type="checkbox" id="intro-complete" onchange="updateProgress('intro', this.checked)"> 
-                        Mark as completed
-                    </label>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Powering a Computer Card -->
-        <div class="card">
-            <div class="card-header" onclick="toggleSection('power')">
-                <h2><i class="fas fa-plug"></i> Powering a Computer</h2>
-                <i class="fas fa-chevron-down"></i>
-            </div>
-            <div class="card-content" id="power">
+                
+                <h3>Powering a Computer</h3>
                 <p>In order for a computer to function, it must be powered. The two ways of powering are:</p>
                 <ul>
                     <li><strong>Alternating Current (AC)</strong>: Supplied as electricity</li>
@@ -680,28 +586,101 @@
                     <li><strong>Warm booting</strong>: When the operating system alone is restarted (without being switched off)</li>
                 </ul>
                 
-                <div class="exercise-box">
-                    <h3>Class Exercise: Starting and Shutting Down a Computer</h3>
-                    <ol>
-                        <li>Point the mouse pointer to the windows key at the bottom left corner of computer</li>
-                        <li>Click once on the left button of the computer</li>
-                        <li>Select restart. This will restart the computer</li>
-                        <li>Observe and note down a few things that the computer will communicate to you during the booting process</li>
-                    </ol>
-                    
-                    <p>Explain what could be happening when the following took place:</p>
-                    <ul>
-                        <li>Restarting, with circles going round</li>
-                        <li>Hardware information by manufacturer</li>
-                        <li>Windows Logo</li>
-                    </ul>
-                    
-                    <p>What is the difference between "Sleep" and "Shut Down"?</p>
+                <div class="info-box">
+                    <p><strong>Power Symbol:</strong> This is the standard symbol used on computer devices to indicate the power buttons. It is used for cold booting. A soft boot is controlled by the operating system and requires that the computer be already powered.</p>
+                    <div style="text-align: center; font-size: 2rem; margin: 10px 0;">
+                        <i class="fas fa-power-off"></i>
+                    </div>
                 </div>
                 
                 <div class="completion-check">
                     <label>
-                        <input type="checkbox" id="power-complete" onchange="updateProgress('power', this.checked)"> 
+                        <input type="checkbox" id="intro-complete" onchange="updateProgress('intro', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Starting and Shutting Down a Computer Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('start-shutdown')">
+                <h2><i class="fas fa-power-off"></i> Starting and Shutting Down a Computer</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="start-shutdown">
+                <div class="exercise-box">
+                    <h3>Class Exercise/Discussion</h3>
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <p><strong>Point the mouse pointer</strong> to the windows key at the bottom left corner of computer. Click once on the left button of the computer.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <p><strong>Select restart</strong>. This will restart the computer. Observe and note down a few things that the computer will communicate to you during the booting process.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <p><strong>Explain what could be happening</strong> when the following took place:</p>
+                            <ul>
+                                <li>Restarting, with circles going round</li>
+                                <li>Hardware information by manufacturer</li>
+                                <li>Windows Logo</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <p><strong>What is the difference between "Sleep" and "Shut Down"?</strong></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3>The Booting Process</h3>
+                <div class="process-diagram">
+                    <div class="process-step">
+                        <div class="process-circle">1</div>
+                        <div>BIOS is loaded</div>
+                    </div>
+                    <div class="process-arrow"><i class="fas fa-arrow-right"></i></div>
+                    <div class="process-step">
+                        <div class="process-circle">2</div>
+                        <div>Power-on self-test (POST) is completed</div>
+                    </div>
+                    <div class="process-arrow"><i class="fas fa-arrow-right"></i></div>
+                    <div class="process-step">
+                        <div class="process-circle">3</div>
+                        <div>Operating system is loaded</div>
+                    </div>
+                    <div class="process-arrow"><i class="fas fa-arrow-right"></i></div>
+                    <div class="process-step">
+                        <div class="process-circle">4</div>
+                        <div>System configuration is accomplished</div>
+                    </div>
+                    <div class="process-arrow"><i class="fas fa-arrow-right"></i></div>
+                    <div class="process-step">
+                        <div class="process-circle">5</div>
+                        <div>System utilities are loaded</div>
+                    </div>
+                    <div class="process-arrow"><i class="fas fa-arrow-right"></i></div>
+                    <div class="process-step">
+                        <div class="process-circle">6</div>
+                        <div>User is authenticated</div>
+                    </div>
+                </div>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="start-shutdown-complete" onchange="updateProgress('start-shutdown', this.checked)"> 
                         Mark as completed
                     </label>
                 </div>
@@ -747,27 +726,19 @@
                 
                 <div class="icon-grid">
                     <div class="icon-item">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48">
-                            <path fill="#4CAF50" d="M19,4H5C3.9,4,3,4.9,3,6v12c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V6C21,4.9,20.1,4,19,4z M19,18H5V8h14V18z"/>
-                        </svg>
+                        <i class="fas fa-desktop fa-2x" style="color: #4CAF50;"></i>
                         <div>My Computer</div>
                     </div>
                     <div class="icon-item">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48">
-                            <path fill="#FF9800" d="M10,4H4C2.9,4,2,4.9,2,6v12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V8c0-1.1-0.9-2-2-2h-8L10,4z"/>
-                        </svg>
+                        <i class="fas fa-folder fa-2x" style="color: #FF9800;"></i>
                         <div>Documents</div>
                     </div>
                     <div class="icon-item">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48">
-                            <path fill="#F44336" d="M19,4h-4L7.4,9.4C7.2,9.6,7,9.9,7,10.2v9.8c0,1.1,0.9,2,2,2h8c1.1,0,2-0.9,2-2V4z M15,20H9v-8h6V20z"/>
-                        </svg>
+                        <i class="fas fa-trash-alt fa-2x" style="color: #F44336;"></i>
                         <div>Recycle Bin</div>
                     </div>
                     <div class="icon-item">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48">
-                            <path fill="#2196F3" d="M21,19V5c0-1.1-0.9-2-2-2H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14C20.1,21,21,20.1,21,19z M8.5,13.5l2.5,3.01 L14.5,12l4.5,6H5L8.5,13.5z"/>
-                        </svg>
+                        <i class="fas fa-image fa-2x" style="color: #2196F3;"></i>
                         <div>Pictures</div>
                     </div>
                 </div>
@@ -795,6 +766,13 @@
                 <h3>Operating System (OS)</h3>
                 <p>An operating system, or "OS," is software that communicates with the hardware and allows other programs to run. It is comprised of system software, or the fundamental files your computer needs to boot up and function.</p>
                 <p>Every desktop computer, tablet, and smartphone includes an operating system that provides basic functionality for the device.</p>
+                <p>This includes basic tasks like:</p>
+                <ul>
+                    <li>Recognizing input from the keyboard</li>
+                    <li>Sending output to the display screen</li>
+                    <li>Keeping track of files and directories on the disk</li>
+                    <li>Controlling peripheral devices such as disks and printers</li>
+                </ul>
                 
                 <h4>Examples of Operating Systems:</h4>
                 <ul>
@@ -811,14 +789,36 @@
                 <p>Application software, also known as an "application" or an "app", is computer software designed to help the user to perform specific tasks. This is the type of software that interfaces with the user. It is the mode of the communication with the user.</p>
                 
                 <h4>Types of Computer Software:</h4>
-                <ul>
-                    <li><strong>Internet browser</strong> - Firefox, Google Chrome, Internet Explorer</li>
-                    <li><strong>Programming language</strong> - C++, HTML, Java, Perl, Visual Basic (VB)</li>
-                    <li>Word processors (Microsoft Word, Google Docs)</li>
-                    <li>Spreadsheet software (Microsoft Excel)</li>
-                    <li>Presentation software (Microsoft PowerPoint)</li>
-                    <li>Graphics software (Adobe Photoshop)</li>
-                </ul>
+                <table class="comparison-table">
+                    <tr>
+                        <th>Software Type</th>
+                        <th>Examples</th>
+                    </tr>
+                    <tr>
+                        <td>Internet browser</td>
+                        <td>Firefox, Google Chrome, Internet Explorer</td>
+                    </tr>
+                    <tr>
+                        <td>Programming language</td>
+                        <td>C++, HTML, Java, Perl, Visual Basic (VB)</td>
+                    </tr>
+                    <tr>
+                        <td>Word processor</td>
+                        <td>Microsoft Word</td>
+                    </tr>
+                    <tr>
+                        <td>Spreadsheet</td>
+                        <td>Microsoft Excel</td>
+                    </tr>
+                    <tr>
+                        <td>Presentation</td>
+                        <td>Microsoft PowerPoint</td>
+                    </tr>
+                    <tr>
+                        <td>Database</td>
+                        <td>Access, MySQL, SQL</td>
+                    </tr>
+                </table>
                 
                 <div class="completion-check">
                     <label>
@@ -855,6 +855,40 @@
                     <li>Compression allows data encryption and therefore provided enhanced file security</li>
                 </ol>
                 
+                <h4>Examples of File Compressors:</h4>
+                <table class="comparison-table">
+                    <tr>
+                        <th>Program</th>
+                        <th>File Extension</th>
+                        <th>Type</th>
+                        <th>OS</th>
+                    </tr>
+                    <tr>
+                        <td>WinZip</td>
+                        <td>.zip</td>
+                        <td>Archive/Compress</td>
+                        <td>DOS/Windows</td>
+                    </tr>
+                    <tr>
+                        <td>WinRar</td>
+                        <td>.rar</td>
+                        <td>Archive/Compress</td>
+                        <td>DOS/Windows</td>
+                    </tr>
+                    <tr>
+                        <td>Gzip</td>
+                        <td>.gz</td>
+                        <td>Compress</td>
+                        <td>Unix/Linux</td>
+                    </tr>
+                    <tr>
+                        <td>TAR</td>
+                        <td>.tar</td>
+                        <td>Archive</td>
+                        <td>Unix/Linux</td>
+                    </tr>
+                </table>
+                
                 <div class="completion-check">
                     <label>
                         <input type="checkbox" id="os-functions-complete" onchange="updateProgress('os-functions', this.checked)"> 
@@ -882,7 +916,7 @@
                     <li><strong>MAN (Metropolitan Area Network)</strong>: Covers a city or campus</li>
                     <li><strong>PAN (Personal Area Network)</strong>: Very small, like Bluetooth connections between phone and headset</li>
                 </ul>
-                <img src="icons/net.svg" alt="networking Photo">
+                
                 <h3>Key Network Components:</h3>
                 <ul>
                     <li><strong>Router</strong>: Directs data between networks</li>
@@ -891,9 +925,49 @@
                     <li><strong>Access Point</strong>: Extends wireless connectivity</li>
                 </ul>
                 
+                <h3>Network Storage</h3>
+                <p><strong>Network-attached storage (NAS)</strong> is a type of dedicated file storage device that provides local-area network nodes with file-based shared storage through a standard Ethernet connection.</p>
+                <p><strong>Storage Area Network (SAN)</strong> provides block-based storage and leaves file system concerns on the "client" side.</p>
+                <p><strong>Direct-attached storage (DAS)</strong> is simply an extension to an existing server and is not necessarily networked.</p>
+                
                 <div class="completion-check">
                     <label>
                         <input type="checkbox" id="networks-complete" onchange="updateProgress('networks', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Types of Computing Devices Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('computing-devices')">
+                <h2><i class="fas fa-laptop"></i> Types of Computing Devices</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="computing-devices">
+                <h3>Personal Computers</h3>
+                <ul>
+                    <li><strong>Desktop Computers</strong> - Personal computer that fits on or under a desk</li>
+                    <li><strong>Laptops</strong> - Portable computer, usually battery-powered</li>
+                    <li><strong>Notebooks</strong> - Small laptop computer</li>
+                    <li><strong>Tablets</strong> - Mobile computer with touchscreen display</li>
+                    <li><strong>Smartphones</strong> - Mobile phone with advanced computing capabilities</li>
+                </ul>
+                
+                <h3>Organizational Computers</h3>
+                <ul>
+                    <li><strong>Workstations</strong> - High-performance computers for technical applications</li>
+                    <li><strong>Network Servers</strong> - Computers that provide functionality for other programs or devices</li>
+                    <li><strong>Mainframe computers</strong> - Used primarily by large organizations for critical applications</li>
+                    <li><strong>Mini Computers</strong> - Mid-sized computing systems</li>
+                    <li><strong>Super computers</strong> - Extremely powerful computers for complex calculations</li>
+                    <li><strong>Hybrid computers</strong> - Cross of traditional computer/laptop and tablet/smartphone</li>
+                </ul>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="computing-devices-complete" onchange="updateProgress('computing-devices', this.checked)"> 
                         Mark as completed
                     </label>
                 </div>
@@ -911,15 +985,6 @@
                     <p><strong>Computer security</strong> (cyber security / IT security) is the protection of computer systems from the theft or damage to the hardware, software or the information on them, as well as from disruption or misdirection of the services they provide.</p>
                 </div>
                 
-                <h3>Key Areas of Computer Security:</h3>
-                <ul>
-                    <li><strong>Data Security</strong>: Protecting data from unauthorized access or corruption (e.g., encryption, backup)</li>
-                    <li><strong>Network Security</strong>: Preventing unauthorized access and threats on a computer network (e.g., firewalls, intrusion detection systems)</li>
-                    <li><strong>Application Security</strong>: Ensuring software applications are secure from vulnerabilities (e.g., regular updates, secure coding practices)</li>
-                    <li><strong>User Security</strong>: Educating and controlling how users access systems (e.g., strong passwords, multi-factor authentication)</li>
-                    <li><strong>Device Security</strong>: Securing physical and digital access to computers and mobile devices (e.g., antivirus, screen locks)</li>
-                </ul>
-                
                 <h3>NIST Cybersecurity Framework</h3>
                 <p>In order to provide sufficient security, an organization needs to follow these steps based on National Institute of Standards and Technology (NIST) Cybersecurity Framework:</p>
                 <ol>
@@ -929,7 +994,16 @@
                     <li><strong>RESPOND</strong> - Make and practice an incidence response plan to contain an attack or incident and maintain business operations in the short term</li>
                     <li><strong>RECOVER</strong> - Know what to do to return to normal business operations after an incident. Protect sensitive data and your business reputation over the long term</li>
                 </ol>
-                 <img src="icons/security.svg" alt="Security Photo">
+                
+                <h3>Key Areas of Computer Security:</h3>
+                <ul>
+                    <li><strong>Data Security</strong>: Protecting data from unauthorized access or corruption (e.g., encryption, backup)</li>
+                    <li><strong>Network Security</strong>: Preventing unauthorized access and threats on a computer network (e.g., firewalls, intrusion detection systems)</li>
+                    <li><strong>Application Security</strong>: Ensuring software applications are secure from vulnerabilities (e.g., regular updates, secure coding practices)</li>
+                    <li><strong>User Security</strong>: Educating and controlling how users access systems (e.g., strong passwords, multi-factor authentication)</li>
+                    <li><strong>Device Security</strong>: Securing physical and digital access to computers and mobile devices (e.g., antivirus, screen locks)</li>
+                </ul>
+                
                 <h3>Common Threats:</h3>
                 <ul>
                     <li><strong>Viruses and Malware</strong>: Malicious programs that can damage or steal data</li>
@@ -954,6 +1028,58 @@
                     <li><strong>Electrostatic Discharge (ESD)</strong> - damages electronics like memory chips, motherboard, processors etc. Store this hardware in static shielding bags. Use static traps or ground bracelets</li>
                     <li><strong>Smoke</strong> - Smoke is a potent abrasive and collects on the heads of magnetic disks, optical disks, and tape drives. Ensure you have installed smoke detectors</li>
                 </ul>
+                
+                <h3>Fire Safety</h3>
+                <table class="fire-safety-table">
+                    <tr>
+                        <th>Extinguisher Type</th>
+                        <th>Solids (paper)</th>
+                        <th>Flammable Liquids</th>
+                        <th>Electrical Equipment</th>
+                        <th>Cooking oils & Fats</th>
+                        <th>Flammable Gas</th>
+                    </tr>
+                    <tr>
+                        <td class="fire-type">Water</td>
+                        <td class="checkmark">✔</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="fire-type">Foam</td>
+                        <td class="checkmark">✔</td>
+                        <td class="checkmark">✔</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="fire-type">Dry Powder</td>
+                        <td class="checkmark">✔</td>
+                        <td class="checkmark">✔</td>
+                        <td class="checkmark">✔</td>
+                        <td class="checkmark">✔</td>
+                        <td class="checkmark">✔</td>
+                    </tr>
+                    <tr>
+                        <td class="fire-type">Carbon Dioxide (CO2)</td>
+                        <td></td>
+                        <td class="checkmark">✔</td>
+                        <td class="checkmark">✔</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="fire-type">Blanket</td>
+                        <td class="checkmark">✔</td>
+                        <td></td>
+                        <td></td>
+                        <td class="checkmark">✔</td>
+                        <td></td>
+                    </tr>
+                </table>
                 
                 <div class="completion-check">
                     <label>
@@ -1034,7 +1160,10 @@
             </div>
         </div>
         
-        <div class="module-end">END OF MODULE 1</div>
+        <div class="module-end">
+            <p>END OF MODULE 1</p>
+            <p>Congratulations on completing the Introduction to Computers module!</p>
+        </div>
         
         <footer>
             <p>JOSHCAB TRAINING INSTITUTE - MWIKI</p>
@@ -1044,420 +1173,83 @@
     </div>
 
     <script>
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyD44h0Uak9EeQs2A_aAfSvyRKT4jgdSuHg",
-            authDomain: "jtimwiki.firebaseapp.com",
-            projectId: "jtimwiki",
-            storageBucket: "jtimwiki.firebasestorage.app",
-            messagingSenderId: "125581944053",
-            appId: "1:125581944053:web:e314fcdd288daf97c1d1bc",
-            measurementId: "G-WNVG1L3CZK"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
-        // DOM Elements
-        const authModal = document.getElementById('authModal');
-        const loginForm = document.getElementById('loginForm');
-        const signupForm = document.getElementById('signupForm');
-        const loginBtn = document.getElementById('loginBtn');
-        const signupBtn = document.getElementById('signupBtn');
-        const showLoginBtn = document.getElementById('showLoginBtn');
-        const showSignupBtn = document.getElementById('showSignupBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const userInfo = document.getElementById('userInfo');
-        const authButtons = document.getElementById('authButtons');
-        const userAvatar = document.getElementById('userAvatar');
-        const userName = document.getElementById('userName');
-        const progressBar = document.getElementById('progressBar');
-        const progressText = document.getElementById('progressText');
-        
-        // User progress data
-        let userProgress = {
-            overview: false,
-            intro: false,
-            power: false,
-            devices: false,
-            software: false,
-            'os-functions': false,
-            networks: false,
-            security: false,
-            'power-management': false
-        };
-        
-        // Toggle section content
+        // Toggle card sections
         function toggleSection(sectionId) {
-            const section = document.getElementById(sectionId);
-            const icon = section.previousElementSibling.querySelector('.fa-chevron-down');
+            const content = document.getElementById(sectionId);
+            const header = content.previousElementSibling;
+            const icon = header.querySelector('.fa-chevron-down');
             
-            section.classList.toggle('active');
-            icon.classList.toggle('fa-rotate-180');
-        }
-        
-        // Update progress
-        function updateProgress(section, completed) {
-            if (!auth.currentUser) {
-                alert('Please log in to save your progress');
-                document.getElementById(`${section}-complete`).checked = false;
-                return;
-            }
+            content.classList.toggle('active');
             
-            userProgress[section] = completed;
-            calculateProgress();
-            
-            // Save to Firestore
-            if (auth.currentUser) {
-                db.collection('userProgress').doc(auth.currentUser.uid).set({
-                    module1: userProgress,
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true })
-                .then(() => {
-                    console.log('Progress saved successfully');
-                })
-                .catch((error) => {
-                    console.error('Error saving progress: ', error);
-                });
+            if (content.classList.contains('active')) {
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                icon.style.transform = 'rotate(0deg)';
             }
         }
         
-        // Calculate and update progress
-        function calculateProgress() {
-            const totalSections = Object.keys(userProgress).length;
-            const completedSections = Object.values(userProgress).filter(Boolean).length;
+        // Progress tracking
+        const totalSections = 10;
+        let completedSections = 0;
+        
+        function updateProgress(section, isCompleted) {
+            // Count how many sections are completed
+            completedSections = 0;
+            const sections = [
+                'overview', 'intro', 'start-shutdown', 'devices', 'software', 
+                'os-functions', 'networks', 'computing-devices', 'security', 'power-management'
+            ];
+            
+            sections.forEach(sectionId => {
+                const checkbox = document.getElementById(`${sectionId}-complete`);
+                if (checkbox && checkbox.checked) {
+                    completedSections++;
+                }
+            });
+            
+            // Update progress bar and text
             const progressPercentage = Math.round((completedSections / totalSections) * 100);
+            document.getElementById('progressBar').style.width = `${progressPercentage}%`;
+            document.getElementById('progressText').textContent = `${progressPercentage}% Complete`;
             
-            progressBar.style.width = `${progressPercentage}%`;
-            progressText.textContent = `${progressPercentage}% Complete`;
+            // Save progress to localStorage
+            localStorage.setItem('module1Progress', progressPercentage);
             
-            // Update checkboxes
-            Object.keys(userProgress).forEach(section => {
-                const checkbox = document.getElementById(`${section}-complete`);
+            // Save individual checkbox states
+            sections.forEach(sectionId => {
+                const checkbox = document.getElementById(`${sectionId}-complete`);
                 if (checkbox) {
-                    checkbox.checked = userProgress[section];
+                    localStorage.setItem(`${sectionId}-completed`, checkbox.checked);
                 }
             });
         }
         
-        // Load user progress from Firestore
-        function loadUserProgress(userId) {
-            db.collection('userProgress').doc(userId).get()
-            .then((doc) => {
-                if (doc.exists && doc.data().module1) {
-                    userProgress = doc.data().module1;
-                    calculateProgress();
-                    
-                    // Open the first incomplete section
-                    const firstIncomplete = Object.keys(userProgress).find(section => !userProgress[section]);
-                    if (firstIncomplete) {
-                        document.getElementById(firstIncomplete).classList.add('active');
-                    }
-                } else {
-                    // Initialize with default progress
-                    calculateProgress();
+        // Load saved progress on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const savedProgress = localStorage.getItem('module1Progress');
+            if (savedProgress) {
+                document.getElementById('progressBar').style.width = `${savedProgress}%`;
+                document.getElementById('progressText').textContent = `${savedProgress}% Complete`;
+            }
+            
+            // Set all checkboxes based on saved state
+            const sections = [
+                'overview', 'intro', 'start-shutdown', 'devices', 'software', 
+                'os-functions', 'networks', 'computing-devices', 'security', 'power-management'
+            ];
+            
+            sections.forEach(sectionId => {
+                const checkbox = document.getElementById(`${sectionId}-complete`);
+                const savedState = localStorage.getItem(`${sectionId}-completed`);
+                
+                if (checkbox && savedState === 'true') {
+                    checkbox.checked = true;
                 }
-            })
-            .catch((error) => {
-                console.error('Error loading progress: ', error);
             });
-        }
-        
-        // Auth tab switching
-        document.querySelectorAll('.auth-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                const tabName = tab.getAttribute('data-tab');
-                
-                // Update active tab
-                document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                
-                // Show corresponding form
-                document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
-                document.getElementById(`${tabName}Form`).classList.add('active');
-                
-                // Clear errors
-                document.getElementById(`${tabName}Error`).style.display = 'none';
-            });
-        });
-        
-        // Show login modal
-        showLoginBtn.addEventListener('click', () => {
-            authModal.classList.add('active');
-            document.querySelector('.auth-tab[data-tab="login"]').click();
-        });
-        
-        // Show signup modal
-        showSignupBtn.addEventListener('click', () => {
-            authModal.classList.add('active');
-            document.querySelector('.auth-tab[data-tab="signup"]').click();
-        });
-        
-        // Login function
-        loginBtn.addEventListener('click', () => {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            const errorElement = document.getElementById('loginError');
             
-            if (!email || !password) {
-                errorElement.textContent = 'Please fill in all fields';
-                errorElement.style.display = 'block';
-                return;
-            }
-            
-            auth.signInWithEmailAndPassword(email, password)
-            .then((userCredential) => {
-                // Signed in
-                authModal.classList.remove('active');
-                errorElement.style.display = 'none';
-            })
-            .catch((error) => {
-                errorElement.textContent = error.message;
-                errorElement.style.display = 'block';
-            });
-        });
-        
-        // Signup function
-        signupBtn.addEventListener('click', () => {
-            const name = document.getElementById('signupName').value;
-            const email = document.getElementById('signupEmail').value;
-            const password = document.getElementById('signupPassword').value;
-            const errorElement = document.getElementById('signupError');
-            
-            if (!name || !email || !password) {
-                errorElement.textContent = 'Please fill in all fields';
-                errorElement.style.display = 'block';
-                return;
-            }
-            
-            if (password.length < 6) {
-                errorElement.textContent = 'Password should be at least 6 characters';
-                errorElement.style.display = 'block';
-                return;
-            }
-            
-            auth.createUserWithEmailAndPassword(email, password)
-            .then((userCredential) => {
-                // Signed up
-                const user = userCredential.user;
-                
-                // Update user profile
-                return user.updateProfile({
-                    displayName: name
-                });
-            })
-            .then(() => {
-                authModal.classList.remove('active');
-                errorElement.style.display = 'none';
-                
-                // Initialize user progress in Firestore
-                db.collection('userProgress').doc(auth.currentUser.uid).set({
-                    module1: userProgress,
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            })
-            .catch((error) => {
-                errorElement.textContent = error.message;
-                errorElement.style.display = 'block';
-            });
-        });
-        
-        // Logout function
-        logoutBtn.addEventListener('click', () => {
-            auth.signOut();
-        });
-        
-        // Auth state observer
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                // User is signed in
-                userInfo.style.display = 'flex';
-                authButtons.style.display = 'none';
-                
-                const displayName = user.displayName || 'User';
-                userName.textContent = displayName;
-                userAvatar.textContent = displayName.charAt(0).toUpperCase();
-                
-                // Load user progress
-                loadUserProgress(user.uid);
-            } else {
-                // User is signed out
-                userInfo.style.display = 'none';
-                authButtons.style.display = 'flex';
-                
-                // Reset progress UI
-                progressBar.style.width = '0%';
-                progressText.textContent = '0% Complete';
-                
-                // Reset checkboxes
-                Object.keys(userProgress).forEach(section => {
-                    userProgress[section] = false;
-                    const checkbox = document.getElementById(`${section}-complete`);
-                    if (checkbox) {
-                        checkbox.checked = false;
-                    }
-                });
-            }
-        });
-        
-        // Close modal when clicking outside
-        authModal.addEventListener('click', (e) => {
-            if (e.target === authModal) {
-                authModal.classList.remove('active');
-            }
-        });
-        
-        // Open the first section by default
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('overview').classList.add('active');
+            // Recalculate progress
+            updateProgress();
         });
     </script>
-     <script>
-        // Module 1 Validation
-        window.addEventListener('DOMContentLoaded', async function() {
-            const moduleContent = document.getElementById('moduleContent');
-            const accessDenied = document.getElementById('accessDenied');
-            
-            // Check if user has access to this module
-            const hasAccess = await window.authManager.checkModuleAccess(1);
-            
-            if (hasAccess) {
-                // User has access - show module content
-                moduleContent.style.display = 'block';
-                accessDenied.style.display = 'none';
-                
-                // Load your module content here
-                moduleContent.innerHTML = `
-                    <h2>Welcome to Introduction to Computers!</h2>
-                    <p>This module covers computer fundamentals.</p>
-                    <div class="lesson">
-                        <h3>Lesson 1: Computer Basics</h3>
-                        <p>Content goes here...</p>
-                    </div>
-                    <button onclick="markAsCompleted()">Mark as Completed</button>
-                `;
-            } else {
-                // User doesn't have access
-                moduleContent.style.display = 'none';
-                accessDenied.style.display = 'block';
-            }
-        });
-
-        function markAsCompleted() {
-            // Add your completion logic here
-            alert('Module marked as completed!');
-            // In real implementation, update progress in database
-        }
-    </script>
-    <!-- Add to head section -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1a2b4a">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="JOSHCAB Training">
-<link rel="apple-touch-icon" href="icons/icon-192x192.png">
-
-<!-- Add to body section (before closing body tag) -->
-<script>
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/service-worker.js')
-                .then(function(registration) {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                    
-                    // Check for updates
-                    registration.addEventListener('updatefound', () => {
-                        const newWorker = registration.installing;
-                        console.log('New service worker found...');
-                        
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                console.log('New content available; please refresh.');
-                                // You can show an update notification here
-                                showUpdateNotification();
-                            }
-                        });
-                    });
-                })
-                .catch(function(error) {
-                    console.log('ServiceWorker registration failed: ', error);
-                });
-        });
-
-        // Listen for claiming of service worker
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (!refreshing) {
-                window.location.reload();
-                refreshing = true;
-            }
-        });
-    }
-
-    // Function to show update notification
-    function showUpdateNotification() {
-        if (confirm('New version available! Would you like to update?')) {
-            window.location.reload();
-        }
-    }
-
-    // Online/offline status detection
-    window.addEventListener('online', function() {
-        console.log('App is online');
-        // You can show a notification that app is back online
-        showOnlineStatus();
-    });
-
-    window.addEventListener('offline', function() {
-        console.log('App is offline');
-        showOfflineStatus();
-    });
-
-    function showOnlineStatus() {
-        // Create a subtle notification
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-            position: fixed;
-            top: 70px;
-            right: 20px;
-            background: #2ecc71;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            z-index: 10000;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        `;
-        notification.innerHTML = '<i class="fas fa-wifi"></i> Back online';
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.remove();
-        }, 3000);
-    }
-
-    function showOfflineStatus() {
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-            position: fixed;
-            top: 70px;
-            right: 20px;
-            background: #e74c3c;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            z-index: 10000;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        `;
-        notification.innerHTML = '<i class="fas fa-wifi-slash"></i> You are offline';
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.remove();
-        }, 3000);
-    }
-</script>
 </body>
-</html>                        
+</html>
