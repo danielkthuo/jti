@@ -1,0 +1,1959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 3 - Word Processors | JOSHCAB TRAINING INSTITUTE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+   <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <!-- Auth Manager -->
+    <script src="auth-manager.js"></script>
+    <!-- Add to head section -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a2b4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="JOSHCAB INSTITUTE">
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #0d47a1;
+            --secondary: #25D366;
+            --accent: #ffc107;
+            --light: #f5f5f5;
+            --dark: #333;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --danger: #F44336;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 100%;
+            padding: 15px;
+        }
+        
+        /* Auth Modal Styles */
+        .auth-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .auth-modal.active {
+            display: flex;
+        }
+        
+        .auth-container {
+            background-color: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+        }
+        
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #777;
+        }
+        
+        .auth-tab.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .auth-form {
+            display: none;
+        }
+        
+        .auth-form.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .auth-btn:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .auth-error {
+            color: var(--danger);
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+        
+        /* Header Styles - Compact Version */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 12px 15px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            flex: 1;
+        }
+        
+        .institute-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        
+        .module-title {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .auth-button {
+            padding: 6px 12px;
+            border: 1px solid white;
+            border-radius: 15px;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+        
+        .auth-button:hover {
+            background-color: white;
+            color: var(--primary);
+        }
+        
+        .whatsapp-contact {
+            background-color: var(--secondary);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 15px;
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            font-size: 0.8rem;
+        }
+        
+        .whatsapp-contact svg {
+            width: 16px;
+            height: 16px;
+            margin-right: 5px;
+        }
+        
+        /* Progress Section */
+        .progress-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .completion-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* Card Styles */
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 0;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-header h2 {
+            color: var(--primary);
+            margin: 0;
+            padding: 0;
+            border: none;
+            font-size: 1.3rem;
+        }
+        
+        .card-header i {
+            transition: transform 0.3s ease;
+        }
+        
+        .card-content {
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .card-content.active {
+            padding: 20px;
+            max-height: 5000px;
+        }
+        
+        h3 {
+            color: var(--primary-dark);
+            margin: 15px 0 10px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+        }
+        
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .definition-box {
+            background-color: #e8f0fe;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .exercise-box {
+            background-color: #fff8e1;
+            border-left: 4px solid var(--accent);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .qa-box {
+            background-color: #e8f5e9;
+            border-left: 4px solid var(--success);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .icon-item {
+            text-align: center;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        
+        .icon-item svg {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 8px;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        .comparison-table th, .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        
+        .comparison-table th {
+            background-color: #f2f2f2;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .completion-check {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .completion-check label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        
+        .completion-check input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .module-end {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin: 30px 0;
+            color: var(--primary);
+        }
+        
+        /* Word Processor Specific Styles */
+        .interface-diagram {
+            width: 100%;
+            max-width: 600px;
+            margin: 15px auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: white;
+        }
+        
+        .interface-diagram img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+        
+        .keyboard-shortcuts {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .keyboard-shortcuts table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .keyboard-shortcuts th, .keyboard-shortcuts td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+        
+        .keyboard-shortcuts th {
+            background-color: #e9ecef;
+        }
+        
+        .ms-word-interface {
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .ms-word-title-bar {
+            background-color: #2b579a;
+            color: white;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .ms-word-menu-bar {
+            background-color: #f3f3f3;
+            padding: 5px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .ms-word-toolbar {
+            background-color: #f9f9f9;
+            padding: 8px 15px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .ms-word-text-area {
+            height: 200px;
+            background-color: white;
+            padding: 15px;
+            border: 1px solid #ddd;
+            margin: 0;
+        }
+        
+        .ms-word-status-bar {
+            background-color: #f3f3f3;
+            padding: 5px 15px;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .tool-button {
+            padding: 5px 10px;
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .tool-button:hover {
+            background-color: #dee2e6;
+        }
+        
+        .word-feature-demo {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            background-color: white;
+        }
+        
+        .word-feature-demo h4 {
+            margin-bottom: 10px;
+            color: var(--primary-dark);
+        }
+        
+        .demo-text {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+        
+        .demo-text.drop-cap::first-letter {
+            font-size: 3em;
+            float: left;
+            line-height: 0.8;
+            margin-right: 5px;
+            color: var(--primary);
+        }
+        
+        .demo-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        .demo-table th, .demo-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .demo-table th {
+            background-color: #f2f2f2;
+        }
+        
+        .demo-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .demo-image {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .demo-watermark {
+            position: relative;
+            padding: 20px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        
+        .demo-watermark::after {
+            content: "CONFIDENTIAL";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 4em;
+            color: rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .demo-watermark p {
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .institute-name {
+                font-size: 1.1rem;
+            }
+            
+            .module-title {
+                font-size: 0.8rem;
+            }
+            
+            .card-header {
+                padding: 15px;
+            }
+            
+            .card-header h2 {
+                font-size: 1.1rem;
+            }
+            
+            .card-content.active {
+                padding: 15px;
+            }
+            
+            .icon-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+            
+            .comparison-table {
+                font-size: 0.9rem;
+            }
+            
+            .comparison-table th, .comparison-table td {
+                padding: 8px;
+            }
+            
+            .header-right {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .auth-button {
+                padding: 4px 8px;
+                font-size: 0.7rem;
+            }
+            
+            .whatsapp-contact {
+                padding: 4px 8px;
+                font-size: 0.7rem;
+            }
+            
+            .ms-word-toolbar {
+                gap: 5px;
+            }
+            
+            .tool-button {
+                padding: 3px 6px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Auth Modal -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-container">
+            <div class="auth-tabs">
+                <div class="auth-tab active" data-tab="login">Login</div>
+                <div class="auth-tab" data-tab="signup">Sign Up</div>
+            </div>
+            
+            <div class="auth-form active" id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password">
+                </div>
+                <button class="auth-btn" id="loginBtn">Login</button>
+                <div class="auth-error" id="loginError"></div>
+            </div>
+            
+            <div class="auth-form" id="signupForm">
+                <div class="form-group">
+                    <label for="signupName">Full Name</label>
+                    <input type="text" id="signupName" placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail">Email</label>
+                    <input type="email" id="signupEmail" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" placeholder="Create a password">
+                </div>
+                <button class="auth-btn" id="signupBtn">Sign Up</button>
+                <div class="auth-error" id="signupError"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Compact Header -->
+        <header>
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="institute-name">JOSHCAB TRAINING INSTITUTE</div>
+                    <div class="module-title">Module 3 – Word Processors</div>
+                </div>
+                
+                <div class="header-right">
+                    <a href="https://wa.me/254734080808" class="whatsapp-contact">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+                            <path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893-.001-3.189-1.262-6.189-3.553-8.449"/>
+                        </svg>
+                        Contact
+                    </a>
+                    
+                    <div class="user-info" id="userInfo" style="display: none;">
+                        <div class="user-avatar" id="userAvatar">JD</div>
+                        <button class="auth-button" id="logoutBtn">Logout</button>
+                    </div>
+                    
+                    <div class="auth-buttons" id="authButtons">
+                        <button class="auth-button" id="showLoginBtn">Login</button>
+                        <button class="auth-button" id="showSignupBtn">Sign Up</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Progress Section -->
+        <div class="progress-container">
+            <h3>Your Progress</h3>
+            <div class="progress-bar">
+                <div class="progress" id="progressBar" style="width: 0%"></div>
+            </div>
+            <div class="progress-text">
+                <span id="progressText">0% Complete</span>
+                <span>Module 3</span>
+            </div>
+            <div class="completion-status">
+                <i class="fas fa-info-circle"></i>
+                <span>Your progress is automatically saved and will be available on any device</span>
+            </div>
+        </div>
+        
+        <!-- Module Overview Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('overview')">
+                <h2><i class="fas fa-info-circle"></i> Module Overview</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="overview">
+                <p>This module introduces learners to word processing software, focusing on Microsoft Word and Google Docs. It covers the interface, text editing, formatting, templates, tables, and advanced features for creating professional documents.</p>
+                
+                <h3>Learning Objectives</h3>
+                <p>At the end of the module, learners will be able to:</p>
+                <ul>
+                    <li>Navigate the Microsoft Word interface effectively</li>
+                    <li>Create, edit, and format documents with various tools</li>
+                    <li>Work with templates for efficient document creation</li>
+                    <li>Utilize different document views and window splits</li>
+                    <li>Apply security features to protect documents</li>
+                    <li>Create and format tables with functions and formulas</li>
+                    <li>Enhance documents with images, text boxes, and headers/footers</li>
+                    <li>Use advanced features like watermarks, WordArt, and Drop Caps</li>
+                    <li>Review documents for correctness using spelling and grammar tools</li>
+                </ul>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="overview-complete" onchange="updateProgress('overview', this.checked)"> 
+                        Mark as reviewed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Introduction to Word Processors Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('intro')">
+                <h2><i class="fas fa-file-word"></i> Introduction to Word Processors</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="intro">
+                <div class="definition-box">
+                    <p>According to <strong>Webopedia</strong>, word processing is the phrase used to describe using a computer to create, edit, and print documents. Of all computer applications, word processing is the most common. To perform word processing, you need a computer, a special program called a word processor, and a printer.</p>
+                </div>
+                
+                <h3>Popular Word Processors</h3>
+                <ul>
+                    <li><strong>Microsoft Word</strong> - Part of the Microsoft Office suite</li>
+                    <li><strong>Google Docs</strong> - Free online word processor from Google</li>
+                    <li><strong>LibreOffice Writer</strong> - Free and open-source alternative</li>
+                    <li><strong>Apple Pages</strong> - For macOS and iOS users</li>
+                </ul>
+                
+                <h3>Key Features of Word Processors</h3>
+                <ul>
+                    <li>Text creation and editing</li>
+                    <li>Formatting options (fonts, sizes, colors)</li>
+                    <li>Paragraph alignment and spacing</li>
+                    <li>Spell checking and grammar correction</li>
+                    <li>Insertion of images, tables, and other objects</li>
+                    <li>Page layout and design options</li>
+                    <li>Templates for quick document creation</li>
+                    <li>Collaboration features</li>
+                </ul>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="intro-complete" onchange="updateProgress('intro', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Microsoft Word Interface Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('word-interface')">
+                <h2><i class="fas fa-window-maximize"></i> Microsoft Word Interface</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="word-interface">
+                <p>The Microsoft Word document editor interface loads with a blinking cursor, showing that the application is ready to accept input from the keyboard.</p>
+                
+                <h3>Microsoft Word Interface Components</h3>
+                
+                <div class="ms-word-interface">
+                    <div class="ms-word-title-bar">
+                        <span>Document1 - Microsoft Word</span>
+                        <div>
+                            <span style="margin: 0 5px;">_</span>
+                            <span style="margin: 0 5px;">□</span>
+                            <span style="margin: 0 5px;">×</span>
+                        </div>
+                    </div>
+                    <div class="ms-word-menu-bar">
+                        <span>File Edit View Insert Format Tools Table Window Help</span>
+                    </div>
+                    <div class="ms-word-toolbar">
+                        <button class="tool-button">B</button>
+                        <button class="tool-button">I</button>
+                        <button class="tool-button">U</button>
+                        <button class="tool-button">Align Left</button>
+                        <button class="tool-button">Center</button>
+                        <button class="tool-button">Align Right</button>
+                        <button class="tool-button">Justify</button>
+                        <button class="tool-button">Numbering</button>
+                        <button class="tool-button">Bullets</button>
+                    </div>
+                    <div class="ms-word-text-area">
+                        <p>The cursor is blinking here | showing that the application is ready to accept input from the keyboard.</p>
+                    </div>
+                    <div class="ms-word-status-bar">
+                        <span>Page 1, Section 1, 1/1</span>
+                        <span>At 1", Ln 1, Col 1</span>
+                    </div>
+                </div>
+                
+                <h3>Interface Components Explained</h3>
+                <ul>
+                    <li><strong>Title Bar</strong> - Shows the document name and application name</li>
+                    <li><strong>Menu Bar</strong> - Contains menus for various functions</li>
+                    <li><strong>Toolbars</strong> - Provide quick access to frequently used commands</li>
+                    <li><strong>Text Area</strong> - The main workspace where you type and edit text</li>
+                    <li><strong>Status Bar</strong> - Shows information about the current document</li>
+                </ul>
+                
+                <h3>Window Controls</h3>
+                <ul>
+                    <li><strong>Minimize Button (-)</strong> - Makes the window disappear without closing it</li>
+                    <li><strong>Restore Down (□)</strong> - Changes the window size without closing it</li>
+                    <li><strong>Close (X)</strong> - Closes the window. If the document has been modified, it prompts to save changes</li>
+                </ul>
+                
+                <h3>Tool Tips</h3>
+                <p>A tool tip is a message that pops up when the mouse pointer is passed over a tool. For example, hovering over the Bold button shows "Bold (Ctrl+B)".</p>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="word-interface-complete" onchange="updateProgress('word-interface', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Online Text Editors Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('online-editors')">
+                <h2><i class="fas fa-cloud"></i> Online Text Editors</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="online-editors">
+                <h3>Google Docs</h3>
+                <p>To use an online text editor, you need an active Google account. Google accounts are created for free, but if a user wants to use enhanced features, they can pay for those features. Google's "Docs" is a free online text editor which you launch from the Google Apps menu after logging into your account.</p>
+                
+                <p>Click on Docs → Start a new document. A new "Untitled document" is created with a similar but slightly different menu and toolbars from Microsoft Word text editor.</p>
+                
+                <h3>Advantages of Online Text Editors</h3>
+                <ul>
+                    <li>Accessible from any device with an internet connection</li>
+                    <li>Automatic saving and version history</li>
+                    <li>Real-time collaboration features</li>
+                    <li>No installation required</li>
+                    <li>Free basic versions</li>
+                </ul>
+                
+                <h3>Comparison: Microsoft Word vs. Google Docs</h3>
+                <table class="comparison-table">
+                    <tr>
+                        <th>Feature</th>
+                        <th>Microsoft Word</th>
+                        <th>Google Docs</th>
+                    </tr>
+                    <tr>
+                        <td>Cost</td>
+                        <td>Paid (subscription or one-time purchase)</td>
+                        <td>Free with Google account</td>
+                    </tr>
+                    <tr>
+                        <td>Offline Access</td>
+                        <td>Full functionality offline</td>
+                        <td>Limited offline functionality</td>
+                    </tr>
+                    <tr>
+                        <td>Collaboration</td>
+                        <td>Limited real-time collaboration</td>
+                        <td>Excellent real-time collaboration</td>
+                    </tr>
+                    <tr>
+                        <td>Advanced Features</td>
+                        <td>More advanced formatting and layout options</td>
+                        <td>Basic to intermediate features</td>
+                    </tr>
+                    <tr>
+                        <td>Storage</td>
+                        <td>Local or cloud (OneDrive)</td>
+                        <td>Cloud (Google Drive)</td>
+                    </tr>
+                </table>
+                
+                <div class="exercise-box">
+                    <h3>Class Exercise: Creating a Document in Google Docs</h3>
+                    <ol>
+                        <li>Open Google Apps and select Docs</li>
+                        <li>On the "Start a new document" interface, select "More"</li>
+                        <li>This will load an extended window of available templates</li>
+                        <li>In the Education category, select "Class Notes - Playful"</li>
+                        <li>Change the date to today's date</li>
+                        <li>Change subject from "Science" to "Introduction to word processors"</li>
+                        <li>Delete the content in bullets and type in the definition of word processing</li>
+                        <li>Save and close the document</li>
+                    </ol>
+                </div>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="online-editors-complete" onchange="updateProgress('online-editors', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Text Editing Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('text-editing')">
+                <h2><i class="fas fa-edit"></i> Text Editing</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="text-editing">
+                <p>Each of the tools in the toolbar modifies a document in a particular way based on the desired look by the user.</p>
+                
+                <div class="exercise-box">
+                    <h3>Class Exercise: Basic Text Editing</h3>
+                    <ol>
+                        <li>Open the document called Sermon.docx in the classroom folder</li>
+                        <li>Method I – Go to the folder and double click on the file (short method) OR</li>
+                        <li>Method II – Open MS Word and use the file menu to access the document (long method)</li>
+                        <li>Make paragraphs for every bible verse by placing the cursor at the end of the last word of the first verse and pressing Enter</li>
+                        <li>Make the first verse of sermon bold</li>
+                        <li>Method I – Select the text and click on the "Bold" tool in the Font group OR</li>
+                        <li>Method II - Select the text and press Ctrl + B simultaneously</li>
+                        <li>Cross out the title "The Sermon" using the Strikethrough tool on the Font group. Next to it, type in "Genesis – Chapter 1"</li>
+                        <li>Save the file under new name "Genesis – Chapter 1.docx" in the same class folder</li>
+                        <li>Change the bible verse numbers to Superscript</li>
+                        <li>Method I – Select the number you want to modify and use the Superscript tool in the Font group</li>
+                        <li>Method II - Select the number you want to modify and use Ctrl + Shift + +</li>
+                    </ol>
+                </div>
+                
+                <h3>Advanced Text Editing</h3>
+                <div class="exercise-box">
+                    <ol>
+                        <li>Select all the text and change the Font from Calibri to Trebuchet MS, and the Font Size from 11 to 12</li>
+                        <li>Select all the text and change the text alignment from Left alignment to Justify</li>
+                        <li>Method I – Select all text and use Justify tool to align the text</li>
+                        <li>Method II – Click inside the text. Press Ctrl + A then Ctrl + J</li>
+                        <li>Change the line spacing from current Single to 1.5</li>
+                        <li>Use the Line and Paragraph Spacing tool of the paragraph group</li>
+                        <li>Open the Paragraph dialogue box by clicking on the arrow at the bottom right corner of the paragraph group and in the Indent and Spacing tab, in the spacing category change paragraph spacing to 1.5</li>
+                        <li>Save the document using shortcut keys Ctrl + S and close the window</li>
+                    </ol>
+                </div>
+                
+                <h3>Keyboard Shortcuts for Text Editing</h3>
+                <div class="keyboard-shortcuts">
+                    <table>
+                        <tr>
+                            <th>Action</th>
+                            <th>Keyboard Shortcut</th>
+                        </tr>
+                        <tr>
+                            <td>Bold</td>
+                            <td>Ctrl + B</td>
+                        </tr>
+                        <tr>
+                            <td>Italic</td>
+                            <td>Ctrl + I</td>
+                        </tr>
+                        <tr>
+                            <td>Underline</td>
+                            <td>Ctrl + U</td>
+                        </tr>
+                        <tr>
+                            <td>Superscript</td>
+                            <td>Ctrl + Shift + +</td>
+                        </tr>
+                        <tr>
+                            <td>Subscript</td>
+                            <td>Ctrl + =</td>
+                        </tr>
+                        <tr>
+                            <td>Select All</td>
+                            <td>Ctrl + A</td>
+                        </tr>
+                        <tr>
+                            <td>Justify Text</td>
+                            <td>Ctrl + J</td>
+                        </tr>
+                        <tr>
+                            <td>Save</td>
+                            <td>Ctrl + S</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="text-editing-complete" onchange="updateProgress('text-editing', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Working with Templates Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('templates')">
+                <h2><i class="fas fa-clone"></i> Working with Templates</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="templates">
+                <div class="definition-box">
+                    <p>A <strong>template</strong> is a sample document that already has some details in place and allows users to fill in text in a predefined format.</p>
+                </div>
+                
+                <p>When MS Word is installed, these templates are installed and are available for the user. One can however still add more templates from the Internet. To see installed templates, start MS Word application. From the File menu, select New.</p>
+                
+                <h3>Using Templates in Microsoft Word</h3>
+                <div class="exercise-box">
+                    <ol>
+                        <li>From the templates menu, select "Resumes and Cover Letters" category</li>
+                        <li>Several templates will be loaded from Office.com. Select Resume (Apothecary design)</li>
+                        <li>Update the details of your Curriculum Vitae on the resume template-Apothecary design</li>
+                        <li>Update your details on the resume template</li>
+                        <li>Save the document with your name in the class folder</li>
+                    </ol>
+                </div>
+                
+                <h3>Using Templates in Google Docs</h3>
+                <div class="exercise-box">
+                    <ol>
+                        <li>Open Google Apps and select Docs</li>
+                        <li>On the Start a new document interface, select More</li>
+                        <li>This will load an extended window of available templates</li>
+                        <li>In the Education category, select "Class Notes - Playful"</li>
+                        <li>Change the date to today's date</li>
+                        <li>Change subject from "Science" to "Introduction to word processors"</li>
+                        <li>Delete the content in bullets and type in the definition of word processing</li>
+                        <li>Replace "Math" with Computer Mathematics</li>
+                        <li>Delete everything else and close the application</li>
+                    </ol>
+                </div>
+                
+                <h3>File Types</h3>
+                <p>You can save Word documents to any of several file formats. You cannot use Word to save a document as a JPEG (.jpg) or GIF (.gif) file, but you can save a file as a PDF (.pdf) file.</p>
+                
+                <div class="exercise-box">
+                    <ol>
+                        <li>Click the File tab</li>
+                        <li>Click Save As</li>
+                        <li>In the Save As dialog box, click the arrow next to the Save as type list, and then click the file type that you want</li>
+                    </ol>
+                </div>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="templates-complete" onchange="updateProgress('templates', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Document Views Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('views')">
+                <h2><i class="fas fa-desktop"></i> Document Views and Window Splits</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="views">
+                <p>MS Word allows users to view documents in five different formats, each with its own features/advantages.</p>
+                
+                <h3>Document Views in Microsoft Word</h3>
+                <ul>
+                    <li><strong>Print Layout</strong> – Allows the user to view the document as it will look when printed. It shows the margins, headers and footers and any formatting.</li>
+                    <li><strong>Full Screen Reading</strong> – This view enables the user to get a feel of reading a book. It eliminates the menu and tool bars for ease of reading and uses only the tools that help navigate the document.</li>
+                    <li><strong>Web Layout</strong> – Displays the document text as it would appear on a website, should the user publish the document as is. It imitates the display of a web browser. The view will vary slightly based on the browser one is using.</li>
+                    <li><strong>Outline</strong> – This view enables the user to see the "Levels" that the document has. The extent to which the text is indented from the margins is shown and any formatting that has title headers. Page breaks and section breaks are also visible but images are not visible. It is used to format the section and page breaks.</li>
+                    <li><strong>Draft</strong> – This view is used to format a document quickly without concern on how it will actually look in print form. This view eliminates headers and footers, pictures that do not have text wrap style.</li>
+                </ul>
+                
+                <div class="exercise-box">
+                    <h3>Class Activity: Exploring Document Views</h3>
+                    <ol>
+                        <li>Open the document Examination results.docx in the class folder</li>
+                        <li>In the current view (Print Layout), the table is not visible to the end. This implies if you print the results, Biology, History and Geography results will not be printed. However, everything else is visible.</li>
+                        <li>From the View tab, Document Views category, change the view to Full Screen Reading. The document adjusts automatically to allow reading of the full document.</li>
+                        <li>Note: This view leaves out Header and Footer.</li>
+                        <li>From the View tab, Document Views category, change the view to Web Layout. The document is clearly visible as it would fit in a web browser.</li>
+                        <li>Note: This view leaves out Header and Footer.</li>
+                        <li>From the View tab, Document Views category, change the view to Outline</li>
+                        <li>Note: This view leaves out most of the context headers, footers and images. It allows the user to view text and tables.</li>
+                        <li>From the View tab, Document Views category, change the view to Draft. It enables the user to see the text but without header and footer and images. It also leaves out the levels.</li>
+                    </ol>
+                </div>
+                
+                <h3>Zooming In and Out</h3>
+                <p>The zoom feature allows for magnification of an application for better view. You can zoom in to get a close-up view of your file or zoom out to see more of the page at a reduced size. You can also save a particular zoom setting with a document or template, presentation, or worksheet.</p>
+                
+                <p>To zoom in or zoom out, on the status bar, click the Zoom slider. Hold the left and drag the mouse towards left (-) to zoom out and towards right (+) to zoom in. On the View menu, you can interact with the zoom more.</p>
+                
+                <h3>Split Window Feature</h3>
+                <p>By splitting up the document view, you can navigate to different parts of the document in different views. If you need to see different parts of a document, you can use the split feature to separate the document.</p>
+                
+                <div class="exercise-box">
+                    <ol>
+                        <li>Open the document Examination results.docx in the class folder</li>
+                        <li>In the View tab, Window group, select Split tool</li>
+                        <li>The mouse pointer changes and a floating line is added. Click on the location where you want to split the window</li>
+                        <li>You can adjust the location of the split. Hold down the left mouse button and move the split bar</li>
+                    </ol>
+                </div>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="views-complete" onchange="updateProgress('views', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Document Security Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('security')">
+                <h2><i class="fas fa-lock"></i> Document Security</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="security">
+                <p>Securing a document is a feature found in word processors as part of Electronic Data Management (EDM). The same feature is available for other applications in the suite (e.g., PowerPoint, Access, Excel etc.) and the principle of applying security is the same. When a user does not want their document to be opened and/or edited without authorization, word processor enables the user to require authentication.</p>
+                
+                <div class="exercise-box">
+                    <h3>Class Activity: Applying Document Security</h3>
+                    <ol>
+                        <li>Open the document "CAT Paper.Docx" in the class folder. Immediately, the content of the examination are revealed. This means that if the document was accessed by anybody, the confidentiality of the document is lost.</li>
+                        <li>Save the file as "CAT Paper Secured.Docx"</li>
+                        <li>To secure the document, select File → Info → Permissions → Protect Document → Encrypt with Password</li>
+                        <li>Type in your password that you would like to use. Then confirm the password and select OK.</li>
+                        <li>Close the dialogue box window, when prompted to save changes, select Yes.</li>
+                        <li>Close the document CAT Paper Secured.Docx.</li>
+                        <li>Open the document CAT Paper Secured.Docx. It will prompt you to specify the password.</li>
+                    </ol>
+                </div>
+                
+                <div class="qa-box">
+                    <p><strong>Note:</strong> If you lose or forget a password, Word cannot recover your data.</p>
+                </div>
+                
+                <h3>Restricting Editing</h3>
+                <div class="exercise-box">
+                    <ol>
+                        <li>Open the document CAT Paper Secured.Docx and enhance the document security</li>
+                        <li>Select File → Info → Permissions → Protect Document → Restrict Editing</li>
+                        <li>Select by checking the Check Box, No Changes (Read Only)</li>
+                        <li>In Start Enforcement select Yes, Start Enforcing Protection</li>
+                        <li>You will be prompted for password. Enter new password different from encryption password. (Same password will still work)</li>
+                        <li>Select OK, then close the documents and Save Changes</li>
+                        <li>Reopen the document and attempt to make changes. MS Word will restrict typing. On the right, there is a dialogue menu that allows you to stop protection</li>
+                    </ol>
+                </div>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="security-complete" onchange="updateProgress('security', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Working with Tables Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('tables')">
+                <h2><i class="fas fa-table"></i> Working with Tables</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="tables">
+                <p>In Microsoft Word, you can add a table in a document in three ways:</p>
+                
+                <ol>
+                    <li>The <strong>Insert → Table → Insert Table</strong> menu allows a user to specify the number of rows and columns (table dimension)</li>
+                    <li>The <strong>Insert → Table → Draw</strong> menu allows a user to use a "pen" to draw the table rows and columns. This menu is also used to split rows and columns in an existing table.</li>
+                    <li>The <strong>Insert → Table → Quick Tables</strong> menu allows a selection of preformatted tables. The tables have sample data that allows user to have a "feel" of the table type and format they would like. Users choose from a gallery of preformatted table templates.</li>
+                </ol>
+                
+                <h3>Creating Tables by Defining Dimensions</h3>
+                <div class="exercise-box">
+                    <ol>
+                        <li>Create a new document and save it as "Tables.docx" in the class folder</li>
+                        <li>Using the Insert → Table → Insert Table menu, insert a table with 5 Rows and 4 Columns</li>
+                        <li>Using the Insert → Table → Draw menu, split the first cell diagonally to separate the days and the time</li>
+                        <li>Add sample data to the table</li>
+                    </ol>
+                </div>
+                
+                <h3>Creating Tables by Drawing</h3>
+                <div class="exercise-box">
+                    <ol>
+                        <li>Using the Insert → Table → Draw menu, select "pen" to draw the tables</li>
+                        <li>Label the table "Sudoku" and enter the values as indicated</li>
+                        <li>Using the paragraph alignment tool, Center the table such that it is in the middle of the table</li>
+                        <li>Hint: You need to select the whole table. Which ways can you achieve table selection?</li>
+                        <li>Center the Values. Select the table; right click and select Cell Alignment option. Select the Align Center option</li>
+                    </ol>
+                </div>
+                
+                <h3>Table Functions and Formulas</h3>
+                <p>By the end of this session, you will be able to:</p>
+                <ul>
+                    <li>Define header rows</li>
+                    <li>Sort records in a table</li>
+                    <li>Use formulas in a table</li>
+                </ul>
+                
+                <h4>Defining Header Rows</h4>
+                <p>When a table is long, it spills into many pages. This presents a challenge to the user who may not be able know the heading of the content being displayed. To solve this problem, a table header row is repeated in all the pages.</p>
+                
+                <h4>Using Formulas in Tables</h4>
+                <div class="exercise-box">
+                    <ol>
+                        <li>In the table Cat Results, delete the grade that is out of 100</li>
+                        <li>Click on the cell that you want results in</li>
+                        <li>Click on Fx Formula tool</li>
+                        <li>From the dialogue window, specify the function that should be done</li>
+                        <li>Specify =SUM(LEFT) and click OK</li>
+                    </ol>
+                </div>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="tables-complete" onchange="updateProgress('tables', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Advanced Formatting Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('advanced-formatting')">
+                <h2><i class="fas fa-paint-brush"></i> Advanced Formatting Features</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="advanced-formatting">
+                <h3>Adding Pictures to Documents</h3>
+                <p>In order to make a document appealing and with extra information, text editors do allow the inclusion of photos/pictures. A picture is worth a thousand words.</p>
+                
+                <div class="exercise-box">
+                    <h3>Class Exercise: Adding Pictures</h3>
+                    <ol>
+                        <li>In the class folder, create a new document and save the document as Titus Final.Docx</li>
+                        <li>Open the file Titus.txt and copy the content. Paste the content in Titus Final.Docx</li>
+                        <li>To give the document a bible look, create columns. In the Page Layout tab, under Page Setup group, select Columns. When prompted to select the number of columns, select 2</li>
+                        <li>Press Enter once after the heading "The Epistle of St. Paul to Titus"</li>
+                        <li>From the tab Insert, in the group Illustration, select Picture</li>
+                        <li>Navigate to the classroom folder, select the folder images, insert Titus.JPG</li>
+                    </ol>
+                </div>
+                
+                <h3>Adding and Formatting Text Boxes</h3>
+                <p>Word processors allow users to add text that is not preformatted, and enhance the text boxes with formatting the text with fancy styles. This gives the document a better look.</p>
+                
+                <div class="exercise-box">
+                    <ol>
+                        <li>In the document Titus Final.Docx, create a white line after the text "Chapter 1"</li>
+                        <li>From the Insert tab, text grouping, select Draw Text Box</li>
+                        <li>The mouse pointer changes to +. Hold down the left mouse button and drag to draw a text box</li>
+                    </ol>
+                </div>
+                
+                <h3>Headers and Footers</h3>
+                <p>A header is a repeated text or graphics that appears at the top of each page and a footer appears at the bottom of each page. There are some predefined text that a user can easily insert as header and/or footer but users are also able to type in the desired text or put graphics.</p>
+                
+                <div class="exercise-box">
+                    <ol>
+                        <li>In the Insert tab, Header and Footer group, select Header</li>
+                        <li>Choose a header style and add content</li>
+                        <li>Similarly, add a footer to the document</li>
+                    </ol>
+                </div>
+                
+                <h3>Background Formatting and Watermarks</h3>
+                <p>You can enhance the document look by setting a colored background, applying a different first page attribute to a document, and enhancing the look of a document by changing the document's background and adding a watermark.</p>
+                
+                <div class="exercise-box">
+                    <h3>Class Exercise: Adding Watermarks</h3>
+                    <ol>
+                        <li>Open the document Titus Final.Docx. Save a copy as Titus Final Ver 2.Docx</li>
+                        <li>In the Page Layout tab, Page Background group, select Watermark</li>
+                        <li>Select "DO NOT COPY" – watermark with grey diagonal text</li>
+                        <li>Once a watermark is added, it allows the user to customize the watermark</li>
+                        <li>From the same watermark tool, select Custom Watermark</li>
+                        <li>You can change the text or even add a picture as a watermark</li>
+                        <li>Select the option button (also called radio button) for Picture watermark</li>
+                        <li>In the class folder, select the folder for images and select photo</li>
+                        <li>Change from auto to 50%</li>
+                        <li>If the checkbox for Washout is checked, the picture gets formatted to gray scale and is transparent. If unchecked, the picture appears as normal. (Be careful with this feature, it might make the document cluttered if not used well)</li>
+                        <li>Apply changes, select OK and save the document</li>
+                    </ol>
+                </div>
+                
+                <div class="demo-watermark">
+                    <p>This is a sample document with a CONFIDENTIAL watermark in the background. Notice how the text appears over the watermark.</p>
+                </div>
+                
+                <h3>WordArt and Drop Cap Formatting</h3>
+                <p>Enhancing document with WordArt and Drop Cap</p>
+                
+                <div class="exercise-box">
+                    <h3>Class Exercise: Drop Cap</h3>
+                    <p>A <strong>Drop Cap</strong> is a large capital letter at the beginning of a text block that has the depth of two or more lines of regular text. It is used to attract attention to a particular area and offer easy remembrance to the reader.</p>
+                    <ol>
+                        <li>Open the document Titus Final Ver 2.Docx. Save the document as Titus Final Ver 3.Docx</li>
+                        <li>Delete text, so that "Paul" is the first word under chapter 1. The cursor should be in the paragraph</li>
+                        <li>Select Insert tab, then select Drop Cap from the Text group</li>
+                        <li>Select Insert → Drop Cap → Dropped. The text achieved should get a drop cap "P"</li>
+                        <li>Dropped capital takes three lines of the text block</li>
+                        <li>To adjust/format how drop cap appears, select Insert → Drop Cap → Drop Cap Option…. The dialogue box allows a user to specify how many lines the drop cap should take. Change lines to drop from the current default of 3 and put 2</li>
+                        <li>The drop cap in margin is now 2 lines of the block of text</li>
+                    </ol>
+                </div>
+                
+                <div class="demo-text drop-cap">
+                    <p>aul, a servant of God and an apostle of Jesus Christ to further the faith of God's elect and their knowledge of the truth that leads to godliness— in the hope of eternal life, which God, who does not lie, promised before the beginning of time, and which now at his appointed season he has brought to light through the preaching entrusted to me by the command of God our Savior, To Titus, my true son in our common faith: Grace and peace from God the Father and Christ Jesus our Savior.</p>
+                </div>
+                
+                <h3>Working with Clip Art</h3>
+                <p>The clip art feature allows a user to add images, or video clips that are stored in the computer. One can also add art from Microsoft.com website.</p>
+                
+                <h3>Adding Movies and Sound to a Document</h3>
+                <p>An audio file format is a file format for storing digital audio data on a computer system. The bit layout of the audio data is called the audio coding format and can be uncompressed, or compressed to reduce the file size. Examples of such file are .wav, .flac, .mp3, .aiff etc.</p>
+                <p>Video files are used for storing digital video data on a computer system. Video formats include .wmv, .asf, .rm, .mov, .mpeg</p>
+                
+                <div class="exercise-box">
+                    <ol>
+                        <li>Open the file Titus Final Ver 3.Docx from the class folder and scroll to the end of the text in page 1</li>
+                        <li>From the Insert tab, Text grouping, select Object</li>
+                        <li>The Object dialogue box, select "Create from File" Table</li>
+                        <li>Browse for the file "Kymo Stigah - Thitima Christmas Edition" in the videos folder of your classroom folder</li>
+                        <li>Tick the checkbox for Link to file and select OK. This means that changes to the file will be automatically reflected</li>
+                        <li>The image is attached to the file and you can double click on it to play the video</li>
+                    </ol>
+                </div>
+                
+                <h3>Applying 3D Effects on Text</h3>
+                <p>You can change the look of your text or WordArt by changing its fill, changing its outline, or adding effects, such as shadows, reflections, glows, or three-dimensional (3-D) rotations or bevels.</p>
+                
+                <div class="exercise-box">
+                    <ol>
+                        <li>Open the file Titus Final Ver 3.Docx from the class folder and scroll to the end of the text in page. Place the cursor after the video insert</li>
+                        <li>From the Insert Tab, Text grouping, select Fill – Red, Accent 2, Warm matter Bevel</li>
+                        <li>Enter text in the inserted text box</li>
+                        <li>Ensure the textbox is selected so that the drawing tools are available in the tools bar. In the Word Styles grouping select Text Effects → 3-D Rotation</li>
+                        <li>Select Perspective → Perspective Heroic Extreme Left, or an effect you are comfortable with</li>
+                        <li>Change the Transform to "Curve up"</li>
+                    </ol>
+                </div>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="advanced-formatting-complete" onchange="updateProgress('advanced-formatting', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Professional Presentation Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('professional')">
+                <h2><i class="fas fa-check-double"></i> Formatting for Professional Presentation</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="professional">
+                <h3>Reviewing Documents for Correctness</h3>
+                <p>All Office programs can check the spelling and grammar of your files. You can check spelling and grammar all at once by running the spelling and grammar checker, or you can check spelling and grammar automatically and make corrections as you work. You can also turn the automatic spelling and grammar off as needed.</p>
+                
+                <div class="exercise-box">
+                    <h3>Class Activity: Spelling and Grammar Check</h3>
+                    <ol>
+                        <li>Open the document Titus Final Ver 3.Docx</li>
+                        <li>Identify the words and phrases that have Red wave underline and green wave underline. These mark "possible" areas of concern as specified in the proofing setting</li>
+                        <li>Open the proofing settings from File → Options → Proofing</li>
+                        <li>To review a document, select Review tab, Spelling and Grammar tool</li>
+                        <li>Make the appropriate changes as desired</li>
+                    </ol>
+                </div>
+                
+                <h3>Adding Words to the Dictionary</h3>
+                <p>Microsoft Word can use multiple custom dictionaries to check the spelling of your documents. A custom dictionary allows you to supplement the main dictionary with additional words, such as names, specialized technical terms, foreign words or alternative spelling of some words.</p>
+                
+                <div class="exercise-box">
+                    <ol>
+                        <li>In the open document (Titus Final Ver 3.Docx), select Review → Spelling and Grammar</li>
+                        <li>The menu load and allows you to make changes, to this document, and also add words in the Proofing tool</li>
+                        <li>Ignore once - only the word that is highlighted is ignored. Other similar words will still be shown as having spelling or grammar issues</li>
+                        <li>Ignore all - all similar words or phrases are ignored in the entire document</li>
+                        <li>Change - only the highlighted word or phrase is changed</li>
+                        <li>Change All - all similar highlighted words or phrases in the entire document are changed</li>
+                        <li>Select add to dictionary, the first highlighted word "lieth"</li>
+                        <li>This adds the word in the dictionary and you can see the list of all words added to the dictionary in the installation/computer. Select File → Options → Proofing → Custom Dictionaries → Edit Word List</li>
+                        <li>This allows you to add or delete words added from the dictionary</li>
+                    </ol>
+                </div>
+                
+                <h3>Using Thesaurus</h3>
+                <p>In general usage, a thesaurus is a reference work that lists words grouped together according to similarity of meaning (containing synonyms and sometimes antonyms), in contrast to a dictionary, which provides definitions for words, and generally lists them in alphabetical order.</p>
+                <p>Using the thesaurus, you can look up synonyms (different words with the same meaning) and antonyms (words with the opposite meaning).</p>
+                
+                <div class="exercise-box">
+                    <ol>
+                        <li>In the open document (Titus Final Ver 3.Docx), place the cursor inside the word "servant" in Chapter 1, verse 1</li>
+                        <li>Select Review tab, select Thesaurus</li>
+                        <li>On the right side of the document, a pane appears showing the synonyms (similar words) and antonyms (opposite words). The application also shows you the dictionary that you are using</li>
+                        <li>To change the original name in the document, select the word you desire in the option and select Insert from the drop down options</li>
+                        <li>Using the Thesaurus, replace the word "apostle" with "disciple"</li>
+                        <li>To load the Thesaurus using shortcut keys, press down the Shift key and press F7. (Shift + F7)</li>
+                    </ol>
+                </div>
+                
+                <h3>Using Word Count Tool</h3>
+                <p>When you type a document, Word automatically counts the number of pages and words in your document and displays them on the status bar at the bottom of the workspace. If you don't see the word count in the status bar, right-click the status bar, then and click Word Count.</p>
+                <p>Microsoft Word counts the number of words in a document while you type. Word can also count the following:</p>
+                <ul>
+                    <li>Pages</li>
+                    <li>Paragraphs</li>
+                    <li>Lines</li>
+                    <li>Characters, either including or excluding the spaces</li>
+                </ul>
+                <p>When the document is active, there is an automatic word count at the left bottom side of the Word application.</p>
+                
+                <div class="exercise-box">
+                    <ol>
+                        <li>In the Review tab, Proofing category, select Word Count</li>
+                        <li>A dialogue box window appears with all the statistics of the documents</li>
+                    </ol>
+                </div>
+                
+                <h3>Mail Merge</h3>
+                <p>Mail merge is a feature that allows you to create personalized documents for multiple recipients. It's commonly used for creating form letters, envelopes, labels, and emails.</p>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="professional-complete" onchange="updateProgress('professional', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Module Summary Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('summary')">
+                <h2><i class="fas fa-clipboard-list"></i> Module Summary</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="summary">
+                <h3>Key Concepts Covered</h3>
+                <ul>
+                    <li>Introduction to word processors and their interfaces</li>
+                    <li>Basic and advanced text editing techniques</li>
+                    <li>Working with templates for efficient document creation</li>
+                    <li>Different document views and their purposes</li>
+                    <li>Document security features</li>
+                    <li>Creating and formatting tables</li>
+                    <li>Advanced formatting features (images, text boxes, headers/footers)</li>
+                    <li>Background formatting and watermarks</li>
+                    <li>WordArt, Drop Caps, and 3D effects</li>
+                    <li>Professional presentation tools (spelling, grammar, thesaurus)</li>
+                </ul>
+                
+                <h3>Practical Skills Developed</h3>
+                <ul>
+                    <li>Navigating Microsoft Word and Google Docs interfaces</li>
+                    <li>Creating, editing, and formatting documents</li>
+                    <li>Applying security to protect sensitive documents</li>
+                    <li>Working with tables and formulas</li>
+                    <li>Enhancing documents with images and advanced formatting</li>
+                    <li>Using proofing tools for professional documents</li>
+                </ul>
+                
+                <div class="qa-box">
+                    <h3>Review Questions</h3>
+                    <ol>
+                        <li>What are the main components of the Microsoft Word interface?</li>
+                        <li>How can you change text to superscript using keyboard shortcuts?</li>
+                        <li>What is the purpose of document views in Word?</li>
+                        <li>How can you secure a document to prevent unauthorized access?</li>
+                        <li>What are the three methods for creating tables in Word?</li>
+                        <li>How do you add a watermark to a document?</li>
+                        <li>What is the difference between a header and a footer?</li>
+                        <li>How can you use the thesaurus to improve your writing?</li>
+                    </ol>
+                </div>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="summary-complete" onchange="updateProgress('summary', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="module-end">
+            <p>Congratulations on completing Module 3!</p>
+        </div>
+        
+        <footer>
+            <p>© 2023 JOSHCAB TRAINING INSTITUTE. All rights reserved.</p>
+            <p>Contact: +254 734 080 808 | Email: info@joshcab.com</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4mOkOIiQUk1Vv0q2kHq9q9Y8Y8w7Y8w8",
+            authDomain: "joshcab-training.firebaseapp.com",
+            projectId: "joshcab-training",
+            storageBucket: "joshcab-training.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef123456"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        // DOM Elements
+        const authModal = document.getElementById('authModal');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const signupBtn = document.getElementById('signupBtn');
+        const showLoginBtn = document.getElementById('showLoginBtn');
+        const showSignupBtn = document.getElementById('showSignupBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const authTabs = document.querySelectorAll('.auth-tab');
+        const userInfo = document.getElementById('userInfo');
+        const authButtons = document.getElementById('authButtons');
+        const userAvatar = document.getElementById('userAvatar');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        
+        // User progress data
+        let userProgress = {
+            overview: false,
+            intro: false,
+            'word-interface': false,
+            'online-editors': false,
+            'text-editing': false,
+            templates: false,
+            views: false,
+            security: false,
+            tables: false,
+            'advanced-formatting': false,
+            professional: false,
+            summary: false
+        };
+        
+        // Authentication state observer
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                // User is signed in
+                userInfo.style.display = 'flex';
+                authButtons.style.display = 'none';
+                userAvatar.textContent = user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase();
+                loadUserProgress(user.uid);
+            } else {
+                // User is signed out
+                userInfo.style.display = 'none';
+                authButtons.style.display = 'flex';
+            }
+        });
+        
+        // Auth tab switching
+        authTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.getAttribute('data-tab');
+                
+                // Update active tab
+                authTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Show corresponding form
+                if (tabName === 'login') {
+                    loginForm.classList.add('active');
+                    signupForm.classList.remove('active');
+                } else {
+                    signupForm.classList.add('active');
+                    loginForm.classList.remove('active');
+                }
+            });
+        });
+        
+        // Show login modal
+        showLoginBtn.addEventListener('click', () => {
+            authModal.classList.add('active');
+            loginForm.classList.add('active');
+            signupForm.classList.remove('active');
+            
+            // Update tabs
+            authTabs.forEach(t => t.classList.remove('active'));
+            document.querySelector('.auth-tab[data-tab="login"]').classList.add('active');
+        });
+        
+        // Show signup modal
+        showSignupBtn.addEventListener('click', () => {
+            authModal.classList.add('active');
+            signupForm.classList.add('active');
+            loginForm.classList.remove('active');
+            
+            // Update tabs
+            authTabs.forEach(t => t.classList.remove('active'));
+            document.querySelector('.auth-tab[data-tab="signup"]').classList.add('active');
+        });
+        
+        // Login
+        loginBtn.addEventListener('click', () => {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const error = document.getElementById('loginError');
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    authModal.classList.remove('active');
+                    error.style.display = 'none';
+                })
+                .catch(err => {
+                    error.textContent = err.message;
+                    error.style.display = 'block';
+                });
+        });
+        
+        // Signup
+        signupBtn.addEventListener('click', () => {
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const error = document.getElementById('signupError');
+            
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Update user profile
+                    return userCredential.user.updateProfile({
+                        displayName: name
+                    });
+                })
+                .then(() => {
+                    authModal.classList.remove('active');
+                    error.style.display = 'none';
+                })
+                .catch(err => {
+                    error.textContent = err.message;
+                    error.style.display = 'block';
+                });
+        });
+        
+        // Logout
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut();
+        });
+        
+        // Close modal when clicking outside
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                authModal.classList.remove('active');
+            }
+        });
+        
+        // Toggle card sections
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const header = section.parentElement.querySelector('.card-header');
+            const icon = header.querySelector('.fa-chevron-down');
+            
+            section.classList.toggle('active');
+            
+            if (section.classList.contains('active')) {
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+        
+        // Update progress
+        function updateProgress(section, isCompleted) {
+            if (!auth.currentUser) {
+                alert('Please log in to save your progress');
+                document.getElementById(`${section}-complete`).checked = false;
+                return;
+            }
+            
+            userProgress[section] = isCompleted;
+            calculateProgress();
+            
+            // Save to Firestore
+            if (auth.currentUser) {
+                db.collection('userProgress').doc(auth.currentUser.uid).set({
+                    module3: userProgress,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true })
+                .then(() => {
+                    console.log('Progress saved successfully');
+                })
+                .catch((error) => {
+                    console.error('Error saving progress: ', error);
+                });
+            }
+        }
+        
+        // Calculate and update progress
+        function calculateProgress() {
+            const totalSections = Object.keys(userProgress).length;
+            const completedSections = Object.values(userProgress).filter(Boolean).length;
+            const progressPercentage = Math.round((completedSections / totalSections) * 100);
+            
+            progressBar.style.width = `${progressPercentage}%`;
+            progressText.textContent = `${progressPercentage}% Complete`;
+            
+            // Update checkboxes
+            Object.keys(userProgress).forEach(section => {
+                const checkbox = document.getElementById(`${section}-complete`);
+                if (checkbox) {
+                    checkbox.checked = userProgress[section];
+                }
+            });
+        }
+        
+        // Load user progress from Firestore
+        function loadUserProgress(userId) {
+            db.collection('userProgress').doc(userId).get()
+            .then((doc) => {
+                if (doc.exists && doc.data().module3) {
+                    userProgress = doc.data().module3;
+                    calculateProgress();
+                    
+                    // Open the first incomplete section
+                    const firstIncomplete = Object.keys(userProgress).find(section => !userProgress[section]);
+                    if (firstIncomplete) {
+                        document.getElementById(firstIncomplete).classList.add('active');
+                    }
+                } else {
+                    // Initialize with default progress
+                    calculateProgress();
+                }
+            })
+            .catch((error) => {
+                console.error('Error loading progress: ', error);
+            });
+        }
+        
+        // Open the first section by default
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('overview').classList.add('active');
+        });
+    </script>
+    <!-- Add to head section -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a2b4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="JOSHCAB Training">
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+
+<!-- Add to body section (before closing body tag) -->
+<script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    
+                    // Check for updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        console.log('New service worker found...');
+                        
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('New content available; please refresh.');
+                                // You can show an update notification here
+                                showUpdateNotification();
+                            }
+                        });
+                    });
+                })
+                .catch(function(error) {
+                    console.log('ServiceWorker registration failed: ', error);
+                });
+        });
+
+        // Listen for claiming of service worker
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+                window.location.reload();
+                refreshing = true;
+            }
+        });
+    }
+
+    // Function to show update notification
+    function showUpdateNotification() {
+        if (confirm('New version available! Would you like to update?')) {
+            window.location.reload();
+        }
+    }
+
+    // Online/offline status detection
+    window.addEventListener('online', function() {
+        console.log('App is online');
+        // You can show a notification that app is back online
+        showOnlineStatus();
+    });
+
+    window.addEventListener('offline', function() {
+        console.log('App is offline');
+        showOfflineStatus();
+    });
+
+    function showOnlineStatus() {
+        // Create a subtle notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: #2ecc71;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 10000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+        notification.innerHTML = '<i class="fas fa-wifi"></i> Back online';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    function showOfflineStatus() {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: #e74c3c;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 10000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+        notification.innerHTML = '<i class="fas fa-wifi-slash"></i> You are offline';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+</script>
+</body>
+</html>

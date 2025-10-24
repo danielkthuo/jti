@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Module - JoshCab Training Institute</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <!-- Auth Manager -->
+    <script src="auth-manager.js"></script>
+    <!-- Add to head section -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a2b4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="JOSHCAB INSTITUTE">
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2c3e50;
+            --primary-dark: #1a252f;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #f8f9fa;
+            --dark: #333;
+            --gray: #6c757d;
+            --border: #e0e0e0;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+            --mobile-padding: 1rem;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f5f5f5;
+            padding-bottom: 80px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 100%;
+            padding: 0;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1rem var(--mobile-padding);
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .institute-info {
+            background: #e74c3c;
+            color: white;
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+
+        .module {
+            background: white;
+            margin: 1rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .module-header {
+            background: var(--secondary);
+            color: white;
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .module-header:hover {
+            background: #2980b9;
+        }
+
+        .module-header h2 {
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .module-content {
+            display: none;
+            padding: 0;
+        }
+
+        .module-content.active {
+            display: block;
+        }
+
+        .unit {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .unit:last-child {
+            border-bottom: none;
+        }
+
+        .unit-header {
+            background: var(--light);
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .unit-header:hover {
+            background: #e9ecef;
+        }
+
+        .unit-header h3 {
+            font-size: 1rem;
+            margin: 0;
+            color: var(--secondary);
+        }
+
+        .unit-content {
+            display: none;
+            padding: 0;
+        }
+
+        .unit-content.active {
+            display: block;
+        }
+
+        .lesson-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .lesson-item {
+            padding: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .lesson-item:hover {
+            background: var(--light);
+        }
+
+        .lesson-item:last-child {
+            border-bottom: none;
+        }
+
+        .lesson-item.completed .lesson-title {
+            text-decoration: line-through;
+            color: var(--gray);
+        }
+
+        .lesson-number {
+            background: var(--secondary);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .lesson-item.completed .lesson-number {
+            background: var(--gray);
+        }
+
+        .lesson-title {
+            font-size: 0.95rem;
+            color: var(--dark);
+            flex-grow: 1;
+        }
+
+        .lesson-content {
+            display: none;
+            padding: 1.2rem;
+            background: #f9f9f9;
+            border-top: 1px solid var(--border);
+        }
+
+        .lesson-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .lesson-content h4 {
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+            font-size: 1.05rem;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
+        }
+
+        .lesson-content p {
+            margin-bottom: 1rem;
+        }
+
+        .lesson-content ul, .lesson-content ol {
+            margin-left: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .lesson-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .keyboard-shortcut {
+            display: inline-block;
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 0.2rem 0.5rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            margin: 0.2rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .code-example {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 1rem 0;
+            overflow-x: auto;
+            border-left: 4px solid var(--accent);
+            font-size: 0.9rem;
+        }
+
+        .illustration {
+            width: 100%;
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 1rem 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+        }
+
+        .tip-box {
+            background: #e7f4ff;
+            border-left: 4px solid #2196F3;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .warning-box {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .icon {
+            transition: transform 0.3s ease;
+        }
+
+        .icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .progress {
+            height: 100%;
+            background: var(--secondary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .nav-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .nav-btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-btn:hover {
+            background: #2980b9;
+        }
+
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .search-container {
+            padding: 0.8rem;
+            background: white;
+            margin: 0.8rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 100px;
+            z-index: 99;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.7rem;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            outline: none;
+            padding-left: 2.5rem;
+        }
+
+        .search-input:focus {
+            border-color: var(--secondary);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        .completion-badge {
+            background: var(--accent);
+            color: white;
+            border-radius: 12px;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.7rem;
+            margin-left: 0.5rem;
+        }
+
+        /* Mobile-first responsive design */
+        @media (max-width: 768px) {
+            .header {
+                padding: 0.8rem var(--mobile-padding);
+            }
+            
+            .header h1 {
+                font-size: 1.2rem;
+            }
+            
+            .module {
+                margin: 0.8rem;
+            }
+            
+            .module-header, .unit-header {
+                padding: 0.8rem;
+            }
+            
+            .module-header h2 {
+                font-size: 1rem;
+            }
+            
+            .unit-header h3 {
+                font-size: 0.9rem;
+            }
+            
+            .lesson-item {
+                padding: 0.8rem;
+            }
+            
+            .lesson-title {
+                font-size: 0.9rem;
+            }
+            
+            .lesson-content {
+                padding: 1rem;
+            }
+            
+            .nav-btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.85rem;
+            }
+            
+            .search-container {
+                margin: 0.8rem;
+                padding: 0.7rem;
+            }
+            
+            .keyboard-shortcut {
+                font-size: 0.8rem;
+                padding: 0.15rem 0.4rem;
+            }
+            
+            .code-example {
+                padding: 0.8rem;
+                font-size: 0.85rem;
+            }
+            
+            .tip-box, .warning-box {
+                padding: 0.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.1rem;
+            }
+            
+            .module-header h2 {
+                font-size: 0.95rem;
+            }
+            
+            .unit-header h3 {
+                font-size: 0.85rem;
+            }
+            
+            .lesson-title {
+                font-size: 0.85rem;
+            }
+            
+            .lesson-number {
+                width: 24px;
+                height: 24px;
+                font-size: 0.75rem;
+                margin-right: 0.8rem;
+            }
+            
+            .nav-btn {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Animation for smooth transitions */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .module-content.active,
+        .unit-content.active {
+            animation: fadeIn 0.3s ease;
+        }
+
+        .function-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .function-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--secondary);
+        }
+
+        .function-card h5 {
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .function-card p {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .function-syntax {
+            background: #f5f5f5;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+
+        /* Mobile-specific grid adjustments */
+        @media (max-width: 768px) {
+            .function-grid {
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+            }
+            
+            .function-card {
+                padding: 0.8rem;
+            }
+        }
+
+        /* Enhanced illustration styling */
+        .illustration-container {
+            position: relative;
+            margin: 1.2rem 0;
+            text-align: center;
+        }
+
+        .illustration-caption {
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        /* Mobile touch improvements */
+        .lesson-item, .module-header, .unit-header {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Better mobile scrolling */
+        .lesson-content.active {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        /* Mobile-friendly tables */
+        .responsive-table {
+            width: 100%;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .responsive-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .responsive-table th, .responsive-table td {
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .responsive-table th {
+            background-color: var(--light);
+        }
+
+        .data-type-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .data-type-table th, .data-type-table td {
+            padding: 0.7rem;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .data-type-table th {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .data-type-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .access-interface {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .access-interface .component {
+            margin-bottom: 0.8rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px dashed #dee2e6;
+        }
+
+        .access-interface .component:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar">
+        <div class="progress" id="progress"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>JoshCab Training Institute</h1>
+            <p>Database Module - Microsoft Access</p>
+        </div>
+
+        <div class="institute-info">
+            <i class="fas fa-phone-alt"></i> 0754-080808 / 0722-699212 &nbsp; | &nbsp; 
+            <i class="fas fa-desktop"></i> Computer Training College
+        </div>
+
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="search-input" placeholder="Search database concepts..." id="search-input">
+        </div>
+
+        <!-- Module 6 -->
+        <div class="module">
+            <div class="module-header" onclick="toggleModule(6)">
+                <h2>Module 6: Database Management with Microsoft Access</h2>
+                <span class="icon">▼</span>
+            </div>
+            <div class="module-content" id="module-6">
+                <!-- Unit 6.1 -->
+                <div class="unit">
+                    <div class="unit-header" onclick="toggleUnit(6, 1)">
+                        <h3>Unit 6.1: Introduction to Databases</h3>
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="unit-content" id="unit-6-1">
+                        <ul class="lesson-list">
+                            <li class="lesson-item" onclick="toggleLesson(6, 1, 1)">
+                                <span class="lesson-number">1</span>
+                                <span class="lesson-title">Database Fundamentals</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-6-1-1">
+                                <h4>What is a Database?</h4>
+                                <p>A database is a collection of information that is organized in a central location so that it can be accessed, managed and updated. Databases are a collection of tables with data stored in rows and columns.</p>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-database" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Database structure with tables, records, and fields</div>
+                                </div>
+                                
+                                <p><strong>Key Database Concepts:</strong></p>
+                                <ul>
+                                    <li><strong>Table:</strong> A collection of data presented in rows and columns</li>
+                                    <li><strong>Record:</strong> A row in a database table containing information about something</li>
+                                    <li><strong>Field:</strong> A column in a database table representing an item type</li>
+                                    <li><strong>Primary Key:</strong> A unique identifier for each record in the database</li>
+                                </ul>
+                                
+                                <div class="tip-box">
+                                    <strong>Database Evolution:</strong> The first databases were implemented in the 1960s and 1970s using networked or flat file models. The relational database model was introduced in the late 1970s as a more flexible approach.
+                                </div>
+                                
+                                <h4>Database Management Systems (DBMS)</h4>
+                                <p>A Database Management System (DBMS) is computer software used to create and manage databases. Common DBMS applications include:</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Microsoft Access</h5>
+                                        <p>Desktop database system for small to medium applications</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>MySQL</h5>
+                                        <p>Open-source relational database management system</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Oracle</h5>
+                                        <p>Enterprise-level database management system</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>SQL Server</h5>
+                                        <p>Microsoft's enterprise database management system</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(6, 1, 2)">
+                                <span class="lesson-number">2</span>
+                                <span class="lesson-title">Database Structure & Design</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-6-1-2">
+                                <h4>Database Design Principles</h4>
+                                <p>Proper database design is crucial for creating efficient, maintainable databases.</p>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-sitemap" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Database design with relationships between tables</div>
+                                </div>
+                                
+                                <p><strong>Database Design Steps:</strong></p>
+                                <ol>
+                                    <li><strong>Identify the purpose</strong> of the database</li>
+                                    <li><strong>Collect and organize</strong> the required information</li>
+                                    <li><strong>Divide information</strong> into tables</li>
+                                    <li><strong>Create fields</strong> (columns) for each table</li>
+                                    <li><strong>Specify primary keys</strong> for each table</li>
+                                    <li><strong>Set up relationships</strong> between tables</li>
+                                </ol>
+                                
+                                <div class="warning-box">
+                                    <strong>Avoid Data Redundancy:</strong> Duplicate information increases the likelihood of data inconsistency. Always design databases to minimize redundancy.
+                                </div>
+                                
+                                <h4>Database Administrator Role</h4>
+                                <p>The Database Administrator (DBA) is responsible for:</p>
+                                <ul>
+                                    <li>Database design and implementation</li>
+                                    <li>Security and access control</li>
+                                    <li>Backup and recovery procedures</li>
+                                    <li>Performance monitoring and optimization</li>
+                                    <li>Troubleshooting database issues</li>
+                                </ul>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(6, 1, 3)">
+                                <span class="lesson-number">3</span>
+                                <span class="lesson-title">Data Types & Field Properties</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-6-1-3">
+                                <h4>Understanding Data Types</h4>
+                                <p>Each field in a database table must have a data type that defines the kind of data it can store.</p>
+                                
+                                <table class="data-type-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Data Type</th>
+                                            <th>Description</th>
+                                            <th>Example</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Short Text</strong></td>
+                                            <td>Stores alphanumeric data (names, titles, etc.)</td>
+                                            <td>John Smith</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Long Text</strong></td>
+                                            <td>Stores large amounts of alphanumeric data</td>
+                                            <td>Product descriptions, comments</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Number</strong></td>
+                                            <td>Stores numeric data</td>
+                                            <td>25, 150.75</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Date/Time</strong></td>
+                                            <td>Stores dates and times</td>
+                                            <td>12/05/2023, 14:30</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Currency</strong></td>
+                                            <td>Stores monetary data with 4 decimal places</td>
+                                            <td>$25.99, €150.50</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>AutoNumber</strong></td>
+                                            <td>Unique value generated by Access for each record</td>
+                                            <td>1, 2, 3, ...</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Yes/No</strong></td>
+                                            <td>Boolean (true/false) data</td>
+                                            <td>Yes, No</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Attachment</strong></td>
+                                            <td>Attach files like pictures, documents</td>
+                                            <td>photo.jpg, document.pdf</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Calculated</strong></td>
+                                            <td>Expression using data from other fields</td>
+                                            <td>Price * Quantity</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                
+                                <h4>Field Properties</h4>
+                                <p>Field properties control the behavior and characteristics of fields in a table:</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Field Size</h5>
+                                        <p>Sets the maximum size for text fields or the type for number fields</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Format</h5>
+                                        <p>Defines how data is displayed</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Input Mask</h5>
+                                        <p>Provides a pattern for data entry</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Default Value</h5>
+                                        <p>Automatically enters a value in new records</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Validation Rule</h5>
+                                        <p>Limits what can be entered in the field</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Required</h5>
+                                        <p>Specifies whether a value is required</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Unit 6.2 -->
+                <div class="unit">
+                    <div class="unit-header" onclick="toggleUnit(6, 2)">
+                        <h3>Unit 6.2: Working with Tables & Relationships</h3>
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="unit-content" id="unit-6-2">
+                        <ul class="lesson-list">
+                            <li class="lesson-item" onclick="toggleLesson(6, 2, 1)">
+                                <span class="lesson-number">1</span>
+                                <span class="lesson-title">Creating Tables in Access</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-6-2-1">
+                                <h4>Microsoft Access Interface</h4>
+                                <p>When you start Access, you'll see the Backstage view where you can create new databases or open existing ones.</p>
+                                
+                                <div class="access-interface">
+                                    <div class="component">
+                                        <strong>Title Bar:</strong> Shows the name of the open database
+                                    </div>
+                                    <div class="component">
+                                        <strong>Ribbon:</strong> Collection of tabbed toolbars (Home, Create, External Data, Database Tools)
+                                    </div>
+                                    <div class="component">
+                                        <strong>Navigation Pane:</strong> Contains all database objects organized by type
+                                    </div>
+                                    <div class="component">
+                                        <strong>Workspace:</strong> Area where you work with database objects
+                                    </div>
+                                </div>
+                                
+                                <h4>Creating a New Database</h4>
+                                <p>To create a new database in Access:</p>
+                                <ol>
+                                    <li>Click <strong>File → New</strong></li>
+                                    <li>Select <strong>Blank Database</strong></li>
+                                    <li>Enter a file name and choose a location</li>
+                                    <li>Click <strong>Create</strong></li>
+                                </ol>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-table" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Creating a new table in Design View</div>
+                                </div>
+                                
+                                <h4>Table Views</h4>
+                                <p>Access provides different views for working with tables:</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Design View</h5>
+                                        <p>Used to create and modify table structure (fields, data types, properties)</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Datasheet View</h5>
+                                        <p>Used to enter, edit, and view table records</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="tip-box">
+                                    <strong>Pro Tip:</strong> Always design your table structure in Design View before entering data in Datasheet View.
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(6, 2, 2)">
+                                <span class="lesson-number">2</span>
+                                <span class="lesson-title">Table Relationships</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-6-2-2">
+                                <h4>Understanding Table Keys</h4>
+                                <p>Keys are used to establish relationships between tables:</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Primary Key</h5>
+                                        <p>A unique identifier for each record in a table. No two records can have the same primary key.</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Foreign Key</h5>
+                                        <p>A field in one table that corresponds to values in the primary key of another table.</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-link" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Table relationships using primary and foreign keys</div>
+                                </div>
+                                
+                                <h4>Types of Table Relationships</h4>
+                                <p>There are three main types of relationships in databases:</p>
+                                
+                                <table class="data-type-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Relationship Type</th>
+                                            <th>Description</th>
+                                            <th>Example</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>One-to-One (1:1)</strong></td>
+                                            <td>One record in Table A relates to one record in Table B</td>
+                                            <td>Employee to EmployeeDetails</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>One-to-Many (1:M)</strong></td>
+                                            <td>One record in Table A relates to many records in Table B</td>
+                                            <td>Customer to Orders</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Many-to-Many (M:M)</strong></td>
+                                            <td>Many records in Table A relate to many records in Table B</td>
+                                            <td>Students to Courses</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                
+                                <h4>Creating Relationships in Access</h4>
+                                <p>To create relationships between tables:</p>
+                                <ol>
+                                    <li>Open the database</li>
+                                    <li>Go to the <strong>Database Tools</strong> tab</li>
+                                    <li>Click <strong>Relationships</strong></li>
+                                    <li>Add the tables you want to relate</li>
+                                    <li>Drag the primary key field from one table to the foreign key field in another table</li>
+                                    <li>Configure relationship options in the dialog box</li>
+                                    <li>Click <strong>Create</strong></li>
+                                </ol>
+                                
+                                <div class="warning-box">
+                                    <strong>Referential Integrity:</strong> When creating relationships, consider enforcing referential integrity to maintain data consistency between related tables.
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Unit 6.3 -->
+                <div class="unit">
+                    <div class="unit-header" onclick="toggleUnit(6, 3)">
+                        <h3>Unit 6.3: Queries, Forms & Reports</h3>
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="unit-content" id="unit-6-3">
+                        <ul class="lesson-list">
+                            <li class="lesson-item" onclick="toggleLesson(6, 3, 1)">
+                                <span class="lesson-number">1</span>
+                                <span class="lesson-title">Working with Queries</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-6-3-1">
+                                <h4>Understanding Queries</h4>
+                                <p>A query is a request for data results or for action on data. Queries allow you to:</p>
+                                
+                                <ul>
+                                    <li>Filter data based on specific criteria</li>
+                                    <li>Perform calculations on data</li>
+                                    <li>Summarize data from multiple tables</li>
+                                    <li>Combine data from related tables</li>
+                                </ul>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-search" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Query filtering data from multiple tables</div>
+                                </div>
+                                
+                                <h4>Types of Queries</h4>
+                                <p>Access provides several types of queries:</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Select Query</h5>
+                                        <p>Retrieves data from one or more tables based on specified criteria</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Parameter Query</h5>
+                                        <p>Prompts for criteria when run</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Action Query</h5>
+                                        <p>Makes changes to data (update, delete, append)</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Crosstab Query</h5>
+                                        <p>Summarizes data in a spreadsheet-like format</p>
+                                    </div>
+                                </div>
+                                
+                                <h4>Creating Queries</h4>
+                                <p>You can create queries using:</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Query Wizard</h5>
+                                        <p>Guides you through creating simple queries</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Query Design</h5>
+                                        <p>Gives you full control over query design and criteria</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="tip-box">
+                                    <strong>Dynamic Results:</strong> When you run a query, Access creates a recordset - a dynamic set of records that reflects any changes made to the underlying tables.
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(6, 3, 2)">
+                                <span class="lesson-number">2</span>
+                                <span class="lesson-title">Creating Forms</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-6-3-2">
+                                <h4>Understanding Forms</h4>
+                                <p>Forms provide a user-friendly interface for entering, editing, and viewing data. Benefits of using forms include:</p>
+                                
+                                <ul>
+                                    <li>Easier data entry than working directly with tables</li>
+                                    <li>Ability to show selected fields from a record</li>
+                                    <li>Customized layout and design</li>
+                                    <li>Data validation and input controls</li>
+                                </ul>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-window-restore" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Custom form for data entry</div>
+                                </div>
+                                
+                                <h4>Form Controls</h4>
+                                <p>Forms use different types of controls:</p>
+                                
+                                <table class="data-type-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Control Type</th>
+                                            <th>Description</th>
+                                            <th>Example</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Bound Control</strong></td>
+                                            <td>Connected to a field in a table or query</td>
+                                            <td>Text box showing customer name</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Unbound Control</strong></td>
+                                            <td>Not connected to any data source</td>
+                                            <td>Label with form title</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Calculated Control</strong></td>
+                                            <td>Uses an expression as data source</td>
+                                            <td>Text box showing total price</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                
+                                <h4>Creating Forms</h4>
+                                <p>Access provides several ways to create forms:</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Form Tool</h5>
+                                        <p>Creates a simple form with one click</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Form Wizard</h5>
+                                        <p>Guides you through form creation with customization options</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Blank Form</h5>
+                                        <p>Starts with a blank form for complete design control</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Form Design</h5>
+                                        <p>Opens in Design view for advanced customization</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(6, 3, 3)">
+                                <span class="lesson-number">3</span>
+                                <span class="lesson-title">Generating Reports</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-6-3-3">
+                                <h4>Understanding Reports</h4>
+                                <p>Reports are used to present data in a formatted, printable layout. Reports are ideal for:</p>
+                                
+                                <ul>
+                                    <li>Summarizing data for decision-making</li>
+                                    <li>Creating professional-looking documents</li>
+                                    <li>Sharing database information with others</li>
+                                    <li>Archiving data in a readable format</li>
+                                </ul>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-file-alt" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Professional report with data grouping and summary</div>
+                                </div>
+                                
+                                <h4>Report Sections</h4>
+                                <p>Reports are divided into sections that control where information appears:</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Report Header</h5>
+                                        <p>Appears once at the beginning of the report</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Page Header</h5>
+                                        <p>Appears at the top of every page</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Detail Section</h5>
+                                        <p>Contains the main body of the report</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Page Footer</h5>
+                                        <p>Appears at the bottom of every page</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Report Footer</h5>
+                                        <p>Appears once at the end of the report</p>
+                                    </div>
+                                </div>
+                                
+                                <h4>Creating Reports</h4>
+                                <p>Access provides several ways to create reports:</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Report Tool</h5>
+                                        <p>Creates a simple tabular report with one click</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Report Wizard</h5>
+                                        <p>Guides you through report creation with layout options</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Blank Report</h5>
+                                        <p>Starts with a blank report for complete design control</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Report Design</h5>
+                                        <p>Opens in Design view for advanced customization</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="tip-box">
+                                    <strong>Report Source:</strong> Reports can be based on tables or queries. Using queries as the source allows you to create reports with filtered or calculated data.
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Unit 6.4 -->
+                <div class="unit">
+                    <div class="unit-header" onclick="toggleUnit(6, 4)">
+                        <h3>Unit 6.4: Advanced Database Features</h3>
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="unit-content" id="unit-6-4">
+                        <ul class="lesson-list">
+                            <li class="lesson-item" onclick="toggleLesson(6, 4, 1)">
+                                <span class="lesson-number">1</span>
+                                <span class="lesson-title">Working with External Data</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-6-4-1">
+                                <h4>Importing and Exporting Data</h4>
+                                <p>Access allows you to work with data from various external sources:</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Import from Excel</h5>
+                                        <p>Bring Excel data into Access as a new table</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Export to Excel</h5>
+                                        <p>Send Access data to Excel for further analysis</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Link to Excel</h5>
+                                        <p>Create a connection to Excel data without importing</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Text Files</h5>
+                                        <p>Import from or export to CSV and other text formats</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-file-export" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Importing data from Excel to Access</div>
+                                </div>
+                                
+                                <h4>Import vs. Link</h4>
+                                <p>When working with external data, you have two options:</p>
+                                
+                                <table class="data-type-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Method</th>
+                                            <th>Description</th>
+                                            <th>When to Use</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Import</strong></td>
+                                            <td>Creates a copy of the data in Access</td>
+                                            <td>When you need to modify the data in Access</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Link</strong></td>
+                                            <td>Creates a connection to the external data</td>
+                                            <td>When data is maintained in the external source</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                
+                                <div class="warning-box">
+                                    <strong>Linked Data Limitations:</strong> When you link to external data, you can view and query the data in Access, but you cannot modify the table structure.
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(6, 4, 2)">
+                                <span class="lesson-number">2</span>
+                                <span class="lesson-title">Working with Macros</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-6-4-2">
+                                <h4>Understanding Macros</h4>
+                                <p>A macro is a series of commands that can be used to automate repetitive tasks in Access.</p>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-robot" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Macros automate database tasks</div>
+                                </div>
+                                
+                                <p><strong>Common uses for macros:</strong></p>
+                                <ul>
+                                    <li>Opening forms and reports automatically</li>
+                                    <li>Running queries with one click</li>
+                                    <li>Validating data entry</li>
+                                    <li>Automating import/export processes</li>
+                                    <li>Creating custom navigation systems</li>
+                                </ul>
+                                
+                                <h4>Macro Security</h4>
+                                <p>Because macros can contain potentially harmful code, Access provides several security settings:</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Disable all macros</h5>
+                                        <p>Most restrictive - no macros run</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Disable with notification</h5>
+                                        <p>Default setting - user can enable macros</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Enable digitally signed macros</h5>
+                                        <p>Only runs macros from trusted sources</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Enable all macros</h5>
+                                        <p>Least secure - all macros run automatically</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="tip-box">
+                                    <strong>Security Best Practice:</strong> Use the "Disable all macros with notification" setting for the best balance of security and functionality.
+                                </div>
+                                
+                                <h4>Creating Macros</h4>
+                                <p>To create a macro in Access:</p>
+                                <ol>
+                                    <li>Go to the <strong>Create</strong> tab</li>
+                                    <li>Click <strong>Macro</strong> in the Macros & Code group</li>
+                                    <li>Add actions from the Action Catalog</li>
+                                    <li>Configure action arguments</li>
+                                    <li>Save the macro</li>
+                                </ol>
+                                
+                                <div class="warning-box">
+                                    <strong>Macro Security Warning:</strong> When you open a database containing macros, Access displays a security warning. You must enable content to run the macros.
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-buttons">
+        <button class="nav-btn" onclick="navigateToPrevious()">
+            <i class="fas fa-arrow-left"></i> Previous Module
+        </button>
+        <button class="nav-btn" onclick="navigateToNext()">
+            Next Module <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+
+    <script>
+        // Initialize the module as open by default
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleModule(6);
+            updateProgress();
+            
+            // Add search functionality
+            document.getElementById('search-input').addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                if (searchTerm.length < 2) return;
+                
+                const lessons = document.querySelectorAll('.lesson-item');
+                lessons.forEach(lesson => {
+                    const title = lesson.querySelector('.lesson-title').textContent.toLowerCase();
+                    if (title.includes(searchTerm)) {
+                        lesson.style.backgroundColor = '#fff3cd';
+                        // Expand parent units and modules
+                        const unit = lesson.closest('.unit');
+                        const module = lesson.closest('.module');
+                        if (unit) {
+                            const unitHeader = unit.querySelector('.unit-header');
+                            if (unitHeader) unitHeader.click();
+                        }
+                        if (module) {
+                            const moduleHeader = module.querySelector('.module-header');
+                            if (moduleHeader) moduleHeader.click();
+                        }
+                    } else {
+                        lesson.style.backgroundColor = '';
+                    }
+                });
+            });
+        });
+
+        function toggleModule(moduleNum) {
+            const moduleContent = document.getElementById(`module-${moduleNum}`);
+            const icon = document.querySelector(`#module-${moduleNum}`).previousElementSibling.querySelector('.icon');
+            
+            if (moduleContent.classList.contains('active')) {
+                moduleContent.classList.remove('active');
+                icon.classList.remove('rotated');
+            } else {
+                // Close other modules if needed
+                document.querySelectorAll('.module-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.querySelectorAll('.module-header .icon').forEach(moduleIcon => {
+                    moduleIcon.classList.remove('rotated');
+                });
+                
+                moduleContent.classList.add('active');
+                icon.classList.add('rotated');
+            }
+            updateProgress();
+        }
+
+        function toggleUnit(moduleNum, unitNum) {
+            const unitContent = document.getElementById(`unit-${moduleNum}-${unitNum}`);
+            const icon = document.querySelector(`#unit-${moduleNum}-${unitNum}`).previousElementSibling.querySelector('.icon');
+            
+            if (unitContent.classList.contains('active')) {
+                unitContent.classList.remove('active');
+                icon.classList.remove('rotated');
+            } else {
+                // Close other units in the same module if needed
+                document.querySelectorAll(`#module-${moduleNum} .unit-content`).forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.querySelectorAll(`#module-${moduleNum} .unit-header .icon`).forEach(unitIcon => {
+                    unitIcon.classList.remove('rotated');
+                });
+                
+                unitContent.classList.add('active');
+                icon.classList.add('rotated');
+            }
+            updateProgress();
+        }
+
+        function toggleLesson(moduleNum, unitNum, lessonNum) {
+            const lessonContent = document.getElementById(`lesson-${moduleNum}-${unitNum}-${lessonNum}`);
+            const lessonItem = document.querySelector(`#lesson-${moduleNum}-${unitNum}-${lessonNum}`).previousElementSibling;
+            
+            if (lessonContent.classList.contains('active')) {
+                lessonContent.classList.remove('active');
+                lessonItem.classList.remove('completed');
+            } else {
+                // Close other lessons in the same unit if needed
+                document.querySelectorAll(`#unit-${moduleNum}-${unitNum} .lesson-content`).forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.querySelectorAll(`#unit-${moduleNum}-${unitNum} .lesson-item`).forEach(item => {
+                    item.classList.remove('completed');
+                });
+                
+                lessonContent.classList.add('active');
+                lessonItem.classList.add('completed');
+            }
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const totalLessons = document.querySelectorAll('.lesson-item').length;
+            const completedLessons = document.querySelectorAll('.lesson-item.completed').length;
+            const progressPercentage = (completedLessons / totalLessons) * 100;
+            
+            document.getElementById('progress').style.width = `${progressPercentage}%`;
+        }
+
+        function navigateToPrevious() {
+            alert('Navigating to previous module...');
+            // In a real application, this would redirect to the previous module
+        }
+
+        function navigateToNext() {
+            alert('Navigating to next module...');
+            // In a real application, this would redirect to the next module
+        }
+    </script>
+    <!-- Add to head section -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a2b4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="JOSHCAB Training">
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+
+<!-- Add to body section (before closing body tag) -->
+<script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    
+                    // Check for updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        console.log('New service worker found...');
+                        
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('New content available; please refresh.');
+                                // You can show an update notification here
+                                showUpdateNotification();
+                            }
+                        });
+                    });
+                })
+                .catch(function(error) {
+                    console.log('ServiceWorker registration failed: ', error);
+                });
+        });
+
+        // Listen for claiming of service worker
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+                window.location.reload();
+                refreshing = true;
+            }
+        });
+    }
+
+    // Function to show update notification
+    function showUpdateNotification() {
+        if (confirm('New version available! Would you like to update?')) {
+            window.location.reload();
+        }
+    }
+
+    // Online/offline status detection
+    window.addEventListener('online', function() {
+        console.log('App is online');
+        // You can show a notification that app is back online
+        showOnlineStatus();
+    });
+
+    window.addEventListener('offline', function() {
+        console.log('App is offline');
+        showOfflineStatus();
+    });
+
+    function showOnlineStatus() {
+        // Create a subtle notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: #2ecc71;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 10000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+        notification.innerHTML = '<i class="fas fa-wifi"></i> Back online';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    function showOfflineStatus() {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: #e74c3c;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 10000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+        notification.innerHTML = '<i class="fas fa-wifi-slash"></i> You are offline';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+</script>
+</body>
+</html>

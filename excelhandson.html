@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Hands-On Practice Module</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <!-- Auth Manager -->
+    <script src="auth-manager.js"></script>
+    <!-- Add to head section -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a2b4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="JOSHCAB INSTITUTE">
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <style>
+        /* Add your module styles here */
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .module-header { background: #1a2b4a; color: white; padding: 20px; border-radius: 10px; }
+        .content { background: #f5f7fa; padding: 20px; margin-top: 20px; border-radius: 10px; }
+        .access-denied { text-align: center; padding: 50px; color: #e74c3c; }
+    </style>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #217346;
+            --primary-dark: #1a5c36;
+            --secondary: #2c7c4c;
+            --accent: #ff6b00;
+            --light: #f8f9fa;
+            --dark: #333;
+            --gray: #6c757d;
+            --border: #e0e0e0;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+            --mobile-padding: 1rem;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f5f5f5;
+            padding-bottom: 80px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 var(--mobile-padding);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1.5rem var(--mobile-padding);
+            text-align: center;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .module-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .practice-module {
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .practice-module:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+
+        .module-header {
+            background: var(--secondary);
+            color: white;
+            padding: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .module-icon {
+            font-size: 1.5rem;
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .module-header h2 {
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .module-content {
+            padding: 1.5rem;
+        }
+
+        .module-description {
+            margin-bottom: 1.2rem;
+            color: var(--gray);
+        }
+
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .skill-tag {
+            background: var(--light);
+            padding: 0.3rem 0.7rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--secondary);
+            border: 1px solid var(--border);
+        }
+
+        .time-estimate {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.2rem;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .difficulty {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .difficulty-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .difficulty-stars {
+            display: flex;
+            gap: 0.2rem;
+        }
+
+        .star {
+            color: #ddd;
+        }
+
+        .star.filled {
+            color: var(--accent);
+        }
+
+        .module-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .btn {
+            padding: 0.9rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--secondary);
+            border: 1px solid var(--secondary);
+        }
+
+        .btn-outline:hover {
+            background: var(--light);
+        }
+
+        .exercise-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            width: 100%;
+        }
+
+        .exercise-section h2 {
+            color: var(--secondary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--accent);
+            font-size: 1.5rem;
+        }
+
+        .exercise-steps {
+            margin: 1.5rem 0;
+        }
+
+        .step {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+            padding-bottom: 1.2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .step:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .step-number {
+            width: 36px;
+            height: 36px;
+            background: var(--secondary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+            font-size: 1rem;
+        }
+
+        .step-content h4 {
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+            font-size: 1.1rem;
+        }
+
+        .step-content p {
+            color: var(--gray);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .formula-example {
+            background: #e7f3ff;
+            border-left: 4px solid #4a90e2;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .formula {
+            font-family: monospace;
+            background: white;
+            padding: 0.8rem;
+            border-radius: 4px;
+            margin: 0.5rem 0;
+            border: 1px solid #d1e7ff;
+            font-size: 0.95rem;
+            overflow-x: auto;
+        }
+
+        .tip-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .download-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            width: 100%;
+        }
+
+        .download-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .download-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .download-card:hover {
+            border-color: var(--secondary);
+            transform: translateY(-3px);
+        }
+
+        .download-icon {
+            font-size: 2.5rem;
+            color: var(--secondary);
+            margin-bottom: 0.8rem;
+        }
+
+        .download-card h4 {
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+            font-size: 1.2rem;
+        }
+
+        .download-card p {
+            color: var(--gray);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .assessment-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            width: 100%;
+        }
+
+        .skill-meter {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .skill-level {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 0.8rem 1rem;
+            background: var(--light);
+            border-radius: 5px;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .skill-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .skill-progress {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            flex-grow: 1;
+        }
+
+        .progress {
+            height: 100%;
+            background: var(--secondary);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .progress-percent {
+            font-weight: bold;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        .success-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            left: 20px;
+            background: var(--secondary);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 5px;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(-100%); opacity: 0; }
+        }
+
+        /* Desktop styles */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 1200px;
+            }
+            
+            .module-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .module-actions {
+                flex-direction: row;
+            }
+            
+            .btn {
+                width: auto;
+                flex: 1;
+            }
+            
+            .download-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .skill-level {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .progress-bar {
+                width: 200px;
+            }
+            
+            .success-message {
+                right: 20px;
+                left: auto;
+                max-width: 400px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .download-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Excel Hands-On Practice Modules</h1>
+            <p>Apply your Excel skills with real-world scenarios and downloadable practice files</p>
+        </div>
+
+        <div class="module-grid">
+            <!-- Budget Tracker Module -->
+            <div class="practice-module">
+                <div class="module-header">
+                    <div class="module-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <h2>Personal Budget Tracker</h2>
+                </div>
+                <div class="module-content">
+                    <p class="module-description">Create a comprehensive personal budget with automated categorization, expense tracking, and monthly reporting.</p>
+                    
+                    <div class="skills-list">
+                        <span class="skill-tag">Formulas</span>
+                        <span class="skill-tag">Charts</span>
+                        <span class="skill-tag">Conditional Formatting</span>
+                        <span class="skill-tag">Pivot Tables</span>
+                    </div>
+                    
+                    <div class="time-estimate">
+                        <i class="far fa-clock"></i>
+                        <span>Estimated time: 45-60 minutes</span>
+                    </div>
+                    
+                    <div class="difficulty">
+                        <span class="difficulty-label">Difficulty:</span>
+                        <div class="difficulty-stars">
+                            <span class="star filled"><i class="fas fa-star"></i></span>
+                            <span class="star filled"><i class="fas fa-star"></i></span>
+                            <span class="star"><i class="fas fa-star"></i></span>
+                            <span class="star"><i class="fas fa-star"></i></span>
+                            <span class="star"><i class="fas fa-star"></i></span>
+                        </div>
+                    </div>
+                    
+                    <div class="module-actions">
+                        <button class="btn btn-primary" onclick="openExercise('budget')">
+                            <i class="fas fa-play-circle"></i> Start Exercise
+                        </button>
+                        <button class="btn btn-outline" onclick="downloadFile('budget-template.xlsx')">
+                            <i class="fas fa-download"></i> Template
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Dashboard Module -->
+            <div class="practice-module">
+                <div class="module-header">
+                    <div class="module-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h2>Sales Performance Dashboard</h2>
+                </div>
+                <div class="module-content">
+                    <p class="module-description">Build an interactive sales dashboard with filters, KPIs, and visualizations to track team performance.</p>
+                    
+                    <div class="skills-list">
+                        <span class="skill-tag">Pivot Tables</span>
+                        <span class="skill-tag">Slicers</span>
+                        <span class="skill-tag">Charts</span>
+                        <span class="skill-tag">XLOOKUP</span>
+                    </div>
+                    
+                    <div class="time-estimate">
+                        <i class="far fa-clock"></i>
+                        <span>Estimated time: 60-75 minutes</span>
+                    </div>
+                    
+                    <div class="difficulty">
+                        <span class="difficulty-label">Difficulty:</span>
+                        <div class="difficulty-stars">
+                            <span class="star filled"><i class="fas fa-star"></i></span>
+                            <span class="star filled"><i class="fas fa-star"></i></span>
+                            <span class="star filled"><i class="fas fa-star"></i></span>
+                            <span class="star"><i class="fas fa-star"></i></span>
+                            <span class="star"><i class="fas fa-star"></i></span>
+                        </div>
+                    </div>
+                    
+                    <div class="module-actions">
+                        <button class="btn btn-primary" onclick="openExercise('sales')">
+                            <i class="fas fa-play-circle"></i> Start Exercise
+                        </button>
+                        <button class="btn btn-outline" onclick="downloadFile('sales-data.xlsx')">
+                            <i class="fas fa-download"></i> Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Management Module -->
+            <div class="practice-module">
+                <div class="module-header">
+                    <div class="module-icon">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                    <h2>Inventory Management System</h2>
+                </div>
+                <div class="module-content">
+                    <p class="module-description">Develop a complete inventory system with stock alerts, supplier tracking, and reorder management.</p>
+                    
+                    <div class="skills-list">
+                        <span class="skill-tag">Data Validation</span>
+                        <span class="skill-tag">Conditional Formatting</span>
+                        <span class="skill-tag">IF Statements</span>
+                        <span class="skill-tag">Formulas</span>
+                    </div>
+                    
+                    <div class="time-estimate">
+                        <i class="far fa-clock"></i>
+                        <span>Estimated time: 50-65 minutes</span>
+                    </div>
+                    
+                    <div class="difficulty">
+                        <span class="difficulty-label">Difficulty:</span>
+                        <div class="difficulty-stars">
+                            <span class="star filled"><i class="fas fa-star"></i></span>
+                            <span class="star filled"><i class="fas fa-star"></i></span>
+                            <span class="star filled"><i class="fas fa-star"></i></span>
+                            <span class="star"><i class="fas fa-star"></i></span>
+                            <span class="star"><i class="fas fa-star"></i></span>
+                        </div>
+                    </div>
+                    
+                    <div class="module-actions">
+                        <button class="btn btn-primary" onclick="openExercise('inventory')">
+                            <i class="fas fa-play-circle"></i> Start Exercise
+                        </button>
+                        <button class="btn btn-outline" onclick="downloadFile('inventory-template.xlsx')">
+                            <i class="fas fa-download"></i> Template
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Analysis Module -->
+            <div class="practice-module">
+                <div class="module-header">
+                    <div class="module-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h2>Data Analysis & Reporting</h2>
+                </div>
+                <div class="module-content">
+                    <p class="module-description">Master data analysis techniques with Power Query, Pivot Tables, and advanced reporting features.</p>
+                    
+                    <div class="skills-list">
+                        <span class="skill-tag">Power Query</span>
+                        <span class="skill-tag">Pivot Tables</span>
+                        <span class="skill-tag">Data Cleaning</span>
+                        <span class="skill-tag">Advanced Formulas</span>
+                    </div>
+                    
+                    <div class="time-estimate">
+                        <i class="far fa-clock"></i>
+                        <span>Estimated time: 75-90 minutes</span>
+                    </div>
+                    
+                    <div class="difficulty">
+                        <span class="difficulty-label">Difficulty:</span>
+                        <div class="difficulty-stars">
+                            <span class="star filled"><i class="fas fa-star"></i></span>
+                            <span class="star filled"><i class="fas fa-star"></i></span>
+                            <span class="star filled"><i class="fas fa-star"></i></span>
+                            <span class="star filled"><i class="fas fa-star"></i></span>
+                            <span class="star"><i class="fas fa-star"></i></span>
+                        </div>
+                    </div>
+                    
+                    <div class="module-actions">
+                        <button class="btn btn-primary" onclick="openExercise('analysis')">
+                            <i class="fas fa-play-circle"></i> Start Exercise
+                        </button>
+                        <button class="btn btn-outline" onclick="downloadFile('analysis-data.csv')">
+                            <i class="fas fa-download"></i> Dataset
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Budget Tracker Exercise -->
+        <div id="budget-exercise" class="exercise-section" style="display: none;">
+            <h2>Personal Budget Tracker Exercise</h2>
+            <p>In this exercise, you'll create a comprehensive personal budget tracker that automatically categorizes expenses and generates monthly reports.</p>
+            
+            <div class="exercise-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Set Up Income and Expense Categories</h4>
+                        <p>Create tables for income sources and expense categories. Use Data Validation to create dropdown lists.</p>
+                        <div class="formula-example">
+                            <p><strong>Data Validation Example:</strong></p>
+                            <p>Select cells > Data > Data Validation > List > Source: =$A$2:$A$10</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Create Transaction Log</h4>
+                        <p>Build a table to record all income and expenses with date, category, description, and amount columns.</p>
+                        <div class="tip-box">
+                            <strong>Pro Tip:</strong> Convert your data range to an Excel Table (Ctrl+T) for automatic formatting and formula expansion.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Build Summary Formulas</h4>
+                        <p>Use SUMIFS to calculate totals by category and month.</p>
+                        <div class="formula-example">
+                            <p><strong>SUMIFS Formula:</strong></p>
+                            <div class="formula">=SUMIFS(Amount_Range, Category_Range, "Food", Date_Range, ">="&Start_Date, Date_Range, "<="&End_Date)</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>Create Visual Dashboard</h4>
+                        <p>Build charts to visualize spending by category, monthly trends, and budget vs actual comparisons.</p>
+                        <div class="tip-box">
+                            <strong>Pro Tip:</strong> Use Pivot Charts for dynamic visualizations that update automatically when your data changes.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h4>Add Conditional Formatting</h4>
+                        <p>Use conditional formatting to highlight overspent categories and important trends.</p>
+                        <div class="formula-example">
+                            <p><strong>Conditional Formatting Rule:</strong></p>
+                            <p>Select cells > Home > Conditional Formatting > Highlight Cell Rules > Greater Than > =Budget_Amount</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="module-actions">
+                <button class="btn btn-primary" onclick="downloadFile('budget-solution.xlsx')">
+                    <i class="fas fa-download"></i> Download Solution
+                </button>
+                <button class="btn btn-outline" onclick="closeExercise('budget')">
+                    <i class="fas fa-times"></i> Close Exercise
+                </button>
+            </div>
+        </div>
+
+        <!-- Sales Dashboard Exercise -->
+        <div id="sales-exercise" class="exercise-section" style="display: none;">
+            <h2>Sales Performance Dashboard Exercise</h2>
+            <p>Build an interactive dashboard to analyze sales performance across regions, products, and salespeople.</p>
+            
+            <div class="exercise-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Prepare Your Data</h4>
+                        <p>Import the sales data and ensure it's properly formatted with headers for Region, Salesperson, Product, Date, Units, and Revenue.</p>
+                        <div class="tip-box">
+                            <strong>Pro Tip:</strong> Use Power Query to clean and transform your data if needed.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Create Pivot Tables</h4>
+                        <p>Build multiple Pivot Tables to analyze sales by region, by product, and by salesperson.</p>
+                        <div class="formula-example">
+                            <p><strong>Pivot Table Setup:</strong></p>
+                            <p>Insert > PivotTable > Select data range > Choose location</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Add Slicers for Interactivity</h4>
+                        <p>Insert slicers for Region, Product, and Date to allow users to filter the dashboard dynamically.</p>
+                        <div class="formula-example">
+                            <p><strong>Slicer Connection:</strong></p>
+                            <p>Select PivotTable > Analyze > Insert Slicer > Choose fields</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>Create Key Performance Indicators</h4>
+                        <p>Use formulas to calculate KPIs like total sales, growth rate, and top performers.</p>
+                        <div class="formula-example">
+                            <p><strong>KPI Formulas:</strong></p>
+                            <div class="formula">Total Sales: =SUM(Sales_Column)</div>
+                            <div class="formula">Growth Rate: =(Current_Period - Previous_Period)/Previous_Period</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h4>Build Interactive Charts</h4>
+                        <p>Create charts that update automatically when users interact with slicers.</p>
+                        <div class="tip-box">
+                            <strong>Pro Tip:</strong> Use Pivot Charts connected to your Pivot Tables for automatic updates.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="module-actions">
+                <button class="btn btn-primary" onclick="downloadFile('sales-solution.xlsx')">
+                    <i class="fas fa-download"></i> Download Solution
+                </button>
+                <button class="btn btn-outline" onclick="closeExercise('sales')">
+                    <i class="fas fa-times"></i> Close Exercise
+                </button>
+            </div>
+        </div>
+
+        <!-- Inventory Management Exercise -->
+        <div id="inventory-exercise" class="exercise-section" style="display: none;">
+            <h2>Inventory Management System Exercise</h2>
+            <p>Create a complete inventory tracking system with automated alerts and reporting.</p>
+            
+            <div class="exercise-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Set Up Product Database</h4>
+                        <p>Create a master product list with Product ID, Name, Category, Supplier, and pricing information.</p>
+                        <div class="tip-box">
+                            <strong>Pro Tip:</strong> Use Data Validation to ensure consistent data entry for categories and suppliers.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Track Stock Levels</h4>
+                        <p>Set up columns for current stock, minimum stock level, and maximum stock level for each product.</p>
+                        <div class="formula-example">
+                            <p><strong>Stock Status Formula:</strong></p>
+                            <div class="formula">=IF(Current_Stock < Min_Stock, "Reorder", IF(Current_Stock > Max_Stock, "Overstock", "OK"))</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Add Conditional Formatting for Alerts</h4>
+                        <p>Use conditional formatting to highlight products that need reordering or are overstocked.</p>
+                        <div class="formula-example">
+                            <p><strong>Conditional Formatting Rules:</strong></p>
+                            <p>For low stock: Format cells if Cell Value less than Min_Stock (Red)</p>
+                            <p>For overstock: Format cells if Cell Value greater than Max_Stock (Yellow)</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>Create Reorder Reports</h4>
+                        <p>Build a report that automatically lists all products that need reordering.</p>
+                        <div class="formula-example">
+                            <p><strong>Filtering Technique:</strong></p>
+                            <p>Use AutoFilter or Advanced Filter to show only products where Current_Stock < Min_Stock</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h4>Add Inventory Valuation</h4>
+                        <p>Calculate the total value of your inventory by multiplying stock levels by unit costs.</p>
+                        <div class="formula-example">
+                            <p><strong>Valuation Formula:</strong></p>
+                            <div class="formula">Total Value: =SUMPRODUCT(Current_Stock_Range, Unit_Cost_Range)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="module-actions">
+                <button class="btn btn-primary" onclick="downloadFile('inventory-solution.xlsx')">
+                    <i class="fas fa-download"></i> Download Solution
+                </button>
+                <button class="btn btn-outline" onclick="closeExercise('inventory')">
+                    <i class="fas fa-times"></i> Close Exercise
+                </button>
+            </div>
+        </div>
+
+        <!-- Data Analysis Exercise -->
+        <div id="analysis-exercise" class="exercise-section" style="display: none;">
+            <h2>Data Analysis & Reporting Exercise</h2>
+            <p>Master advanced data analysis techniques using Power Query, Pivot Tables, and statistical functions.</p>
+            
+            <div class="exercise-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Data Import and Cleaning with Power Query</h4>
+                        <p>Use Power Query to import, clean, and transform your data before analysis.</p>
+                        <div class="tip-box">
+                            <strong>Pro Tip:</strong> Power Query can remove duplicates, split columns, change data types, and merge data from multiple sources.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Create Advanced Pivot Tables</h4>
+                        <p>Build Pivot Tables with calculated fields, grouping, and custom formatting.</p>
+                        <div class="formula-example">
+                            <p><strong>Calculated Field Example:</strong></p>
+                            <div class="formula">Profit Margin: = (Sales - Cost) / Sales</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Use Statistical Functions</h4>
+                        <p>Apply statistical functions to analyze data distributions and trends.</p>
+                        <div class="formula-example">
+                            <p><strong>Statistical Functions:</strong></p>
+                            <div class="formula">Average: =AVERAGE(Range)</div>
+                            <div class="formula">Standard Deviation: =STDEV.P(Range)</div>
+                            <div class="formula">Correlation: =CORREL(Range1, Range2)</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h4>Create Dynamic Dashboards</h4>
+                        <p>Build interactive dashboards with slicers, timelines, and connected charts.</p>
+                        <div class="tip-box">
+                            <strong>Pro Tip:</strong> Use Excel's Camera tool to create live snapshots of important data areas.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h4>Automate Reporting with Macros</h4>
+                        <p>Record or write simple macros to automate repetitive reporting tasks.</p>
+                        <div class="formula-example">
+                            <p><strong>Macro Recording:</strong></p>
+                            <p>View > Macros > Record Macro > Perform actions > Stop Recording</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="module-actions">
+                <button class="btn btn-primary" onclick="downloadFile('analysis-solution.xlsx')">
+                    <i class="fas fa-download"></i> Download Solution
+                </button>
+                <button class="btn btn-outline" onclick="closeExercise('analysis')">
+                    <i class="fas fa-times"></i> Close Exercise
+                </button>
+            </div>
+        </div>
+
+        <!-- Download Resources Section -->
+        <div class="download-section">
+            <h2>Practice Files & Resources</h2>
+            <p>Download these resources to practice your Excel skills with real datasets and templates.</p>
+            
+            <div class="download-grid">
+                <div class="download-card">
+                    <div class="download-icon">
+                        <i class="fas fa-file-excel"></i>
+                    </div>
+                    <h4>Budget Template</h4>
+                    <p>Starter template for personal budget tracking</p>
+                    <button class="btn btn-outline" onclick="downloadFile('budget-template.xlsx')">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+                
+                <div class="download-card">
+                    <div class="download-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h4>Sales Dataset</h4>
+                    <p>Sample sales data for analysis and dashboard creation</p>
+                    <button class="btn btn-outline" onclick="downloadFile('sales-data.xlsx')">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+                
+                <div class="download-card">
+                    <div class="download-icon">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                    <h4>Inventory Template</h4>
+                    <p>Template for inventory management system</p>
+                    <button class="btn btn-outline" onclick="downloadFile('inventory-template.xlsx')">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+                
+                <div class="download-card">
+                    <div class="download-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h4>Formula Cheat Sheet</h4>
+                    <p>Quick reference for common Excel formulas</p>
+                    <button class="btn btn-outline" onclick="downloadFile('formula-cheatsheet.pdf')">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skill Assessment Section -->
+        <div class="assessment-section">
+            <h2>Excel Skill Assessment</h2>
+            <p>Track your progress and identify areas for improvement.</p>
+            
+            <div class="skill-meter">
+                <div class="skill-level">
+                    <span class="skill-name">Basic Formulas & Functions</span>
+                    <div class="skill-progress">
+                        <div class="progress-bar">
+                            <div class="progress" id="progress-basic" style="width: 75%"></div>
+                        </div>
+                        <span class="progress-percent">75%</span>
+                    </div>
+                </div>
+                
+                <div class="skill-level">
+                    <span class="skill-name">Data Analysis & Pivot Tables</span>
+                    <div class="skill-progress">
+                        <div class="progress-bar">
+                            <div class="progress" id="progress-analysis" style="width: 60%"></div>
+                        </div>
+                        <span class="progress-percent">60%</span>
+                    </div>
+                </div>
+                
+                <div class="skill-level">
+                    <span class="skill-name">Charts & Visualization</span>
+                    <div class="skill-progress">
+                        <div class="progress-bar">
+                            <div class="progress" id="progress-charts" style="width: 80%"></div>
+                        </div>
+                        <span class="progress-percent">80%</span>
+                    </div>
+                </div>
+                
+                <div class="skill-level">
+                    <span class="skill-name">Advanced Functions & Automation</span>
+                    <div class="skill-progress">
+                        <div class="progress-bar">
+                            <div class="progress" id="progress-advanced" style="width: 45%"></div>
+                        </div>
+                        <span class="progress-percent">45%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="module-actions">
+                <button class="btn btn-primary" onclick="takeAssessment()">
+                    <i class="fas fa-clipboard-check"></i> Take Skill Assessment
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced download function with real file data
+        function downloadFile(filename) {
+            const fileData = {
+                'budget-template.xlsx': {
+                    content: `Date,Type,Category,Description,Amount
+2024-01-01,Income,Salary,Monthly Salary,3500
+2024-01-05,Expense,Housing,Rent,1200
+2024-01-08,Expense,Food,Groceries,300
+2024-01-12,Expense,Transportation,Gas,80
+2024-01-15,Expense,Utilities,Electricity,120
+2024-01-20,Expense,Entertainment,Dining Out,75
+2024-01-25,Income,Freelance,Web Design Project,800
+2024-01-28,Expense,Savings,Emergency Fund,200
+2024-02-01,Income,Salary,Monthly Salary,3500
+2024-02-03,Expense,Housing,Rent,1200
+2024-02-07,Expense,Food,Groceries,320
+2024-02-10,Expense,Transportation,Gas,85`,
+                    type: 'text/csv'
+                },
+                'sales-data.xlsx': {
+                    content: `Region,Salesperson,Product,Date,Units,Unit_Price,Total_Sales
+North,John Smith,Laptop,2024-01-15,5,899,4495
+South,Maria Garcia,Tablet,2024-01-16,8,349,2792
+East,David Chen,Smartphone,2024-01-17,12,699,8388
+West,Sarah Johnson,Laptop,2024-01-18,3,899,2697
+North,John Smith,Tablet,2024-01-19,6,349,2094
+South,Maria Garcia,Smartphone,2024-01-20,10,699,6990
+East,David Chen,Laptop,2024-01-21,7,899,6293
+West,Sarah Johnson,Tablet,2024-01-22,4,349,1396
+North,John Smith,Smartphone,2024-01-23,9,699,6291
+South,Maria Garcia,Laptop,2024-01-24,2,899,1798
+East,David Chen,Tablet,2024-01-25,11,349,3839
+West,Sarah Johnson,Smartphone,2024-01-26,5,699,3495`,
+                    type: 'text/csv'
+                },
+                'inventory-template.xlsx': {
+                    content: `Product_ID,Product_Name,Category,Current_Stock,Min_Stock,Max_Stock,Unit_Price,Supplier,Last_Order_Date
+PROD001,Wireless Mouse,Electronics,45,20,100,25.99,TechSupplies Inc,2024-01-10
+PROD002,Mechanical Keyboard,Electronics,32,15,80,89.99,TechSupplies Inc,2024-01-12
+PROD003,Monitor 24",Electronics,12,5,30,199.99,DisplayTech,2024-01-05
+PROD004,Office Chair,Furniture,8,5,25,249.99,ComfortOffice,2024-01-08
+PROD005,Desk Lamp,Furniture,56,30,150,34.99,ComfortOffice,2024-01-15
+PROD006,Notebook,Office Supplies,120,50,300,4.99,PaperWorks,2024-01-18
+PROD007,Pen Set,Office Supplies,89,40,200,12.99,PaperWorks,2024-01-20
+PROD008,Stapler,Office Supplies,34,20,100,8.99,OfficeGear,2024-01-14`,
+                    type: 'text/csv'
+                },
+                'analysis-data.csv': {
+                    content: `CustomerID,Name,Age,City,SignupDate,Plan,MonthlyCharge,TotalCharges,Churn
+CUST001,Alice Johnson,34,New York,2023-01-15,Premium,89.99,1079.88,No
+CUST002,Bob Smith,45,Los Angeles,2023-02-20,Basic,49.99,549.89,Yes
+CUST003,Carol Davis,29,Chicago,2023-03-10,Premium,89.99,989.89,No
+CUST004,David Wilson,52,Houston,2023-01-05,Standard,69.99,839.88,No
+CUST005,Eva Brown,41,New York,2023-04-18,Basic,49.99,449.91,Yes
+CUST006,Frank Miller,38,Los Angeles,2023-02-28,Premium,89.99,989.89,No
+CUST007,Grace Lee,31,Chicago,2023-05-12,Standard,69.99,699.90,No
+CUST008,Henry Clark,47,Houston,2023-03-25,Basic,49.99,499.90,Yes
+CUST009,Irene Adams,28,New York,2023-06-08,Premium,89.99,809.91,No
+CUST010,Jack Harris,39,Los Angeles,2023-04-30,Standard,69.99,699.90,No`,
+                    type: 'text/csv'
+                },
+                'budget-solution.xlsx': {
+                    content: `Date,Type,Category,Description,Amount,Budget,Status
+2024-01-01,Income,Salary,Monthly Salary,3500,3500,On Target
+2024-01-05,Expense,Housing,Rent,1200,1200,On Target
+2024-01-08,Expense,Food,Groceries,300,400,Under Budget
+2024-01-12,Expense,Transportation,Gas,80,100,Under Budget
+2024-01-15,Expense,Utilities,Electricity,120,150,Under Budget
+2024-01-20,Expense,Entertainment,Dining Out,75,50,Over Budget
+2024-01-25,Income,Freelance,Web Design Project,800,500,Over Budget
+2024-01-28,Expense,Savings,Emergency Fund,200,200,On Target
+2024-02-01,Income,Salary,Monthly Salary,3500,3500,On Target
+2024-02-03,Expense,Housing,Rent,1200,1200,On Target
+2024-02-07,Expense,Food,Groceries,320,400,Under Budget
+2024-02-10,Expense,Transportation,Gas,85,100,Under Budget`,
+                    type: 'text/csv'
+                },
+                'sales-solution.xlsx': {
+                    content: `Region,Salesperson,Product,Date,Units,Unit_Price,Total_Sales,Commission
+North,John Smith,Laptop,2024-01-15,5,899,4495,449.5
+South,Maria Garcia,Tablet,2024-01-16,8,349,2792,279.2
+East,David Chen,Smartphone,2024-01-17,12,699,8388,838.8
+West,Sarah Johnson,Laptop,2024-01-18,3,899,2697,269.7
+North,John Smith,Tablet,2024-01-19,6,349,2094,209.4
+South,Maria Garcia,Smartphone,2024-01-20,10,699,6990,699.0
+East,David Chen,Laptop,2024-01-21,7,899,6293,629.3
+West,Sarah Johnson,Tablet,2024-01-22,4,349,1396,139.6
+North,John Smith,Smartphone,2024-01-23,9,699,6291,629.1
+South,Maria Garcia,Laptop,2024-01-24,2,899,1798,179.8`,
+                    type: 'text/csv'
+                },
+                'inventory-solution.xlsx': {
+                    content: `Product_ID,Product_Name,Category,Current_Stock,Min_Stock,Max_Stock,Unit_Price,Supplier,Last_Order_Date,Status,Reorder_Quantity
+PROD001,Wireless Mouse,Electronics,45,20,100,25.99,TechSupplies Inc,2024-01-10,OK,0
+PROD002,Mechanical Keyboard,Electronics,32,15,80,89.99,TechSupplies Inc,2024-01-12,OK,0
+PROD003,Monitor 24",Electronics,12,5,30,199.99,DisplayTech,2024-01-05,Reorder,18
+PROD004,Office Chair,Furniture,8,5,25,249.99,ComfortOffice,2024-01-08,Reorder,17
+PROD005,Desk Lamp,Furniture,56,30,150,34.99,ComfortOffice,2024-01-15,OK,0
+PROD006,Notebook,Office Supplies,120,50,300,4.99,PaperWorks,2024-01-18,OK,0
+PROD007,Pen Set,Office Supplies,89,40,200,12.99,PaperWorks,2024-01-20,OK,0
+PROD008,Stapler,Office Supplies,34,20,100,8.99,OfficeGear,2024-01-14,Reorder,16`,
+                    type: 'text/csv'
+                },
+                'analysis-solution.xlsx': {
+                    content: `CustomerID,Name,Age,City,SignupDate,Plan,MonthlyCharge,TotalCharges,Churn,Tenure_Months,LTV
+CUST001,Alice Johnson,34,New York,2023-01-15,Premium,89.99,1079.88,No,12,1079.88
+CUST002,Bob Smith,45,Los Angeles,2023-02-20,Basic,49.99,549.89,Yes,11,549.89
+CUST003,Carol Davis,29,Chicago,2023-03-10,Premium,89.99,989.89,No,10,989.89
+CUST004,David Wilson,52,Houston,2023-01-05,Standard,69.99,839.88,No,12,839.88
+CUST005,Eva Brown,41,New York,2023-04-18,Basic,49.99,449.91,Yes,9,449.91
+CUST006,Frank Miller,38,Los Angeles,2023-02-28,Premium,89.99,989.89,No,11,989.89
+CUST007,Grace Lee,31,Chicago,2023-05-12,Standard,69.99,699.90,No,8,699.90
+CUST008,Henry Clark,47,Houston,2023-03-25,Basic,49.99,499.90,Yes,10,499.90
+CUST009,Irene Adams,28,New York,2023-06-08,Premium,89.99,809.91,No,7,809.91
+CUST010,Jack Harris,39,Los Angeles,2023-04-30,Standard,69.99,699.90,No,9,699.90`,
+                    type: 'text/csv'
+                },
+                'formula-cheatsheet.pdf': {
+                    content: 'This would be a PDF file with formula examples',
+                    type: 'application/pdf'
+                }
+            };
+
+            if (fileData[filename]) {
+                const { content, type } = fileData[filename];
+                
+                // Create and download the file
+                const blob = new Blob([content], { type });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                // Show success message
+                showDownloadSuccess(filename);
+                
+                // Update progress
+                updateProgress();
+            } else {
+                alert('File not found: ' + filename);
+            }
+        }
+
+        function showDownloadSuccess(filename) {
+            // Remove any existing success messages
+            const existingMessages = document.querySelectorAll('.success-message');
+            existingMessages.forEach(msg => msg.remove());
+            
+            // Create new success message
+            const message = document.createElement('div');
+            message.className = 'success-message';
+            message.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                ${filename} downloaded successfully!
+            `;
+            
+            document.body.appendChild(message);
+            
+            // Remove message after 3 seconds
+            setTimeout(() => {
+                message.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    if (message.parentNode) {
+                        message.parentNode.removeChild(message);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        function openExercise(module) {
+            // Hide all exercise sections first
+            document.querySelectorAll('.exercise-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Show the selected exercise
+            document.getElementById(`${module}-exercise`).style.display = 'block';
+            
+            // Scroll to the exercise section
+            document.getElementById(`${module}-exercise`).scrollIntoView({
+                behavior: 'smooth'
+            });
+        }
+        
+        function closeExercise(module) {
+            document.getElementById(`${module}-exercise`).style.display = 'none';
+        }
+        
+        function takeAssessment() {
+            alert('Opening skill assessment...\n\nThis would open a comprehensive Excel skills test in a real implementation.');
+        }
+        
+        function updateProgress() {
+            // Simulate progress updates when files are downloaded
+            const progresses = [
+                {id: 'progress-basic', percent: 75},
+                {id: 'progress-analysis', percent: 60},
+                {id: 'progress-charts', percent: 80},
+                {id: 'progress-advanced', percent: 45}
+            ];
+            
+            progresses.forEach(item => {
+                const progressBar = document.getElementById(item.id);
+                const currentWidth = parseInt(progressBar.style.width);
+                const newWidth = Math.min(currentWidth + 5, 100);
+                progressBar.style.width = `${newWidth}%`;
+                
+                // Update the percentage text
+                const percentElement = progressBar.parentElement.nextElementSibling;
+                percentElement.textContent = `${newWidth}%`;
+            });
+        }
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Any initialization code would go here
+        });
+    </script>
+    <!-- Add to head section -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a2b4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="JOSHCAB Training">
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+
+<!-- Add to body section (before closing body tag) -->
+<script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    
+                    // Check for updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        console.log('New service worker found...');
+                        
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('New content available; please refresh.');
+                                // You can show an update notification here
+                                showUpdateNotification();
+                            }
+                        });
+                    });
+                })
+                .catch(function(error) {
+                    console.log('ServiceWorker registration failed: ', error);
+                });
+        });
+
+        // Listen for claiming of service worker
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+                window.location.reload();
+                refreshing = true;
+            }
+        });
+    }
+
+    // Function to show update notification
+    function showUpdateNotification() {
+        if (confirm('New version available! Would you like to update?')) {
+            window.location.reload();
+        }
+    }
+
+    // Online/offline status detection
+    window.addEventListener('online', function() {
+        console.log('App is online');
+        // You can show a notification that app is back online
+        showOnlineStatus();
+    });
+
+    window.addEventListener('offline', function() {
+        console.log('App is offline');
+        showOfflineStatus();
+    });
+
+    function showOnlineStatus() {
+        // Create a subtle notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: #2ecc71;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 10000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+        notification.innerHTML = '<i class="fas fa-wifi"></i> Back online';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    function showOfflineStatus() {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: #e74c3c;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 10000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+        notification.innerHTML = '<i class="fas fa-wifi-slash"></i> You are offline';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+</script>
+</body>
+</html>

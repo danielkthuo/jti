@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 2 - Internet and E-Mails | JOSHCAB TRAINING INSTITUTE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <!-- Auth Manager -->
+    <script src="auth-manager.js"></script>
+    <!-- Add to head section -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a2b4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="JOSHCAB INSTITUTE">
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <style>
+        /* Add your module styles here */
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .module-header { background: #1a2b4a; color: white; padding: 20px; border-radius: 10px; }
+        .content { background: #f5f7fa; padding: 20px; margin-top: 20px; border-radius: 10px; }
+        .access-denied { text-align: center; padding: 50px; color: #e74c3c; }
+    </style>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #0d47a1;
+            --secondary: #25D366;
+            --accent: #ffc107;
+            --light: #f5f5f5;
+            --dark: #333;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --danger: #F44336;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 100%;
+            padding: 15px;
+        }
+        
+        /* Auth Modal Styles */
+        .auth-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .auth-modal.active {
+            display: flex;
+        }
+        
+        .auth-container {
+            background-color: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+        }
+        
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #777;
+        }
+        
+        .auth-tab.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .auth-form {
+            display: none;
+        }
+        
+        .auth-form.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .auth-btn:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .auth-error {
+            color: var(--danger);
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+        
+        /* Header Styles - Compact Version */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 12px 15px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            flex: 1;
+        }
+        
+        .institute-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        
+        .module-title {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .auth-button {
+            padding: 6px 12px;
+            border: 1px solid white;
+            border-radius: 15px;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+        
+        .auth-button:hover {
+            background-color: white;
+            color: var(--primary);
+        }
+        
+        .whatsapp-contact {
+            background-color: var(--secondary);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 15px;
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            font-size: 0.8rem;
+        }
+        
+        .whatsapp-contact svg {
+            width: 16px;
+            height: 16px;
+            margin-right: 5px;
+        }
+        
+        /* Progress Section */
+        .progress-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .completion-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* Card Styles */
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 0;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-header h2 {
+            color: var(--primary);
+            margin: 0;
+            padding: 0;
+            border: none;
+            font-size: 1.3rem;
+        }
+        
+        .card-header i {
+            transition: transform 0.3s ease;
+        }
+        
+        .card-content {
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .card-content.active {
+            padding: 20px;
+            max-height: 5000px;
+        }
+        
+        h3 {
+            color: var(--primary-dark);
+            margin: 15px 0 10px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+        }
+        
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .definition-box {
+            background-color: #e8f0fe;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .exercise-box {
+            background-color: #fff8e1;
+            border-left: 4px solid var(--accent);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .qa-box {
+            background-color: #e8f5e9;
+            border-left: 4px solid var(--success);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .icon-item {
+            text-align: center;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        
+        .icon-item svg {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 8px;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        .comparison-table th, .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        
+        .comparison-table th {
+            background-color: #f2f2f2;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .completion-check {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .completion-check label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        
+        .completion-check input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .module-end {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin: 30px 0;
+            color: var(--primary);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .institute-name {
+                font-size: 1.1rem;
+            }
+            
+            .module-title {
+                font-size: 0.8rem;
+            }
+            
+            .card-header {
+                padding: 15px;
+            }
+            
+            .card-header h2 {
+                font-size: 1.1rem;
+            }
+            
+            .card-content.active {
+                padding: 15px;
+            }
+            
+            .icon-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+            
+            .comparison-table {
+                font-size: 0.9rem;
+            }
+            
+            .comparison-table th, .comparison-table td {
+                padding: 8px;
+            }
+            
+            .header-right {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .auth-button {
+                padding: 4px 8px;
+                font-size: 0.7rem;
+            }
+            
+            .whatsapp-contact {
+                padding: 4px 8px;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Auth Modal -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-container">
+            <div class="auth-tabs">
+                <div class="auth-tab active" data-tab="login">Login</div>
+                <div class="auth-tab" data-tab="signup">Sign Up</div>
+            </div>
+            
+            <div class="auth-form active" id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password">
+                </div>
+                <button class="auth-btn" id="loginBtn">Login</button>
+                <div class="auth-error" id="loginError"></div>
+            </div>
+            
+            <div class="auth-form" id="signupForm">
+                <div class="form-group">
+                    <label for="signupName">Full Name</label>
+                    <input type="text" id="signupName" placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail">Email</label>
+                    <input type="email" id="signupEmail" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" placeholder="Create a password">
+                </div>
+                <button class="auth-btn" id="signupBtn">Sign Up</button>
+                <div class="auth-error" id="signupError"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Compact Header -->
+        <header>
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="institute-name">JOSHCAB TRAINING INSTITUTE</div>
+                    <div class="module-title">Module 2 – Internet and E-Mails</div>
+                </div>
+                
+                <div class="header-right">
+                    <a href="https://wa.me/254734080808" class="whatsapp-contact">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+                            <path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893-.001-3.189-1.262-6.189-3.553-8.449"/>
+                        </svg>
+                        Contact
+                    </a>
+                    
+                    <div class="user-info" id="userInfo" style="display: none;">
+                        <div class="user-avatar" id="userAvatar">JD</div>
+                        <button class="auth-button" id="logoutBtn">Logout</button>
+                    </div>
+                    
+                    <div class="auth-buttons" id="authButtons">
+                        <button class="auth-button" id="showLoginBtn">Login</button>
+                        <button class="auth-button" id="showSignupBtn">Sign Up</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Progress Section -->
+        <div class="progress-container">
+            <h3>Your Progress</h3>
+            <div class="progress-bar">
+                <div class="progress" id="progressBar" style="width: 0%"></div>
+            </div>
+            <div class="progress-text">
+                <span id="progressText">0% Complete</span>
+                <span>Module 2</span>
+            </div>
+            <div class="completion-status">
+                <i class="fas fa-info-circle"></i>
+                <span>Your progress is automatically saved and will be available on any device</span>
+            </div>
+        </div>
+        
+        <!-- Module Overview Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('overview')">
+                <h2><i class="fas fa-info-circle"></i> Module Overview</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="overview">
+                <p>This module introduces learners to internet concepts, email communication, and web browsers. It covers practical skills for managing communication environments, creating and managing email messages, and understanding internet security and ethics.</p>
+                
+                <h3>Learning Objectives</h3>
+                <p>At the end of the module, learners will be able to:</p>
+                <ul>
+                    <li>Manage the communication environment of Google and Microsoft Outlook</li>
+                    <li>Create and format emails and other applications</li>
+                    <li>Create and manage email messages</li>
+                    <li>Create and manage the contacts menu</li>
+                    <li>Schedule and manage calendar events</li>
+                    <li>Understand Internet legal and ethical issues like information security and copyrights</li>
+                    <li>Configure an Internet browser to achieve personalization and security</li>
+                    <li>Make use of online communities and social media</li>
+                </ul>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="overview-complete" onchange="updateProgress('overview', this.checked)"> 
+                        Mark as reviewed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Introduction to Internet Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('internet-intro')">
+                <h2><i class="fas fa-globe"></i> Introduction to Internet</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="internet-intro">
+                <div class="definition-box">
+                    <p><strong>Internet</strong> is a means of connecting a computer to any other computer anywhere in the world via dedicated routers and servers. When two computers are connected over the Internet, they can send and receive all kinds of information such as text, graphics, voice, video, and computer programs.</p>
+                </div>
+                
+                <h3>Types of Networks</h3>
+                
+                <div class="definition-box">
+                    <p><strong>Intranet</strong> is a private network accessible only to an organization's staff.</p>
+                </div>
+                
+                <div class="definition-box">
+                    <p><strong>Extranet</strong> is a controlled private network allowing customers, partners, vendors, suppliers and other businesses to gain information, typically about a specific company or educational institution, and do so without granting access to the organization's entire network. An extranet is often a private part of a website. It is restricted to select users through user IDs, passwords and other authentication mechanisms on a login page.</p>
+                </div>
+                
+                <h3>Computer Networks</h3>
+                <p>A computer network is a collection of various computing devices in a way that they communicate with each other. A device is also called a node, which could be a personal computer (PC), a server, an Internet Protocol (IP) phone, a smart phone connecting to the network via a Wi-Fi router, a printer etc.</p>
+                <p>The devices are connected to each other using a variety of media. In a network, more than one type of media can be used wired (also called guided) or unwired (also called unguided).</p>
+                
+                <h3>Network Cables</h3>
+                <ul>
+                    <li><strong>Twisted pair</strong> - used to make local area network (LAN) cables that connect nodes to the network. The common term is network cable, Ethernet cable or RJ45 cable</li>
+                    <li><strong>Coaxial cable</strong> - old technology and is hardly used. It is same as a television aerial cable. The transmission speeds were low and the termination complex to make</li>
+                    <li><strong>Fiber cables</strong> - used for backbone connectivity (e.g. between buildings or cities). They are also used in the patch panel connectivity in the server room and inside the systems unit to connect the hard disc drive to the motherboard</li>
+                </ul>
+                 <img src="icons/cables.svg" alt="cables Photo">
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="internet-intro-complete" onchange="updateProgress('internet-intro', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Electronic Mail (Email) Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('email')">
+                <h2><i class="fas fa-envelope"></i> Electronic Mail (Email)</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="email">
+                <div class="definition-box">
+                    <p><strong>Electronic mail (email, e-mail)</strong> is a system for sending messages from one individual to another via telecommunications links between computers or terminals using dedicated software. It also means the document sent by email software which may include embedded images or attached files.</p>
+                </div>
+                
+                <h3>Popular Email Software</h3>
+                <ul>
+                    <li><strong>Microsoft Outlook</strong> (or Outlook Express) by Microsoft Inc.</li>
+                    <li><strong>Mozilla Thunderbird</strong> by Mozilla Foundation</li>
+                    <li><strong>Gnome Evolution</strong>, a Linux/Gnome based email and calendar client (there is now a windows version of Evolution)</li>
+                    <li><strong>Kontact</strong>, a Linux/KDE based email and calendar client</li>
+                </ul>
+                
+                <h3>Email Protocols</h3>
+                <p>Standards that govern how email is sent, received, and stored:</p>
+                
+                <table class="comparison-table">
+                    <tr>
+                        <th>Protocol</th>
+                        <th>Purpose</th>
+                        <th>Function</th>
+                    </tr>
+                    <tr>
+                        <td><strong>POP3 (Post Office Protocol version 3)</strong></td>
+                        <td>Receive emails from a remote server to a local email client</td>
+                        <td>Allows you to download email messages on your local computer and read them even when you are offline</td>
+                    </tr>
+                    <tr>
+                        <td><strong>IMAP (Internet Message Access Protocol)</strong></td>
+                        <td>Access email on a remote web server from a local client</td>
+                        <td>Used for retrieving emails, keeps messages on the server</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SMTP (Simple Mail Transfer Protocol)</strong></td>
+                        <td>Send emails from a client to a server or between mail servers</td>
+                        <td>Works with outgoing mail only; cannot retrieve emails</td>
+                    </tr>
+                </table>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="email-complete" onchange="updateProgress('email', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Web Browsers Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('browsers')">
+                <h2><i class="fas fa-window-restore"></i> Web Browsers</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="browsers">
+                <div class="definition-box">
+                    <p>A <strong>web browser</strong> is software that is used in retrieving, presenting, and traversing information resources on the Internet. There are different types of browsers but all use Uniform Resource Locator (URL) also called Uniform Resource Identifier (URI), which is a unique address to a web page.</p>
+                </div>
+                
+                <h3>Leading Internet Browsers</h3>
+                <ol>
+                    <li>Google Chrome</li>
+                    <li>Mozilla Firefox</li>
+                    <li>Apple Safari</li>
+                    <li>Microsoft Internet Explorer</li>
+                    <li>Microsoft Edge</li>
+                    <li>Opera</li>
+                    <li>Maxthon</li>
+                </ol>
+                
+                <p>Google Chrome has been gaining popularity over time, while Microsoft's Internet Explorer has been losing popularity.</p>
+                
+                <h3>Uniform Resource Locator/Identifier (URL/URI)</h3>
+                <p>A URI is a string of characters used to identify a resource on the Internet. It is the global address of documents and other resources on the World Wide Web.</p>
+                <p>A URL is one type of Uniform Resource Identifier (URI); the generic term for all types of names and addresses that refer to objects on the World Wide Web.</p>
+                <p>A Uniform Resource Locator (URL), commonly informally termed a web address is a reference to a web resource that specifies its location on a computer network and a mechanism for retrieving it.</p>
+                <p>The URL contains the name of the protocol to be used to access the resource and a resource name. The first part of a URL identifies what protocol to use. The second part identifies the IP address or domain name where the resource is located.</p>
+                
+                <div class="exercise-box">
+                    <h3>Class Exercise 1: Identify the Browsers</h3>
+                    <p>Identify the browsers for the following icons (images would be inserted here in a real implementation)</p>
+                </div>
+                
+                <div class="exercise-box">
+                    <h3>Class Exercise 2: Working with Tabs</h3>
+                    <ol>
+                        <li>Open Opera or any other browser and launch the Joshcab Consultant website</li>
+                        <li>Right click on About Us and select Open Link in New Tab</li>
+                    </ol>
+                </div>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="browsers-complete" onchange="updateProgress('browsers', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Configuring Web Browsers Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('config-browsers')">
+                <h2><i class="fas fa-cog"></i> Configuring Web Browsers</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="config-browsers">
+                <p>Browser setting enables a user to define how the application should interact with the real world. Attackers use the Internet to compromise computers through vulnerable web browsers.</p>
+                
+                <p>An insecure web browser can lead to spyware being installed on your computer without your knowledge, attackers taking control of your computer, stealing your information, or even using your computer to attack other computers.</p>
+                
+                <p>Of all the software out there, browsers are the most exposed and information rich. If a malicious hacker manages to break in, he can find out just about anything about you: address, credit card data, emails, passwords, browsing history, bookmarks etc.</p>
+                
+                <h3>Configuring Google Chrome</h3>
+                <div class="exercise-box">
+                    <p>To configure the setting for Google Chrome:</p>
+                    <ol>
+                        <li>Left click on the three vertical buttons</li>
+                        <li>The settings window loads</li>
+                        <li>Sign in to Google Chrome - enables you to log on to your Google mail account</li>
+                        <li>Default Browser - enables automatic opening of pages</li>
+                    </ol>
+                </div>
+                
+                <h3>Configuring Cookies</h3>
+                <p>"Cookies" are small pieces of data that a website stores on your computer or device through your web browser.</p>
+                <p><strong>Function:</strong> Cookies help websites remember your preferences, login information, and past actions on the site, making your future visits smoother.</p>
+                <p><strong>How they work:</strong> When you visit a website, it sends a cookie to your browser which is then stored on your device.</p>
+                
+                <div class="exercise-box">
+                    <h3>Class Exercise: Configuring Cookies</h3>
+                    <ol>
+                        <li>Open Google Chrome home page (www.google.co.ke)</li>
+                        <li>Select Settings → Show Advanced Settings → Privacy → Content Settings</li>
+                        <li>To allow first-party and third-party cookies, choose "Allow local data to be set"</li>
+                        <li>To block all cookies, choose "Block sites from setting any data"</li>
+                        <li>To allow only first-party cookies and block all third-party cookies, check the box next to "Block third-party cookies and site data"</li>
+                    </ol>
+                </div>
+                
+                <h3>Configuring Pop-Ups</h3>
+                <p>Pop-up ads or pop-ups are often forms of online advertising on the World Wide Web intended to attract web traffic or capture email addresses.</p>
+                <p>By default, Google Chrome blocks pop-ups from automatically showing up on your screen. When a pop-up is blocked, the address bar will be marked "Pop-ups blocked". You can also decide to allow pop-ups.</p>
+                <p>If you still get pop-ups after disabling them, then you could have malware.</p>
+                
+                <div class="exercise-box">
+                    <h3>Class Exercise: Configuring Pop-Ups</h3>
+                    <ol>
+                        <li>On your computer, open Chrome and select Settings</li>
+                        <li>At the bottom, click Show advanced settings</li>
+                        <li>Under "Privacy," click Content settings</li>
+                        <li>Under "Pop-ups," select an option: "Do not allow any site to show pop-ups (recommended)" or "Allow all sites to show pop-ups"</li>
+                    </ol>
+                </div>
+                
+                <h3>Configuring Downloads Locations</h3>
+                <p>A browser allows a user to give a location where data which is downloads (photos, documents, videos etc.) get stored and accessible by the user, unless otherwise specified i.e. The user changes the path for a specific browsing session.</p>
+                
+                <div class="exercise-box">
+                    <h3>Class Exercise: Configuring Downloads</h3>
+                    <ol>
+                        <li>On your computer, open Chrome and select Settings</li>
+                        <li>At the bottom, click Show advanced settings</li>
+                        <li>Scroll down to downloads</li>
+                        <li>You can change the path of the storage</li>
+                        <li>When you are in an active browsing session and you do not know where downloads are set to go, Press Ctrl + J. This will take you to the location where files are downloaded to</li>
+                    </ol>
+                </div>
+                
+                <h3>Managing Browsing Windows and Toolbars</h3>
+                <p>The management of browser window is based on the browser that you are using. The principles are however similar with difference in semantics only. However, there may also be fundamental differences. Example, when you launch Google Chrome web browser, the home page loads without any tools.</p>
+                
+                <h3>Web Development Tools</h3>
+                <p>Most browsers support for web developer tools that allows web designers and developers to take a look at the make-up of their pages. These are all tools that are built into the browser and do not require additional modules or configuration.</p>
+                <ul>
+                    <li>Google Chrome – Web Developer Tools</li>
+                    <li>Internet Explorer – F12 Web Developer Tools (As of version 8)</li>
+                    <li>Safari – Safari Web Development Tools (As of version 3)</li>
+                    <li>Firefox – F12 Web Console / Browser Console (since Firefox 4)</li>
+                    <li>Opera – Opera Dragonfly</li>
+                </ul>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="config-browsers-complete" onchange="updateProgress('config-browsers', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Browser Search Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('search')">
+                <h2><i class="fas fa-search"></i> Browser Search</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="search">
+                <p>Searching for information is one of the most important uses of the Internet. There are many search engines that can be used to search for information on the Internet.</p>
+                
+                <h3>Search Engines</h3>
+                <p>A search engine is a program that searches for and identifies items in a database that correspond to keywords or characters specified by the user, used especially for finding particular sites on the World Wide Web.</p>
+                <p>Search engines are used to find information on the Internet. They use automated software programs (known as bots, robots or spiders) that travel along the Web, following links from page to page, site to site.</p>
+                
+                <h3>Popular Search Engines</h3>
+                <ul>
+                    <li>Google</li>
+                    <li>Bing</li>
+                    <li>Yahoo</li>
+                    <li>Ask</li>
+                    <li>DuckDuckGo</li>
+                </ul>
+                
+                <h3>Searching Techniques</h3>
+                <p>There are different ways of searching for information on the Internet. The following are some of the techniques:</p>
+                <ul>
+                    <li><strong>Phrase searching</strong> - Use quotation marks to search for an exact phrase</li>
+                    <li><strong>Boolean searching</strong> - Use AND, OR, NOT to combine search terms</li>
+                    <li><strong>Truncation</strong> - Use an asterisk (*) to search for variations of a word</li>
+                    <li><strong>Wildcard searching</strong> - Use a question mark (?) to replace a single character</li>
+                    <li><strong>Field searching</strong> - Limit your search to specific fields such as title, author, etc.</li>
+                </ul>
+                
+                <div class="exercise-box">
+                    <h3>Class Exercise: Search Techniques</h3>
+                    <ol>
+                        <li>Open Google Chrome home page (www.google.co.ke)</li>
+                        <li>Search for "Joshcab Training Institute"</li>
+                        <li>Search for "Joshcab Training Institute" AND "Nairobi"</li>
+                        <li>Search for "Joshcab Training Institute" OR "Joshcab Consultant"</li>
+                        <li>Search for "Joshcab Training Institute" NOT "Mombasa"</li>
+                        <li>Search for "Joshcab Training Institute" site:ke</li>
+                        <li>Search for "Joshcab Training Institute" filetype:pdf</li>
+                    </ol>
+                </div>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="search-complete" onchange="updateProgress('search', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Email Management Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('email-management')">
+                <h2><i class="fas fa-mail-bulk"></i> Email Management</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="email-management">
+                <h3>Creating an Email Account</h3>
+                <p>To create an email account, you need to:</p>
+                <ol>
+                    <li>Choose an email service provider (e.g., Gmail, Yahoo, Outlook)</li>
+                    <li>Go to the provider's website</li>
+                    <li>Click on the "Create account" or "Sign up" button</li>
+                    <li>Fill in the required information (name, username, password, etc.)</li>
+                    <li>Verify your account (usually through a phone number or another email address)</li>
+                    <li>Agree to the terms and conditions</li>
+                    <li>Click on the "Create account" button</li>
+                </ol>
+                
+                <h3>Email Etiquette</h3>
+                <p>Email etiquette refers to the principles of behavior that one should use when writing or answering email messages. It is also known as the code of conduct for email communication.</p>
+                <ul>
+                    <li>Use a clear and concise subject line</li>
+                    <li>Use a proper salutation</li>
+                    <li>Keep your email brief and to the point</li>
+                    <li>Use proper grammar and spelling</li>
+                    <li>Be professional and courteous</li>
+                    <li>Use a signature block</li>
+                    <li>Be careful with attachments</li>
+                    <li>Respond to emails in a timely manner</li>
+                    <li>Use "Reply All" sparingly</li>
+                    <li>Avoid using all caps</li>
+                </ul>
+                
+                <h3>Managing Email Messages</h3>
+                <p>Email management involves organizing and maintaining your email messages. This includes:</p>
+                <ul>
+                    <li>Creating folders to organize your emails</li>
+                    <li>Using filters to automatically sort incoming emails</li>
+                    <li>Archiving old emails</li>
+                    <li>Deleting unnecessary emails</li>
+                    <li>Using labels or tags to categorize emails</li>
+                    <li>Setting up rules for automatic email processing</li>
+                </ul>
+                
+                <div class="exercise-box">
+                    <h3>Class Exercise: Creating Folders in Gmail</h3>
+                    <ol>
+                        <li>Open Gmail</li>
+                        <li>On the left side of the page, scroll down, then click "More"</li>
+                        <li>Click "Create new label"</li>
+                        <li>Enter the label name and click "Create"</li>
+                        <li>To move an email to a folder, select the email, click the "Move to" icon, and select the folder</li>
+                    </ol>
+                </div>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="email-management-complete" onchange="updateProgress('email-management', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Internet Security and Ethics Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('security')">
+                <h2><i class="fas fa-shield-alt"></i> Internet Security and Ethics</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="security">
+                <h3>Information Security</h3>
+                <p>Information security refers to the processes and methodologies which are designed and implemented to protect print, electronic, or any other form of confidential, private and sensitive information or data from unauthorized access, use, misuse, disclosure, destruction, modification, or disruption.</p>
+                
+                <h3>Common Internet Threats</h3>
+                <ul>
+                    <li><strong>Malware</strong> - malicious software designed to harm or exploit any programmable device, service or network</li>
+                    <li><strong>Phishing</strong> - attempting to acquire sensitive information by masquerading as a trustworthy entity</li>
+                    <li><strong>Spam</strong> - unsolicited messages sent in bulk by email</li>
+                    <li><strong>Spyware</strong> - software that enables a user to obtain covert information about another's computer activities</li>
+                    <li><strong>Adware</strong> - software that automatically displays or downloads advertising material</li>
+                    <li><strong>Ransomware</strong> - a type of malware that blocks access to the victim's data and threatens to publish or delete it unless a ransom is paid</li>
+                </ul>
+                
+                <h3>Protecting Yourself Online</h3>
+                <ul>
+                    <li>Use strong, unique passwords for each account</li>
+                    <li>Enable two-factor authentication</li>
+                    <li>Keep your software and operating system updated</li>
+                    <li>Use a firewall and antivirus software</li>
+                    <li>Be cautious when clicking on links or downloading attachments</li>
+                    <li>Use a virtual private network (VPN) when on public Wi-Fi</li>
+                    <li>Regularly back up your data</li>
+                    <li>Be mindful of what you share on social media</li>
+                </ul>
+                
+                <h3>Copyright and Intellectual Property</h3>
+                <p>Copyright is a legal right that grants the creator of an original work exclusive rights to its use and distribution, usually for a limited time, with the intention of enabling the creator to receive compensation for their intellectual effort.</p>
+                <p>When using content from the Internet, it's important to:</p>
+                <ul>
+                    <li>Respect copyright laws</li>
+                    <li>Give proper attribution when using someone else's work</li>
+                    <li>Understand fair use guidelines</li>
+                    <li>Use royalty-free or Creative Commons licensed content when possible</li>
+                </ul>
+                
+                <div class="qa-box">
+                    <h3>Q&A Session</h3>
+                    <p><strong>Question:</strong> What is the difference between copyright and plagiarism?</p>
+                    <p><strong>Answer:</strong> Copyright is a legal concept that protects the rights of creators, while plagiarism is an ethical concept related to presenting someone else's work as your own without proper attribution.</p>
+                </div>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="security-complete" onchange="updateProgress('security', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Online Communities and Social Media Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('social-media')">
+                <h2><i class="fas fa-users"></i> Online Communities and Social Media</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="social-media">
+                <h3>Online Communities</h3>
+                <p>An online community is a virtual community whose members interact with each other primarily via the Internet. Online communities have become popular with the rise of the Internet and social media.</p>
+                
+                <h3>Types of Online Communities</h3>
+                <ul>
+                    <li><strong>Social networks</strong> - Facebook, LinkedIn, Twitter</li>
+                    <li><strong>Forums</strong> - discussion boards where people can post messages</li>
+                    <li><strong>Blogs</strong> - websites with regular entries of commentary, descriptions of events, or other material</li>
+                    <li><strong>Wikis</strong> - websites that allow collaborative modification of its content and structure directly from the web browser</li>
+                    <li><strong>Virtual worlds</strong> - computer-based simulated environments</li>
+                </ul>
+                
+                <h3>Social Media Platforms</h3>
+                <div class="icon-grid">
+                    <div class="icon-item">
+                        <i class="fab fa-facebook fa-2x" style="color: #3b5998;"></i>
+                        <p>Facebook</p>
+                    </div>
+                    <div class="icon-item">
+                        <i class="fab fa-twitter fa-2x" style="color: #1da1f2;"></i>
+                        <p>Twitter</p>
+                    </div>
+                    <div class="icon-item">
+                        <i class="fab fa-linkedin fa-2x" style="color: #0077b5;"></i>
+                        <p>LinkedIn</p>
+                    </div>
+                    <div class="icon-item">
+                        <i class="fab fa-instagram fa-2x" style="color: #e4405f;"></i>
+                        <p>Instagram</p>
+                    </div>
+                    <div class="icon-item">
+                        <i class="fab fa-youtube fa-2x" style="color: #ff0000;"></i>
+                        <p>YouTube</p>
+                    </div>
+                    <div class="icon-item">
+                        <i class="fab fa-whatsapp fa-2x" style="color: #25d366;"></i>
+                        <p>WhatsApp</p>
+                    </div>
+                </div>
+                
+                <h3>Using Social Media Responsibly</h3>
+                <ul>
+                    <li>Think before you post</li>
+                    <li>Be mindful of your privacy settings</li>
+                    <li>Be respectful of others</li>
+                    <li>Verify information before sharing</li>
+                    <li>Be aware of your digital footprint</li>
+                    <li>Take breaks from social media</li>
+                    <li>Report inappropriate content</li>
+                </ul>
+                
+                <div class="exercise-box">
+                    <h3>Class Exercise: Creating a Professional LinkedIn Profile</h3>
+                    <ol>
+                        <li>Go to LinkedIn.com and create an account</li>
+                        <li>Add a professional profile photo</li>
+                        <li>Write a compelling headline</li>
+                        <li>Create a summary that highlights your skills and experience</li>
+                        <li>Add your education and work experience</li>
+                        <li>List your skills and ask for endorsements</li>
+                        <li>Connect with colleagues and professionals in your field</li>
+                    </ol>
+                </div>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="social-media-complete" onchange="updateProgress('social-media', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Module Summary Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('summary')">
+                <h2><i class="fas fa-clipboard-list"></i> Module Summary</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="summary">
+                <h3>Key Concepts Covered</h3>
+                <ul>
+                    <li>Internet concepts and types of networks</li>
+                    <li>Electronic mail systems and protocols</li>
+                    <li>Web browsers and their configuration</li>
+                    <li>Search techniques and search engines</li>
+                    <li>Email management and etiquette</li>
+                    <li>Internet security threats and protection</li>
+                    <li>Copyright and intellectual property</li>
+                    <li>Online communities and social media</li>
+                </ul>
+                
+                <h3>Practical Skills Developed</h3>
+                <ul>
+                    <li>Configuring browser settings for security and personalization</li>
+                    <li>Creating and managing email accounts</li>
+                    <li>Using search engines effectively</li>
+                    <li>Managing email messages and contacts</li>
+                    <li>Understanding and applying internet security measures</li>
+                    <li>Using social media responsibly</li>
+                </ul>
+                
+                <div class="qa-box">
+                    <h3>Review Questions</h3>
+                    <ol>
+                        <li>What is the difference between the Internet and an intranet?</li>
+                        <li>What are the three main email protocols and what is the function of each?</li>
+                        <li>How can you configure your browser to block pop-ups?</li>
+                        <li>What are some techniques for effective Internet searching?</li>
+                        <li>What are some common Internet security threats and how can you protect yourself?</li>
+                        <li>Why is it important to respect copyright when using online content?</li>
+                    </ol>
+                </div>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="summary-complete" onchange="updateProgress('summary', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="module-end">
+            <p>Congratulations on completing Module 2!</p>
+        </div>
+        
+        <footer>
+            <p>© 2023 JOSHCAB TRAINING INSTITUTE. All rights reserved.</p>
+            <p>Contact: +254 734 080 808 | Email: info@joshcab.com</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4mOkOIiQUk1Vv0q2kHq9q9Y8Y8w7Y8w8",
+            authDomain: "joshcab-training.firebaseapp.com",
+            projectId: "joshcab-training",
+            storageBucket: "joshcab-training.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef123456"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        // DOM Elements
+        const authModal = document.getElementById('authModal');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const signupBtn = document.getElementById('signupBtn');
+        const showLoginBtn = document.getElementById('showLoginBtn');
+        const showSignupBtn = document.getElementById('showSignupBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const authTabs = document.querySelectorAll('.auth-tab');
+        const userInfo = document.getElementById('userInfo');
+        const authButtons = document.getElementById('authButtons');
+        const userAvatar = document.getElementById('userAvatar');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        
+        // Authentication state observer
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                // User is signed in
+                userInfo.style.display = 'flex';
+                authButtons.style.display = 'none';
+                userAvatar.textContent = user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase();
+                loadUserProgress(user.uid);
+            } else {
+                // User is signed out
+                userInfo.style.display = 'none';
+                authButtons.style.display = 'flex';
+            }
+        });
+        
+        // Auth tab switching
+        authTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.getAttribute('data-tab');
+                
+                // Update active tab
+                authTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Show corresponding form
+                if (tabName === 'login') {
+                    loginForm.classList.add('active');
+                    signupForm.classList.remove('active');
+                } else {
+                    signupForm.classList.add('active');
+                    loginForm.classList.remove('active');
+                }
+            });
+        });
+        
+        // Show login modal
+        showLoginBtn.addEventListener('click', () => {
+            authModal.classList.add('active');
+            loginForm.classList.add('active');
+            signupForm.classList.remove('active');
+            
+            // Update tabs
+            authTabs.forEach(t => t.classList.remove('active'));
+            document.querySelector('.auth-tab[data-tab="login"]').classList.add('active');
+        });
+        
+        // Show signup modal
+        showSignupBtn.addEventListener('click', () => {
+            authModal.classList.add('active');
+            signupForm.classList.add('active');
+            loginForm.classList.remove('active');
+            
+            // Update tabs
+            authTabs.forEach(t => t.classList.remove('active'));
+            document.querySelector('.auth-tab[data-tab="signup"]').classList.add('active');
+        });
+        
+        // Login
+        loginBtn.addEventListener('click', () => {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const error = document.getElementById('loginError');
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    authModal.classList.remove('active');
+                    error.style.display = 'none';
+                })
+                .catch(err => {
+                    error.textContent = err.message;
+                    error.style.display = 'block';
+                });
+        });
+        
+        // Signup
+        signupBtn.addEventListener('click', () => {
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const error = document.getElementById('signupError');
+            
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Update user profile
+                    return userCredential.user.updateProfile({
+                        displayName: name
+                    });
+                })
+                .then(() => {
+                    authModal.classList.remove('active');
+                    error.style.display = 'none';
+                })
+                .catch(err => {
+                    error.textContent = err.message;
+                    error.style.display = 'block';
+                });
+        });
+        
+        // Logout
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut();
+        });
+        
+        // Close modal when clicking outside
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                authModal.classList.remove('active');
+            }
+        });
+        
+        // Toggle card sections
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const header = section.parentElement.querySelector('.card-header');
+            const icon = header.querySelector('.fa-chevron-down');
+            
+            section.classList.toggle('active');
+            
+            if (section.classList.contains('active')) {
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+        
+        // Progress tracking
+        let completedSections = {};
+        
+        function updateProgress(sectionId, isCompleted) {
+            const user = auth.currentUser;
+            if (!user) return;
+            
+            completedSections[sectionId] = isCompleted;
+            
+            // Calculate progress percentage
+            const totalSections = 9; // Total number of sections with checkboxes
+            const completedCount = Object.values(completedSections).filter(Boolean).length;
+            const progressPercentage = Math.round((completedCount / totalSections) * 100);
+            
+            // Update progress bar and text
+            progressBar.style.width = `${progressPercentage}%`;
+            progressText.textContent = `${progressPercentage}% Complete`;
+            
+            // Save progress to Firestore
+            db.collection('userProgress').doc(user.uid).set({
+                module2: {
+                    completedSections: completedSections,
+                    progressPercentage: progressPercentage,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                }
+            }, { merge: true });
+        }
+        
+        // Load user progress
+        function loadUserProgress(userId) {
+            db.collection('userProgress').doc(userId).get()
+                .then(doc => {
+                    if (doc.exists && doc.data().module2) {
+                        const progressData = doc.data().module2;
+                        completedSections = progressData.completedSections || {};
+                        
+                        // Update UI based on saved progress
+                        Object.keys(completedSections).forEach(sectionId => {
+                            const checkbox = document.getElementById(`${sectionId}-complete`);
+                            if (checkbox) {
+                                checkbox.checked = completedSections[sectionId];
+                            }
+                        });
+                        
+                        // Update progress bar
+                        const progressPercentage = progressData.progressPercentage || 0;
+                        progressBar.style.width = `${progressPercentage}%`;
+                        progressText.textContent = `${progressPercentage}% Complete`;
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading user progress:", error);
+                });
+        }
+        
+        // Initialize the module
+        document.addEventListener('DOMContentLoaded', () => {
+            // Open the first section by default
+            toggleSection('overview');
+        });
+    </script>
+    <!-- Add to head section -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a2b4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="JOSHCAB Training">
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+
+<!-- Add to body section (before closing body tag) -->
+<script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    
+                    // Check for updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        console.log('New service worker found...');
+                        
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('New content available; please refresh.');
+                                // You can show an update notification here
+                                showUpdateNotification();
+                            }
+                        });
+                    });
+                })
+                .catch(function(error) {
+                    console.log('ServiceWorker registration failed: ', error);
+                });
+        });
+
+        // Listen for claiming of service worker
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+                window.location.reload();
+                refreshing = true;
+            }
+        });
+    }
+
+    // Function to show update notification
+    function showUpdateNotification() {
+        if (confirm('New version available! Would you like to update?')) {
+            window.location.reload();
+        }
+    }
+
+    // Online/offline status detection
+    window.addEventListener('online', function() {
+        console.log('App is online');
+        // You can show a notification that app is back online
+        showOnlineStatus();
+    });
+
+    window.addEventListener('offline', function() {
+        console.log('App is offline');
+        showOfflineStatus();
+    });
+
+    function showOnlineStatus() {
+        // Create a subtle notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: #2ecc71;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 10000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+        notification.innerHTML = '<i class="fas fa-wifi"></i> Back online';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    function showOfflineStatus() {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: #e74c3c;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 10000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+        notification.innerHTML = '<i class="fas fa-wifi-slash"></i> You are offline';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+</script>
+</body>
+</html>

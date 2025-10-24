@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 1 - Introduction to Computers | JOSHCAB TRAINING INSTITUTE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <!-- Auth Manager -->
+    <script src="auth-manager.js"></script>
+    <!-- Add to head section -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a2b4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="JOSHCAB INSTITUTE">
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <style>
+        /* Add your module styles here */
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .module-header { background: #1a2b4a; color: white; padding: 20px; border-radius: 10px; }
+        .content { background: #f5f7fa; padding: 20px; margin-top: 20px; border-radius: 10px; }
+        .access-denied { text-align: center; padding: 50px; color: #e74c3c; }
+    </style>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #0d47a1;
+            --secondary: #25D366;
+            --accent: #ffc107;
+            --light: #f5f5f5;
+            --dark: #333;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --danger: #F44336;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 100%;
+            padding: 15px;
+        }
+        
+        /* Auth Modal Styles */
+        .auth-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .auth-modal.active {
+            display: flex;
+        }
+        
+        .auth-container {
+            background-color: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+        }
+        
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #777;
+        }
+        
+        .auth-tab.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .auth-form {
+            display: none;
+        }
+        
+        .auth-form.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .auth-btn:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .auth-error {
+            color: var(--danger);
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+        
+        /* Header Styles - Compact Version */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 12px 15px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            flex: 1;
+        }
+        
+        .institute-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        
+        .module-title {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .auth-button {
+            padding: 6px 12px;
+            border: 1px solid white;
+            border-radius: 15px;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+        
+        .auth-button:hover {
+            background-color: white;
+            color: var(--primary);
+        }
+        
+        .whatsapp-contact {
+            background-color: var(--secondary);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 15px;
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            font-size: 0.8rem;
+        }
+        
+        .whatsapp-contact svg {
+            width: 16px;
+            height: 16px;
+            margin-right: 5px;
+        }
+        
+        /* Progress Section */
+        .progress-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .completion-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* Card Styles */
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 0;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-header h2 {
+            color: var(--primary);
+            margin: 0;
+            padding: 0;
+            border: none;
+            font-size: 1.3rem;
+        }
+        
+        .card-header i {
+            transition: transform 0.3s ease;
+        }
+        
+        .card-content {
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .card-content.active {
+            padding: 20px;
+            max-height: 5000px;
+        }
+        
+        h3 {
+            color: var(--primary-dark);
+            margin: 15px 0 10px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+        }
+        
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .definition-box {
+            background-color: #e8f0fe;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .exercise-box {
+            background-color: #fff8e1;
+            border-left: 4px solid var(--accent);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .qa-box {
+            background-color: #e8f5e9;
+            border-left: 4px solid var(--success);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .icon-item {
+            text-align: center;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        
+        .icon-item svg {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 8px;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        .comparison-table th, .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        
+        .comparison-table th {
+            background-color: #f2f2f2;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .completion-check {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .completion-check label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        
+        .completion-check input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .module-end {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin: 30px 0;
+            color: var(--primary);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .institute-name {
+                font-size: 1.1rem;
+            }
+            
+            .module-title {
+                font-size: 0.8rem;
+            }
+            
+            .card-header {
+                padding: 15px;
+            }
+            
+            .card-header h2 {
+                font-size: 1.1rem;
+            }
+            
+            .card-content.active {
+                padding: 15px;
+            }
+            
+            .icon-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+            
+            .comparison-table {
+                font-size: 0.9rem;
+            }
+            
+            .comparison-table th, .comparison-table td {
+                padding: 8px;
+            }
+            
+            .header-right {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .auth-button {
+                padding: 4px 8px;
+                font-size: 0.7rem;
+            }
+            
+            .whatsapp-contact {
+                padding: 4px 8px;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Auth Modal -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-container">
+            <div class="auth-tabs">
+                <div class="auth-tab active" data-tab="login">Login</div>
+                <div class="auth-tab" data-tab="signup">Sign Up</div>
+            </div>
+            
+            <div class="auth-form active" id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password">
+                </div>
+                <button class="auth-btn" id="loginBtn">Login</button>
+                <div class="auth-error" id="loginError"></div>
+            </div>
+            
+            <div class="auth-form" id="signupForm">
+                <div class="form-group">
+                    <label for="signupName">Full Name</label>
+                    <input type="text" id="signupName" placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail">Email</label>
+                    <input type="email" id="signupEmail" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" placeholder="Create a password">
+                </div>
+                <button class="auth-btn" id="signupBtn">Sign Up</button>
+                <div class="auth-error" id="signupError"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Compact Header -->
+        <header>
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="institute-name">JOSHCAB TRAINING INSTITUTE</div>
+                    <div class="module-title">Module 1 – Introduction to Computers</div>
+                </div>
+                
+                <div class="header-right">
+                    <a href="https://wa.me/254734080808" class="whatsapp-contact">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+                            <path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893-.001-3.189-1.262-6.189-3.553-8.449"/>
+                        </svg>
+                        Contact
+                    </a>
+                    
+                    <div class="user-info" id="userInfo" style="display: none;">
+                        <div class="user-avatar" id="userAvatar">JD</div>
+                        <button class="auth-button" id="logoutBtn">Logout</button>
+                        <button class="auth-button" onclick="window.location.href='index.html'">Dashboard</button>
+
+                    </div>
+                    
+                    <div class="auth-buttons" id="authButtons">
+                        <button class="auth-button" id="showLoginBtn">Login</button>
+                        <button class="auth-button" id="showSignupBtn">Sign Up</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Progress Section -->
+        <div class="progress-container">
+            <h3>Your Progress</h3>
+            <div class="progress-bar">
+                <div class="progress" id="progressBar" style="width: 0%"></div>
+            </div>
+            <div class="progress-text">
+                <span id="progressText">0% Complete</span>
+                <span>Module 1</span>
+            </div>
+            <div class="completion-status">
+                <i class="fas fa-info-circle"></i>
+                <span>Your progress is automatically saved and will be available on any device</span>
+            </div>
+        </div>
+        
+        <!-- Module Overview Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('overview')">
+                <h2><i class="fas fa-info-circle"></i> Module Overview</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="overview">
+                <p>This module introduces learners to information and communication technology (ICT). It creates a foundation for fundamentals for computer hardware, operating systems and application software.</p>
+                <p>It discusses computer input and output devices, data processing and data storage. Computer software is and general overview of ICT is discussed.</p>
+                
+                <h3>Learning Objectives</h3>
+                <p>At the end of the module, learners will be able to:</p>
+                <ul>
+                    <li>Differentiate between computer software and computer hardware</li>
+                    <li>Describe how computers processes data</li>
+                    <li>Discuss different types of data storage and the rationale for selecting the right storage medium</li>
+                    <li>Describe the different types of computer networks</li>
+                    <li>Differentiate the various types of software</li>
+                    <li>Start and shut down a computer using the start menu</li>
+                    <li>Differentiate between Input, Output and Input/output devices</li>
+                    <li>Describe the computer desktop standard icons</li>
+                </ul>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="overview-complete" onchange="updateProgress('overview', this.checked)"> 
+                        Mark as reviewed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Introduction to Computers Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('intro')">
+                <h2><i class="fas fa-desktop"></i> Introduction to Computers</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="intro">
+                <div class="definition-box">
+                    <p>A computer is a multipurpose electronic device that can receive, process and store data.</p>
+                    <p>It operates under the control of instructions stored in its own memory, that can accept data, manipulate the data according to specified rules, produce results, and store the results for future use.</p>
+                </div>
+                <p>It has input, processing, storage and output. Examples of computers could be:</p>
+                <ul>
+                    <li>Desktop computers</li>
+                    <li>Laptops</li>
+                    <li>Smart phones</li>
+                    <li>Office calculator</li>
+                    <li>Point of Sale systems</li>
+                </ul>
+                 <!-- Right Side: Photo -->
+                   <img src="icons/part.svg" alt="parts of computer Photo">
+                 <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="intro-complete" onchange="updateProgress('intro', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Powering a Computer Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('power')">
+                <h2><i class="fas fa-plug"></i> Powering a Computer</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="power">
+                <p>In order for a computer to function, it must be powered. The two ways of powering are:</p>
+                <ul>
+                    <li><strong>Alternating Current (AC)</strong>: Supplied as electricity</li>
+                    <li><strong>Direct Current (DC)</strong>: Supplied as a battery</li>
+                </ul>
+                <p>Some devices can use both, others have an option of either, based on power consumptions.</p>
+                
+                <h3>Booting Process</h3>
+                <p>Powering a computing involves booting, which can further be classified as:</p>
+                <ul>
+                    <li><strong>Cold booting</strong>: When the computer is started after having been switched off</li>
+                    <li><strong>Warm booting</strong>: When the operating system alone is restarted (without being switched off)</li>
+                </ul>
+                
+                <div class="exercise-box">
+                    <h3>Class Exercise: Starting and Shutting Down a Computer</h3>
+                    <ol>
+                        <li>Point the mouse pointer to the windows key at the bottom left corner of computer</li>
+                        <li>Click once on the left button of the computer</li>
+                        <li>Select restart. This will restart the computer</li>
+                        <li>Observe and note down a few things that the computer will communicate to you during the booting process</li>
+                    </ol>
+                    
+                    <p>Explain what could be happening when the following took place:</p>
+                    <ul>
+                        <li>Restarting, with circles going round</li>
+                        <li>Hardware information by manufacturer</li>
+                        <li>Windows Logo</li>
+                    </ul>
+                    
+                    <p>What is the difference between "Sleep" and "Shut Down"?</p>
+                </div>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="power-complete" onchange="updateProgress('power', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Computer Devices Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('devices')">
+                <h2><i class="fas fa-keyboard"></i> Computer Devices</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="devices">
+                <h3>Input, Output and Input/Output Devices</h3>
+                
+                <table class="comparison-table">
+                    <tr>
+                        <th>Device Type</th>
+                        <th>Description</th>
+                        <th>Examples</th>
+                    </tr>
+                    <tr>
+                        <td><strong>Input Device</strong></td>
+                        <td>A device that gives instructions or data to a computer for processing. Usually controlled by user to give instructions to a computer. Can send data to another device, but cannot receive data from another device.</td>
+                        <td>Keyboards, Mouse, Scanner, Camera, etc.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Output Device</strong></td>
+                        <td>A peripheral component that the processor uses to display information to the user or another device. Can receive data from another device, but cannot send data to another device.</td>
+                        <td>Monitor (Visual Display Unit), Projector, Speakers, etc.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Input/Output Device</strong></td>
+                        <td>A device that allows entering of data and also displaying or outputting data/information. Can send data to another device and also receive data from another device.</td>
+                        <td>Headsets (with speakers and microphone), Facsimile (fax), Touch screen monitor, etc.</td>
+                    </tr>
+                </table>
+                
+                <h3>Computer Desktop Standard Icons</h3>
+                <p>When the Operating system loads and a user logs in, they get to the computer desktop.</p>
+                <p>This desktop is modeled much like a standard physical office and desktop with a recycle bin, where deleted files go, shortcuts, which are like a catalogue to office storage space etc.</p>
+                <p>To start using the application, there is a windows menu accessed from the start button.</p>
+                
+                <div class="icon-grid">
+                    <div class="icon-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48">
+                            <path fill="#4CAF50" d="M19,4H5C3.9,4,3,4.9,3,6v12c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V6C21,4.9,20.1,4,19,4z M19,18H5V8h14V18z"/>
+                        </svg>
+                        <div>My Computer</div>
+                    </div>
+                    <div class="icon-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48">
+                            <path fill="#FF9800" d="M10,4H4C2.9,4,2,4.9,2,6v12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V8c0-1.1-0.9-2-2-2h-8L10,4z"/>
+                        </svg>
+                        <div>Documents</div>
+                    </div>
+                    <div class="icon-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48">
+                            <path fill="#F44336" d="M19,4h-4L7.4,9.4C7.2,9.6,7,9.9,7,10.2v9.8c0,1.1,0.9,2,2,2h8c1.1,0,2-0.9,2-2V4z M15,20H9v-8h6V20z"/>
+                        </svg>
+                        <div>Recycle Bin</div>
+                    </div>
+                    <div class="icon-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48">
+                            <path fill="#2196F3" d="M21,19V5c0-1.1-0.9-2-2-2H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14C20.1,21,21,20.1,21,19z M8.5,13.5l2.5,3.01 L14.5,12l4.5,6H5L8.5,13.5z"/>
+                        </svg>
+                        <div>Pictures</div>
+                    </div>
+                </div>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="devices-complete" onchange="updateProgress('devices', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Computer Software Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('software')">
+                <h2><i class="fas fa-code"></i> Computer Software</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="software">
+                <div class="definition-box">
+                    <p><strong>Software (SW/S/W)</strong> is a collection of instructions that enable the user to interact with a computer, its hardware, or perform tasks.</p>
+                </div>
+                
+                <h3>Operating System (OS)</h3>
+                <p>An operating system, or "OS," is software that communicates with the hardware and allows other programs to run. It is comprised of system software, or the fundamental files your computer needs to boot up and function.</p>
+                <p>Every desktop computer, tablet, and smartphone includes an operating system that provides basic functionality for the device.</p>
+                
+                <h4>Examples of Operating Systems:</h4>
+                <ul>
+                    <li>Mac OS X</li>
+                    <li>Windows XP</li>
+                    <li>Windows 7</li>
+                    <li>Windows 10</li>
+                    <li>Linux</li>
+                    <li>Android</li>
+                    <li>iOS</li>
+                </ul>
+                
+                <h3>Application Software</h3>
+                <p>Application software, also known as an "application" or an "app", is computer software designed to help the user to perform specific tasks. This is the type of software that interfaces with the user. It is the mode of the communication with the user.</p>
+                
+                <h4>Types of Computer Software:</h4>
+                <ul>
+                    <li><strong>Internet browser</strong> - Firefox, Google Chrome, Internet Explorer</li>
+                    <li><strong>Programming language</strong> - C++, HTML, Java, Perl, Visual Basic (VB)</li>
+                    <li>Word processors (Microsoft Word, Google Docs)</li>
+                    <li>Spreadsheet software (Microsoft Excel)</li>
+                    <li>Presentation software (Microsoft PowerPoint)</li>
+                    <li>Graphics software (Adobe Photoshop)</li>
+                </ul>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="software-complete" onchange="updateProgress('software', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Functions of OS Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('os-functions')">
+                <h2><i class="fas fa-cogs"></i> Functions of Operating Systems</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="os-functions">
+                <ul>
+                    <li><strong>Manage hardware resources</strong> - these include managing memory (RAM and ROM), printers, screen, keyboard mouse etc.</li>
+                    <li><strong>Providing user interface</strong> - the OS enables the users to see where files are located, and allows the user to work with the computer hardware through the graphical user interface.</li>
+                    <li><strong>Provide interface between application software and machine</strong> - when a file is created by an application e.g. MS Word, when the user selects save, it is the operating systems that writes the file on the disk.</li>
+                    <li><strong>Provide security</strong> - the operating system provides user authentication, and ensures malicious programs do not get into the system.</li>
+                    <li><strong>Provide utility software for maintenance</strong> - the operating system monitors how other programs are installed and running. If something goes wrong, the OS helps to rectify.</li>
+                </ul>
+                
+                <h3>File Compression</h3>
+                <p>Zipped (compressed) files take up less storage space and can be transferred to other computers more quickly than uncompressed files.</p>
+                
+                <h4>Why do we compress files?</h4>
+                <ol>
+                    <li>It allows better back-up of huge files because of the reduced capacity of the files</li>
+                    <li>Allows easier and cheaper file transfers because of using less bandwidth</li>
+                    <li>It allows "lighter" files to run on the web and therefore increases the speed of website loading and unloading</li>
+                    <li>Compression allows data encryption and therefore provided enhanced file security</li>
+                </ol>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="os-functions-complete" onchange="updateProgress('os-functions', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Computer Networks Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('networks')">
+                <h2><i class="fas fa-network-wired"></i> Computer Networks</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="networks">
+                <div class="definition-box">
+                    <p>A <strong>computer network</strong> is a group of interconnected computers and devices that communicate and share resources such as files, printers, internet, and applications.</p>
+                </div>
+                
+                <h3>Types of Computer Networks:</h3>
+                <ul>
+                    <li><strong>LAN (Local Area Network)</strong>: Covers a small area like an office or building</li>
+                    <li><strong>WAN (Wide Area Network)</strong>: Spans large geographical areas (e.g., the internet)</li>
+                    <li><strong>MAN (Metropolitan Area Network)</strong>: Covers a city or campus</li>
+                    <li><strong>PAN (Personal Area Network)</strong>: Very small, like Bluetooth connections between phone and headset</li>
+                </ul>
+                <img src="icons/net.svg" alt="networking Photo">
+                <h3>Key Network Components:</h3>
+                <ul>
+                    <li><strong>Router</strong>: Directs data between networks</li>
+                    <li><strong>Switch</strong>: Connects devices within the same network</li>
+                    <li><strong>Modem</strong>: Connects the network to the internet</li>
+                    <li><strong>Access Point</strong>: Extends wireless connectivity</li>
+                </ul>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="networks-complete" onchange="updateProgress('networks', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Computer Security Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('security')">
+                <h2><i class="fas fa-shield-alt"></i> Computer Security</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="security">
+                <div class="definition-box">
+                    <p><strong>Computer security</strong> (cyber security / IT security) is the protection of computer systems from the theft or damage to the hardware, software or the information on them, as well as from disruption or misdirection of the services they provide.</p>
+                </div>
+                
+                <h3>Key Areas of Computer Security:</h3>
+                <ul>
+                    <li><strong>Data Security</strong>: Protecting data from unauthorized access or corruption (e.g., encryption, backup)</li>
+                    <li><strong>Network Security</strong>: Preventing unauthorized access and threats on a computer network (e.g., firewalls, intrusion detection systems)</li>
+                    <li><strong>Application Security</strong>: Ensuring software applications are secure from vulnerabilities (e.g., regular updates, secure coding practices)</li>
+                    <li><strong>User Security</strong>: Educating and controlling how users access systems (e.g., strong passwords, multi-factor authentication)</li>
+                    <li><strong>Device Security</strong>: Securing physical and digital access to computers and mobile devices (e.g., antivirus, screen locks)</li>
+                </ul>
+                
+                <h3>NIST Cybersecurity Framework</h3>
+                <p>In order to provide sufficient security, an organization needs to follow these steps based on National Institute of Standards and Technology (NIST) Cybersecurity Framework:</p>
+                <ol>
+                    <li><strong>IDENTIFY</strong> - Take inventory of key technologies you use and know what information you need to rebuild your infrastructure from scratch</li>
+                    <li><strong>PROTECT</strong> - Assess what protective measures you need to have in place to be as prepared as possible for a cyber incident</li>
+                    <li><strong>DETECT</strong> - Put measures in place to alert you about current or imminent threats to system integrity, or loss or compromise of data</li>
+                    <li><strong>RESPOND</strong> - Make and practice an incidence response plan to contain an attack or incident and maintain business operations in the short term</li>
+                    <li><strong>RECOVER</strong> - Know what to do to return to normal business operations after an incident. Protect sensitive data and your business reputation over the long term</li>
+                </ol>
+                 <img src="icons/security.svg" alt="Security Photo">
+                <h3>Common Threats:</h3>
+                <ul>
+                    <li><strong>Viruses and Malware</strong>: Malicious programs that can damage or steal data</li>
+                    <li><strong>Phishing Attacks</strong>: Fraudulent attempts to gain sensitive information</li>
+                    <li><strong>Ransomware</strong>: Malicious software that locks files until a ransom is paid</li>
+                    <li><strong>Hackers</strong>: Unauthorized users who try to gain access to systems</li>
+                </ul>
+                
+                <h3>Security Measures:</h3>
+                <ul>
+                    <li><strong>User authentication</strong> - ensure that only authorized users access the systems. This can be achieved with usernames and password</li>
+                    <li><strong>Firewalls</strong> - this ensures that devises and users outside the network are allowed entry after checking their safety</li>
+                    <li><strong>Antivirus</strong> - checks that viruses do not enter the network</li>
+                    <li><strong>Email scans</strong> - ensures that junk mail and malicious emails filtered before getting into the network</li>
+                    <li><strong>Keep your software updated</strong> - Ensure you download the latest operating system patches and keep all software up-to-date</li>
+                </ul>
+                
+                <h3>Hardware Protection Measures:</h3>
+                <ul>
+                    <li><strong>Fire</strong> - have preventive strategies against fire. Ensure you have different types of fire extinguishers for different types of fire and use them appropriately</li>
+                    <li><strong>Extreme temperatures</strong> - Most computer systems should be kept between 50 and 90 degrees Fahrenheit (10 to 32 degrees Celsius). Have free flowing air to maintain this temperature or install air-conditioning units</li>
+                    <li><strong>Electrostatic Discharge (ESD)</strong> - damages electronics like memory chips, motherboard, processors etc. Store this hardware in static shielding bags. Use static traps or ground bracelets</li>
+                    <li><strong>Smoke</strong> - Smoke is a potent abrasive and collects on the heads of magnetic disks, optical disks, and tape drives. Ensure you have installed smoke detectors</li>
+                </ul>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="security-complete" onchange="updateProgress('security', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Computer Power Management Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('power-management')">
+                <h2><i class="fas fa-battery-half"></i> Computer Power Management</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="power-management">
+                <p>Computer power management is a set of features that help reduce power consumption by placing monitors and computers into a low-power "sleep mode" after a period of activity. Simply touching the mouse or keyboard "wakes" the computer and monitor in seconds.</p>
+                
+                <h3>Types of Power Management</h3>
+                <p>There are 4 basic types of computer power management or "sleep" features on Windows PCs:</p>
+                
+                <table class="comparison-table">
+                    <tr>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Benefits</th>
+                    </tr>
+                    <tr>
+                        <td><strong>System standby</strong></td>
+                        <td>Drops monitor and computer power use down to 1–3 watts each. Wakes up in seconds</td>
+                        <td>Saves $25–75 per PC annually</td>
+                    </tr>
+                    <tr>
+                        <td><strong>System hibernates</strong></td>
+                        <td>Drops monitor and computer power use down to 1–3 watts each. Wakes up in 20+ seconds. Saves work in the event of power loss</td>
+                        <td>Saves $25–75 per PC annually</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Turn off monitor</strong></td>
+                        <td>Drops monitor power use down to 1–3 W. Wakes in seconds or less</td>
+                        <td>Saves half as much as system standby or hibernate: about $10–40</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Turn off hard disks</strong></td>
+                        <td>Saves very little energy</td>
+                        <td>Minimal savings</td>
+                    </tr>
+                </table>
+                
+                <h3>Benefits of Power Management</h3>
+                <ol>
+                    <li>Cutting the electricity used by PCs roughly in half, saving $25–75 per PC annually</li>
+                    <li>Enhancing data security by reducing the chance that valuable personal information is displayed on an unattended PC</li>
+                    <li>Saving time by eliminating the daily wait for computers to boot up</li>
+                </ol>
+                
+                <div class="completion-check">
+                    <label>
+                        <input type="checkbox" id="power-management-complete" onchange="updateProgress('power-management', this.checked)"> 
+                        Mark as completed
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Q&A Card -->
+        <div class="card">
+            <div class="card-header" onclick="toggleSection('qa')">
+                <h2><i class="fas fa-question-circle"></i> Q&A Session</h2>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="card-content" id="qa">
+                <div class="qa-box">
+                    <p>This section is reserved for questions and answers related to Module 1 content.</p>
+                    <p>Please contact your instructor or use the WhatsApp link above for any queries.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="module-end">END OF MODULE 1</div>
+        
+        <footer>
+            <p>JOSHCAB TRAINING INSTITUTE - MWIKI</p>
+            <p>ICT Course - Module 1: Introduction to Computers</p>
+            <p>Contact: 0734080808 (WhatsApp)</p>
+        </footer>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyD44h0Uak9EeQs2A_aAfSvyRKT4jgdSuHg",
+            authDomain: "jtimwiki.firebaseapp.com",
+            projectId: "jtimwiki",
+            storageBucket: "jtimwiki.firebasestorage.app",
+            messagingSenderId: "125581944053",
+            appId: "1:125581944053:web:e314fcdd288daf97c1d1bc",
+            measurementId: "G-WNVG1L3CZK"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // DOM Elements
+        const authModal = document.getElementById('authModal');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const signupBtn = document.getElementById('signupBtn');
+        const showLoginBtn = document.getElementById('showLoginBtn');
+        const showSignupBtn = document.getElementById('showSignupBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userInfo = document.getElementById('userInfo');
+        const authButtons = document.getElementById('authButtons');
+        const userAvatar = document.getElementById('userAvatar');
+        const userName = document.getElementById('userName');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        
+        // User progress data
+        let userProgress = {
+            overview: false,
+            intro: false,
+            power: false,
+            devices: false,
+            software: false,
+            'os-functions': false,
+            networks: false,
+            security: false,
+            'power-management': false
+        };
+        
+        // Toggle section content
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const icon = section.previousElementSibling.querySelector('.fa-chevron-down');
+            
+            section.classList.toggle('active');
+            icon.classList.toggle('fa-rotate-180');
+        }
+        
+        // Update progress
+        function updateProgress(section, completed) {
+            if (!auth.currentUser) {
+                alert('Please log in to save your progress');
+                document.getElementById(`${section}-complete`).checked = false;
+                return;
+            }
+            
+            userProgress[section] = completed;
+            calculateProgress();
+            
+            // Save to Firestore
+            if (auth.currentUser) {
+                db.collection('userProgress').doc(auth.currentUser.uid).set({
+                    module1: userProgress,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true })
+                .then(() => {
+                    console.log('Progress saved successfully');
+                })
+                .catch((error) => {
+                    console.error('Error saving progress: ', error);
+                });
+            }
+        }
+        
+        // Calculate and update progress
+        function calculateProgress() {
+            const totalSections = Object.keys(userProgress).length;
+            const completedSections = Object.values(userProgress).filter(Boolean).length;
+            const progressPercentage = Math.round((completedSections / totalSections) * 100);
+            
+            progressBar.style.width = `${progressPercentage}%`;
+            progressText.textContent = `${progressPercentage}% Complete`;
+            
+            // Update checkboxes
+            Object.keys(userProgress).forEach(section => {
+                const checkbox = document.getElementById(`${section}-complete`);
+                if (checkbox) {
+                    checkbox.checked = userProgress[section];
+                }
+            });
+        }
+        
+        // Load user progress from Firestore
+        function loadUserProgress(userId) {
+            db.collection('userProgress').doc(userId).get()
+            .then((doc) => {
+                if (doc.exists && doc.data().module1) {
+                    userProgress = doc.data().module1;
+                    calculateProgress();
+                    
+                    // Open the first incomplete section
+                    const firstIncomplete = Object.keys(userProgress).find(section => !userProgress[section]);
+                    if (firstIncomplete) {
+                        document.getElementById(firstIncomplete).classList.add('active');
+                    }
+                } else {
+                    // Initialize with default progress
+                    calculateProgress();
+                }
+            })
+            .catch((error) => {
+                console.error('Error loading progress: ', error);
+            });
+        }
+        
+        // Auth tab switching
+        document.querySelectorAll('.auth-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.getAttribute('data-tab');
+                
+                // Update active tab
+                document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Show corresponding form
+                document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+                document.getElementById(`${tabName}Form`).classList.add('active');
+                
+                // Clear errors
+                document.getElementById(`${tabName}Error`).style.display = 'none';
+            });
+        });
+        
+        // Show login modal
+        showLoginBtn.addEventListener('click', () => {
+            authModal.classList.add('active');
+            document.querySelector('.auth-tab[data-tab="login"]').click();
+        });
+        
+        // Show signup modal
+        showSignupBtn.addEventListener('click', () => {
+            authModal.classList.add('active');
+            document.querySelector('.auth-tab[data-tab="signup"]').click();
+        });
+        
+        // Login function
+        loginBtn.addEventListener('click', () => {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorElement = document.getElementById('loginError');
+            
+            if (!email || !password) {
+                errorElement.textContent = 'Please fill in all fields';
+                errorElement.style.display = 'block';
+                return;
+            }
+            
+            auth.signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                // Signed in
+                authModal.classList.remove('active');
+                errorElement.style.display = 'none';
+            })
+            .catch((error) => {
+                errorElement.textContent = error.message;
+                errorElement.style.display = 'block';
+            });
+        });
+        
+        // Signup function
+        signupBtn.addEventListener('click', () => {
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const errorElement = document.getElementById('signupError');
+            
+            if (!name || !email || !password) {
+                errorElement.textContent = 'Please fill in all fields';
+                errorElement.style.display = 'block';
+                return;
+            }
+            
+            if (password.length < 6) {
+                errorElement.textContent = 'Password should be at least 6 characters';
+                errorElement.style.display = 'block';
+                return;
+            }
+            
+            auth.createUserWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                // Signed up
+                const user = userCredential.user;
+                
+                // Update user profile
+                return user.updateProfile({
+                    displayName: name
+                });
+            })
+            .then(() => {
+                authModal.classList.remove('active');
+                errorElement.style.display = 'none';
+                
+                // Initialize user progress in Firestore
+                db.collection('userProgress').doc(auth.currentUser.uid).set({
+                    module1: userProgress,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            })
+            .catch((error) => {
+                errorElement.textContent = error.message;
+                errorElement.style.display = 'block';
+            });
+        });
+        
+        // Logout function
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut();
+        });
+        
+        // Auth state observer
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User is signed in
+                userInfo.style.display = 'flex';
+                authButtons.style.display = 'none';
+                
+                const displayName = user.displayName || 'User';
+                userName.textContent = displayName;
+                userAvatar.textContent = displayName.charAt(0).toUpperCase();
+                
+                // Load user progress
+                loadUserProgress(user.uid);
+            } else {
+                // User is signed out
+                userInfo.style.display = 'none';
+                authButtons.style.display = 'flex';
+                
+                // Reset progress UI
+                progressBar.style.width = '0%';
+                progressText.textContent = '0% Complete';
+                
+                // Reset checkboxes
+                Object.keys(userProgress).forEach(section => {
+                    userProgress[section] = false;
+                    const checkbox = document.getElementById(`${section}-complete`);
+                    if (checkbox) {
+                        checkbox.checked = false;
+                    }
+                });
+            }
+        });
+        
+        // Close modal when clicking outside
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                authModal.classList.remove('active');
+            }
+        });
+        
+        // Open the first section by default
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('overview').classList.add('active');
+        });
+    </script>
+     <script>
+        // Module 1 Validation
+        window.addEventListener('DOMContentLoaded', async function() {
+            const moduleContent = document.getElementById('moduleContent');
+            const accessDenied = document.getElementById('accessDenied');
+            
+            // Check if user has access to this module
+            const hasAccess = await window.authManager.checkModuleAccess(1);
+            
+            if (hasAccess) {
+                // User has access - show module content
+                moduleContent.style.display = 'block';
+                accessDenied.style.display = 'none';
+                
+                // Load your module content here
+                moduleContent.innerHTML = `
+                    <h2>Welcome to Introduction to Computers!</h2>
+                    <p>This module covers computer fundamentals.</p>
+                    <div class="lesson">
+                        <h3>Lesson 1: Computer Basics</h3>
+                        <p>Content goes here...</p>
+                    </div>
+                    <button onclick="markAsCompleted()">Mark as Completed</button>
+                `;
+            } else {
+                // User doesn't have access
+                moduleContent.style.display = 'none';
+                accessDenied.style.display = 'block';
+            }
+        });
+
+        function markAsCompleted() {
+            // Add your completion logic here
+            alert('Module marked as completed!');
+            // In real implementation, update progress in database
+        }
+    </script>
+    <!-- Add to head section -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a2b4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="JOSHCAB Training">
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+
+<!-- Add to body section (before closing body tag) -->
+<script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    
+                    // Check for updates
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        console.log('New service worker found...');
+                        
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('New content available; please refresh.');
+                                // You can show an update notification here
+                                showUpdateNotification();
+                            }
+                        });
+                    });
+                })
+                .catch(function(error) {
+                    console.log('ServiceWorker registration failed: ', error);
+                });
+        });
+
+        // Listen for claiming of service worker
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+                window.location.reload();
+                refreshing = true;
+            }
+        });
+    }
+
+    // Function to show update notification
+    function showUpdateNotification() {
+        if (confirm('New version available! Would you like to update?')) {
+            window.location.reload();
+        }
+    }
+
+    // Online/offline status detection
+    window.addEventListener('online', function() {
+        console.log('App is online');
+        // You can show a notification that app is back online
+        showOnlineStatus();
+    });
+
+    window.addEventListener('offline', function() {
+        console.log('App is offline');
+        showOfflineStatus();
+    });
+
+    function showOnlineStatus() {
+        // Create a subtle notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: #2ecc71;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 10000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+        notification.innerHTML = '<i class="fas fa-wifi"></i> Back online';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    function showOfflineStatus() {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: #e74c3c;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 10000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+        notification.innerHTML = '<i class="fas fa-wifi-slash"></i> You are offline';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+</script>
+</body>
+</html>                        
