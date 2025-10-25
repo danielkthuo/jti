@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security in ICT Course</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1a2b4a;
+            --primary-dark: #0f1a2f;
+            --secondary: #2c3e6c;
+            --accent: #ff6b00;
+            --light: #f8f9fa;
+            --dark: #333;
+            --gray: #6c757d;
+            --border: #e0e0e0;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+            --mobile-padding: 1rem;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f5f5f5;
+            padding-bottom: 80px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 100%;
+            padding: 0;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1rem var(--mobile-padding);
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .module {
+            background: white;
+            margin: 1rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .module-header {
+            background: var(--secondary);
+            color: white;
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .module-header:hover {
+            background: var(--primary-dark);
+        }
+
+        .module-header h2 {
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .module-content {
+            display: none;
+            padding: 0;
+        }
+
+        .module-content.active {
+            display: block;
+        }
+
+        .unit {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .unit:last-child {
+            border-bottom: none;
+        }
+
+        .unit-header {
+            background: var(--light);
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .unit-header:hover {
+            background: #e9ecef;
+        }
+
+        .unit-header h3 {
+            font-size: 1rem;
+            margin: 0;
+            color: var(--secondary);
+        }
+
+        .unit-content {
+            display: none;
+            padding: 0;
+        }
+
+        .unit-content.active {
+            display: block;
+        }
+
+        .lesson-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .lesson-item {
+            padding: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .lesson-item:hover {
+            background: var(--light);
+        }
+
+        .lesson-item:last-child {
+            border-bottom: none;
+        }
+
+        .lesson-item.completed .lesson-title {
+            text-decoration: line-through;
+            color: var(--gray);
+        }
+
+        .lesson-number {
+            background: var(--secondary);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .lesson-item.completed .lesson-number {
+            background: var(--gray);
+        }
+
+        .lesson-title {
+            font-size: 0.95rem;
+            color: var(--dark);
+            flex-grow: 1;
+        }
+
+        .lesson-content {
+            display: none;
+            padding: 1.2rem;
+            background: #f9f9f9;
+            border-top: 1px solid var(--border);
+        }
+
+        .lesson-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .lesson-content h4 {
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+            font-size: 1.05rem;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
+        }
+
+        .lesson-content p {
+            margin-bottom: 1rem;
+        }
+
+        .lesson-content ul, .lesson-content ol {
+            margin-left: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .lesson-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .keyboard-shortcut {
+            display: inline-block;
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 0.2rem 0.5rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            margin: 0.2rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .code-example {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 1rem 0;
+            overflow-x: auto;
+            border-left: 4px solid var(--accent);
+            font-size: 0.9rem;
+        }
+
+        .illustration {
+            width: 100%;
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 1rem 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+        }
+
+        .tip-box {
+            background: #e7f4ff;
+            border-left: 4px solid #2196F3;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .warning-box {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .icon {
+            transition: transform 0.3s ease;
+        }
+
+        .icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .progress {
+            height: 100%;
+            background: var(--secondary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .nav-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .nav-btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .search-container {
+            padding: 0.8rem;
+            background: white;
+            margin: 0.8rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 100px;
+            z-index: 99;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.7rem;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            outline: none;
+            padding-left: 2.5rem;
+        }
+
+        .search-input:focus {
+            border-color: var(--secondary);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        .completion-badge {
+            background: var(--accent);
+            color: white;
+            border-radius: 12px;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.7rem;
+            margin-left: 0.5rem;
+        }
+
+        /* Mobile-first responsive design */
+        @media (max-width: 768px) {
+            .header {
+                padding: 0.8rem var(--mobile-padding);
+            }
+            
+            .header h1 {
+                font-size: 1.2rem;
+            }
+            
+            .module {
+                margin: 0.8rem;
+            }
+            
+            .module-header, .unit-header {
+                padding: 0.8rem;
+            }
+            
+            .module-header h2 {
+                font-size: 1rem;
+            }
+            
+            .unit-header h3 {
+                font-size: 0.9rem;
+            }
+            
+            .lesson-item {
+                padding: 0.8rem;
+            }
+            
+            .lesson-title {
+                font-size: 0.9rem;
+            }
+            
+            .lesson-content {
+                padding: 1rem;
+            }
+            
+            .nav-btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.85rem;
+            }
+            
+            .search-container {
+                margin: 0.8rem;
+                padding: 0.7rem;
+            }
+            
+            .keyboard-shortcut {
+                font-size: 0.8rem;
+                padding: 0.15rem 0.4rem;
+            }
+            
+            .code-example {
+                padding: 0.8rem;
+                font-size: 0.85rem;
+            }
+            
+            .tip-box, .warning-box {
+                padding: 0.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.1rem;
+            }
+            
+            .module-header h2 {
+                font-size: 0.95rem;
+            }
+            
+            .unit-header h3 {
+                font-size: 0.85rem;
+            }
+            
+            .lesson-title {
+                font-size: 0.85rem;
+            }
+            
+            .lesson-number {
+                width: 24px;
+                height: 24px;
+                font-size: 0.75rem;
+                margin-right: 0.8rem;
+            }
+            
+            .nav-btn {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Animation for smooth transitions */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .module-content.active,
+        .unit-content.active {
+            animation: fadeIn 0.3s ease;
+        }
+
+        .function-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .function-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--secondary);
+        }
+
+        .function-card h5 {
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .function-card p {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .function-syntax {
+            background: #f5f5f5;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+
+        /* Mobile-specific grid adjustments */
+        @media (max-width: 768px) {
+            .function-grid {
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+            }
+            
+            .function-card {
+                padding: 0.8rem;
+            }
+        }
+
+        /* Enhanced illustration styling */
+        .illustration-container {
+            position: relative;
+            margin: 1.2rem 0;
+            text-align: center;
+        }
+
+        .illustration-caption {
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        /* Mobile touch improvements */
+        .lesson-item, .module-header, .unit-header {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Better mobile scrolling */
+        .lesson-content.active {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        /* Mobile-friendly tables */
+        .responsive-table {
+            width: 100%;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .responsive-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .responsive-table th, .responsive-table td {
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .responsive-table th {
+            background-color: var(--light);
+        }
+
+        .security-concept {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .security-concept .component {
+            margin-bottom: 0.8rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px dashed #dee2e6;
+        }
+
+        .security-concept .component:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .formula-example {
+            background: #e7f3ff;
+            border-left: 4px solid #4a90e2;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .formula-example .formula {
+            font-family: monospace;
+            background: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin: 0.5rem 0;
+        }
+
+        .chart-container {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .chart-placeholder {
+            height: 200px;
+            background: linear-gradient(135deg, #f0f8ff 0%, #e6f7ff 100%);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4a90e2;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar">
+        <div class="progress" id="progress"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Security in ICT Course</h1>
+            <p>From Fundamentals to Advanced Cyber Security</p>
+        </div>
+
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="search-input" placeholder="Search security concepts and threats..." id="search-input">
+        </div>
+
+        <!-- Module 1: Introduction to ICT Security -->
+        <div class="module">
+            <div class="module-header" onclick="toggleModule(1)">
+                <h2>Module 1: Introduction to ICT Security</h2>
+                <span class="icon">▼</span>
+            </div>
+            <div class="module-content" id="module-1">
+                <!-- Unit 1.1 -->
+                <div class="unit">
+                    <div class="unit-header" onclick="toggleUnit(1, 1)">
+                        <h3>Unit 1.1: Introduction to ICT Security</h3>
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="unit-content" id="unit-1-1">
+                        <ul class="lesson-list">
+                            <li class="lesson-item" onclick="toggleLesson(1, 1, 1)">
+                                <span class="lesson-number">1</span>
+                                <span class="lesson-title">What is ICT Security?</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-1-1-1">
+                                <h4>Understanding ICT Security</h4>
+                                <p>Information and Communication Technology (ICT) refers to technologies that provide access to data and information through the use of computers, tablets, phones and telecommunications networks.</p>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-shield-alt" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">ICT Security protects digital assets and information</div>
+                                </div>
+                                
+                                <p><strong>Key Definitions:</strong></p>
+                                <ul>
+                                    <li><strong>Computer Security:</strong> Protection of computer systems from theft, damage, or disruption of services</li>
+                                    <li><strong>Cybersecurity:</strong> Protection of internet-connected systems from cyberattacks</li>
+                                    <li><strong>Information Security:</strong> Practice of preventing unauthorized access, use, disclosure, or destruction of information</li>
+                                </ul>
+                                
+                                <div class="tip-box">
+                                    <strong>Global Village:</strong> Modern ICT has created a "global village" where people are connected by easy travel, mass media and electronic communications, making security a global concern.
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(1, 1, 2)">
+                                <span class="lesson-number">2</span>
+                                <span class="lesson-title">The Security Triad</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-1-1-2">
+                                <h4>CIA Triad: Foundation of Information Security</h4>
+                                <p>The CIA triad of confidentiality, integrity, and availability is at the heart of information security. These three principles form the basis for all security measures.</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Confidentiality</h5>
+                                        <p>Only authorized users can access the data resources and information</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Integrity</h5>
+                                        <p>Only authorized users should be able to modify the data when needed</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Availability</h5>
+                                        <p>Data should be available to users when needed</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <div style="text-align:center;width:100%">
+                                            <div style="display:flex;justify-content:space-around;margin-bottom:20px">
+                                                <div style="text-align:center">
+                                                    <i class="fas fa-user-secret" style="font-size:2rem;"></i>
+                                                    <p style="margin-top:10px">Confidentiality</p>
+                                                </div>
+                                                <div style="text-align:center">
+                                                    <i class="fas fa-check-circle" style="font-size:2rem;"></i>
+                                                    <p style="margin-top:10px">Integrity</p>
+                                                </div>
+                                                <div style="text-align:center">
+                                                    <i class="fas fa-wifi" style="font-size:2rem;"></i>
+                                                    <p style="margin-top:10px">Availability</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="illustration-caption">The CIA Triad: Core principles of information security</div>
+                                </div>
+                                
+                                <h4>Extended Security Principles</h4>
+                                <p>Modern security frameworks have extended the CIA triad to include additional principles:</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Authenticity</h5>
+                                        <p>Providing verification of the identities of users and systems</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Accountability</h5>
+                                        <p>Assurance by recording the identities and activities of users</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Non-repudiation</h5>
+                                        <p>Assuring the identities of the parties in a transaction cannot be denied</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="warning-box">
+                                    <strong>Important:</strong> All security measures should be designed to protect one or more of these principles. A security breach typically violates at least one of these core concepts.
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(1, 1, 3)">
+                                <span class="lesson-number">3</span>
+                                <span class="lesson-title">Threats to Computing Environments</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-1-1-3">
+                                <h4>Understanding Security Threats</h4>
+                                <p>Security threats can be classified based on what they target: hardware, information, or administration.</p>
+                                
+                                <div class="security-concept">
+                                    <div class="component">
+                                        <strong>Hardware Security:</strong> Protection of physical systems from harm, including computing devices and IoT devices
+                                    </div>
+                                    <div class="component">
+                                        <strong>Software Security:</strong> Protection of software against malicious attacks to ensure it functions correctly
+                                    </div>
+                                    <div class="component">
+                                        <strong>Personnel Security:</strong> Assurance of honesty and trustworthiness in the use of ICT resources
+                                    </div>
+                                </div>
+                                
+                                <h4>Common Threats to Data Security</h4>
+                                <p>Data faces numerous threats in today's digital environment:</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>System Crashes</h5>
+                                        <p>Data lost or damaged during hardware failures, especially affecting hard disks</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Hardware Failures</h5>
+                                        <p>Data corrupted due to faulty disks, disk drives, or power failures</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Human Error</h5>
+                                        <p>Data lost by accidentally deleting or overwriting files</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Malware</h5>
+                                        <p>Data lost or corrupted by computer viruses and other malicious software</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Unauthorized Access</h5>
+                                        <p>Systems hacked by unauthorized users who delete or alter data</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Natural Disasters</h5>
+                                        <p>Data destroyed by natural disasters, acts of terrorism, or war</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="tip-box">
+                                    <strong>Case Study:</strong> In 2014, Kaspersky Lab detected and neutralized over 6 billion threats, blocked 1.3 million attacks on Android devices, and identified 295,539 new malicious mobile programs.
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Unit 1.2 -->
+                <div class="unit">
+                    <div class="unit-header" onclick="toggleUnit(1, 2)">
+                        <h3>Unit 1.2: Software-Based Threats</h3>
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="unit-content" id="unit-1-2">
+                        <ul class="lesson-list">
+                            <li class="lesson-item" onclick="toggleLesson(1, 2, 1)">
+                                <span class="lesson-number">1</span>
+                                <span class="lesson-title">Types of Malicious Software</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-1-2-1">
+                                <h4>Understanding Malware</h4>
+                                <p>Malicious software (malware) is any software that brings harm to a computer system. Malware can steal protected data, delete documents, or add unauthorized software.</p>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-bug" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Malware comes in various forms with different harmful capabilities</div>
+                                </div>
+                                
+                                <h4>Common Types of Malware</h4>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Virus</h5>
+                                        <p>Malicious program that executes itself and spreads by infecting other programs or files</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Worm</h5>
+                                        <p>Self-replicating malware that spreads without human interaction</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Trojan Horse</h5>
+                                        <p>Malicious program disguised as legitimate software</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Spyware</h5>
+                                        <p>Software designed to collect information without users' knowledge</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Ransomware</h5>
+                                        <p>Malware that encrypts data and demands payment for decryption</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Rootkit</h5>
+                                        <p>Malware designed to obtain administrator-level access to systems</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="warning-box">
+                                    <strong>Mobile Threats:</strong> In 2014, 19% of Android users encountered a mobile threat, with 53% of attacks using mobile Trojans designed to steal money through SMS and banking Trojans.
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(1, 2, 2)">
+                                <span class="lesson-number">2</span>
+                                <span class="lesson-title">Operating System Security</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-1-2-2">
+                                <h4>OS Security Framework</h4>
+                                <p>Operating System Security (OS Security) encompasses techniques and methods to ensure safety from threats and attacks, allowing applications to perform required tasks while preventing unauthorized interference.</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Memory Management</h5>
+                                        <p>Prevents programs from mixing with each other in memory</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Data Security</h5>
+                                        <p>Protects data from illegal use, modification or deletion</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Process Management</h5>
+                                        <p>Decides which tasks get CPU resources</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Device Controlling</h5>
+                                        <p>Controls devices using device drivers</p>
+                                    </div>
+                                </div>
+                                
+                                <h4>Authentication Methods</h4>
+                                <p>Operating systems use various methods to authenticate users:</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Username/Password</h5>
+                                        <p>Traditional authentication using credentials</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>User Card/Key</h5>
+                                        <p>Physical authentication using cards or key generators</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Biometrics</h5>
+                                        <p>Authentication using fingerprints, retina patterns, or signatures</p>
+                                    </div>
+                                </div>
+                                
+                                <h4>Program Threats</h4>
+                                <p>Operating systems must protect against various program threats:</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Trojan Horse</h5>
+                                        <p>Traps user credentials and sends them to malicious users</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Trap Door</h5>
+                                        <p>Program with security holes that perform illegal actions</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Logic Bomb</h5>
+                                        <p>Program that misbehaves only when certain conditions are met</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Virus</h5>
+                                        <p>Self-replicating programs that can modify/delete files</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="tip-box">
+                                    <strong>System Threats:</strong> Operating systems also protect against system threats like worms, port scanning, and denial of service attacks that misuse system services and network connections.
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(1, 2, 3)">
+                                <span class="lesson-number">3</span>
+                                <span class="lesson-title">Endpoint Security Tools</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-1-2-3">
+                                <h4>Protecting Network Endpoints</h4>
+                                <p>Endpoint security refers to protecting corporate networks when accessed via remote devices like laptops or mobile devices. Each device creates a potential entry point for security threats.</p>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-laptop" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Endpoint security protects each device connecting to the network</div>
+                                </div>
+                                
+                                <h4>Endpoint Security Features</h4>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Antivirus & Antispyware</h5>
+                                        <p>Protection against malware and spyware</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Firewall</h5>
+                                        <p>Network traffic monitoring and control</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Host Intrusion Prevention</h5>
+                                        <p>Detection and prevention of intrusion attempts</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Data Loss Prevention</h5>
+                                        <p>Prevention of unauthorized data transfer</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Application Control</h5>
+                                        <p>Whitelisting or control of applications</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Network Access Control</h5>
+                                        <p>Control of network access based on compliance</p>
+                                    </div>
+                                </div>
+                                
+                                <h4>Top Endpoint Security Solutions</h4>
+                                <p>According to AV-TEST Institute, leading endpoint security solutions include:</p>
+                                
+                                <div class="responsive-table">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Vendor</th>
+                                                <th>Product</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>AVG</td>
+                                                <td>AVG Antivirus Business 2016</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Bitdefender</td>
+                                                <td>Bitdefender Endpoint Security 6.2</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Kaspersky Lab</td>
+                                                <td>Endpoint Security 10</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Symantec</td>
+                                                <td>Endpoint Protection 14.0</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Sophos</td>
+                                                <td>Endpoint Security and Control 10.6</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Trend Micro</td>
+                                                <td>Office Scan 11.0</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div class="tip-box">
+                                    <strong>Endpoint Security Management:</strong> This is a policy-based approach to network security that requires endpoint devices to comply with specific criteria before they are granted access to network resources.
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 2: Data Security and Disaster Recovery -->
+        <div class="module">
+            <div class="module-header" onclick="toggleModule(2)">
+                <h2>Module 2: Data Security and Disaster Recovery</h2>
+                <span class="icon">▼</span>
+            </div>
+            <div class="module-content" id="module-2">
+                <!-- Unit 2.1 -->
+                <div class="unit">
+                    <div class="unit-header" onclick="toggleUnit(2, 1)">
+                        <h3>Unit 2.1: Securing Data and Information</h3>
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="unit-content" id="unit-2-1">
+                        <ul class="lesson-list">
+                            <li class="lesson-item" onclick="toggleLesson(2, 1, 1)">
+                                <span class="lesson-number">1</span>
+                                <span class="lesson-title">Data Protection Methods</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-2-1-1">
+                                <h4>Data Security Fundamentals</h4>
+                                <p>Data security involves protecting data from unauthorized access, corruption, or theft throughout its lifecycle. This includes both digital and physical protection measures.</p>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-database" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Data security protects information throughout its lifecycle</div>
+                                </div>
+                                
+                                <h4>Data Security Techniques</h4>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Data Encryption</h5>
+                                        <p>Converting data into unreadable code to prevent unauthorized access</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Data Masking</h5>
+                                        <p>Hiding specific data within a database to protect sensitive information</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Data Erasure</h5>
+                                        <p>Ensuring data is completely removed when no longer needed</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Data Backup</h5>
+                                        <p>Creating copies of data to restore in case of loss or corruption</p>
+                                    </div>
+                                </div>
+                                
+                                <h4>Data Security Best Practices</h4>
+                                <p>Implementing strong data security requires a comprehensive approach:</p>
+                                
+                                <ol>
+                                    <li><strong>Identify sensitive data:</strong> Know what data needs protection</li>
+                                    <li><strong>Establish security policies:</strong> Create clear rules for data handling</li>
+                                    <li><strong>Control access:</strong> Limit data access to authorized personnel only</li>
+                                    <li><strong>Implement encryption:</strong> Protect data at rest and in transit</li>
+                                    <li><strong>Monitor and audit:</strong> Track data access and usage patterns</li>
+                                    <li><strong>Train employees:</strong> Ensure staff understand security protocols</li>
+                                </ol>
+                                
+                                <div class="warning-box">
+                                    <strong>Data Classification:</strong> Not all data requires the same level of protection. Classify data based on sensitivity to apply appropriate security measures efficiently.
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(2, 1, 2)">
+                                <span class="lesson-number">2</span>
+                                <span class="lesson-title">Disaster Recovery Planning</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-2-1-2">
+                                <h4>Understanding Disaster Recovery</h4>
+                                <p>Disaster recovery involves a set of policies, tools, and procedures to enable the recovery or continuation of vital technology infrastructure and systems following a natural or human-induced disaster.</p>
+                                
+                                <div class="chart-container">
+                                    <div class="chart-placeholder">
+                                        Disaster Recovery Plan Components
+                                    </div>
+                                </div>
+                                
+                                <h4>Key Elements of Disaster Recovery</h4>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Risk Assessment</h5>
+                                        <p>Identifying potential threats and vulnerabilities</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Business Impact Analysis</h5>
+                                        <p>Determining critical systems and recovery priorities</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Recovery Strategies</h5>
+                                        <p>Developing approaches for system recovery</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Plan Development</h5>
+                                        <p>Creating detailed recovery procedures</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Testing & Maintenance</h5>
+                                        <p>Regularly testing and updating the recovery plan</p>
+                                    </div>
+                                </div>
+                                
+                                <h4>Disaster Recovery Metrics</h4>
+                                <p>Two key metrics guide disaster recovery planning:</p>
+                                
+                                <div class="formula-example">
+                                    <div class="component">
+                                        <strong>Recovery Time Objective (RTO)</strong>
+                                        <div class="formula">Maximum acceptable length of time that a system can be offline</div>
+                                        <p>This determines how quickly systems must be restored after a disaster.</p>
+                                    </div>
+                                    <div class="component">
+                                        <strong>Recovery Point Objective (RPO)</strong>
+                                        <div class="formula">Maximum acceptable amount of data loss measured in time</div>
+                                        <p>This determines how frequently data must be backed up.</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="tip-box">
+                                    <strong>Testing is Critical:</strong> A disaster recovery plan is only effective if it works when needed. Regular testing and updates are essential to ensure the plan remains viable as systems and threats evolve.
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(2, 1, 3)">
+                                <span class="lesson-number">3</span>
+                                <span class="lesson-title">Backup Strategies</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-2-1-3">
+                                <h4>Data Backup Fundamentals</h4>
+                                <p>Data backup involves creating copies of data that can be restored after a data loss event. Effective backup strategies are essential for business continuity and disaster recovery.</p>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-hdd" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Regular backups protect against data loss from various threats</div>
+                                </div>
+                                
+                                <h4>Backup Types</h4>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Full Backup</h5>
+                                        <p>Complete copy of all selected data</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Incremental Backup</h5>
+                                        <p>Only backs up data changed since last backup</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Differential Backup</h5>
+                                        <p>Backs up data changed since last full backup</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Mirror Backup</h5>
+                                        <p>Exact copy of source data without compression</p>
+                                    </div>
+                                </div>
+                                
+                                <h4>Backup Storage Options</h4>
+                                <p>Choosing where to store backups is critical for security and accessibility:</p>
+                                
+                                <div class="responsive-table">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Storage Type</th>
+                                                <th>Advantages</th>
+                                                <th>Disadvantages</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>External Hard Drives</td>
+                                                <td>Fast, portable, inexpensive</td>
+                                                <td>Physical damage risk, manual process</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Network Attached Storage (NAS)</td>
+                                                <td>Centralized, automated backups</td>
+                                                <td>Single location risk, network dependency</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Cloud Storage</td>
+                                                <td>Off-site, accessible from anywhere</td>
+                                                <td>Ongoing costs, internet dependency</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Tape Drives</td>
+                                                <td>High capacity, long-term storage</td>
+                                                <td>Slow access, specialized equipment</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <h4>Backup Best Practices</h4>
+                                <ol>
+                                    <li><strong>Follow the 3-2-1 rule:</strong> 3 copies of data, on 2 different media, with 1 copy off-site</li>
+                                    <li><strong>Automate backups:</strong> Reduce human error with scheduled backups</li>
+                                    <li><strong>Test restores regularly:</strong> Ensure backups are working correctly</li>
+                                    <li><strong>Secure backup data:</strong> Encrypt backups to protect sensitive information</li>
+                                    <li><strong>Document procedures:</strong> Create clear instructions for backup and recovery</li>
+                                </ol>
+                                
+                                <div class="warning-box">
+                                    <strong>Backup Verification:</strong> Creating backups is only half the solution. Regular verification that backups can be successfully restored is critical to ensure they will work when needed.
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 3: Network Security -->
+        <div class="module">
+            <div class="module-header" onclick="toggleModule(3)">
+                <h2>Module 3: Network Security</h2>
+                <span class="icon">▼</span>
+            </div>
+            <div class="module-content" id="module-3">
+                <!-- Unit 3.1 -->
+                <div class="unit">
+                    <div class="unit-header" onclick="toggleUnit(3, 1)">
+                        <h3>Unit 3.1: Network Security Fundamentals</h3>
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="unit-content" id="unit-3-1">
+                        <ul class="lesson-list">
+                            <li class="lesson-item" onclick="toggleLesson(3, 1, 1)">
+                                <span class="lesson-number">1</span>
+                                <span class="lesson-title">Firewalls and Network Defense</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-3-1-1">
+                                <h4>Understanding Firewalls</h4>
+                                <p>A firewall is a network security system that monitors and controls incoming and outgoing network traffic based on predetermined security rules. Firewalls establish a barrier between trusted internal networks and untrusted external networks.</p>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-shield-alt" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Firewalls act as barriers between trusted and untrusted networks</div>
+                                </div>
+                                
+                                <h4>Types of Firewalls</h4>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Packet-Filtering Firewalls</h5>
+                                        <p>Examine packets and allow or block based on source/destination IP, ports, and protocols</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Stateful Inspection Firewalls</h5>
+                                        <p>Monitor the state of active connections and make decisions based on context</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Proxy Firewalls</h5>
+                                        <p>Act as intermediaries between end systems, filtering at application layer</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Next-Generation Firewalls</h5>
+                                        <p>Integrate additional features like intrusion prevention and application awareness</p>
+                                    </div>
+                                </div>
+                                
+                                <h4>Firewall Configuration Best Practices</h4>
+                                <ol>
+                                    <li><strong>Default deny policy:</strong> Block all traffic by default, only allow explicitly permitted traffic</li>
+                                    <li><strong>Least privilege principle:</strong> Grant minimum necessary access for users and systems</li>
+                                    <li><strong>Regular rule review:</strong> Periodically audit and clean up firewall rules</li>
+                                    <li><strong>Segmentation:</strong> Use internal firewalls to segment network zones</li>
+                                    <li><strong>Logging and monitoring:</strong> Maintain comprehensive logs and monitor for suspicious activity</li>
+                                </ol>
+                                
+                                <div class="tip-box">
+                                    <strong>Defense in Depth:</strong> Firewalls are just one layer of network security. Implement multiple security controls (firewalls, IDS/IPS, antivirus, etc.) to create a comprehensive defense strategy.
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(3, 1, 2)">
+                                <span class="lesson-number">2</span>
+                                <span class="lesson-title">Intrusion Detection and Prevention</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-3-1-2">
+                                <h4>Intrusion Detection Systems (IDS)</h4>
+                                <p>An Intrusion Detection System (IDS) is a device or software application that monitors a network or systems for malicious activity or policy violations. Any detected activity is reported to an administrator.</p>
+                                
+                                <div class="chart-container">
+                                    <div class="chart-placeholder">
+                                        IDS/IPS Detection Methods
+                                    </div>
+                                </div>
+                                
+                                <h4>Types of Intrusion Detection Systems</h4>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Network IDS (NIDS)</h5>
+                                        <p>Monitors network traffic for suspicious activity</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Host IDS (HIDS)</h5>
+                                        <p>Monitors activity on individual devices or hosts</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Signature-Based IDS</h5>
+                                        <p>Detects known threats using predefined patterns</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Anomaly-Based IDS</h5>
+                                        <p>Detects deviations from normal behavior patterns</p>
+                                    </div>
+                                </div>
+                                
+                                <h4>Intrusion Prevention Systems (IPS)</h4>
+                                <p>An Intrusion Prevention System (IPS) is an extension of IDS that can automatically take action to prevent detected threats. IPS systems can block traffic, reset connections, or drop packets.</p>
+                                
+                                <div class="responsive-table">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Feature</th>
+                                                <th>IDS</th>
+                                                <th>IPS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Placement</td>
+                                                <td>Out-of-band monitoring</td>
+                                                <td>In-line deployment</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Action</td>
+                                                <td>Detection and alerting</td>
+                                                <td>Prevention and blocking</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Impact</td>
+                                                <td>No network impact</td>
+                                                <td>Potential latency</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Response</td>
+                                                <td>Manual response required</td>
+                                                <td>Automatic response</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <h4>IDS/IPS Deployment Considerations</h4>
+                                <ol>
+                                    <li><strong>Network visibility:</strong> Ensure the system can monitor all critical network segments</li>
+                                    <li><strong>Performance impact:</strong> Consider the processing requirements and potential latency</li>
+                                    <li><strong>False positives:</strong> Tune systems to minimize false alarms while maintaining detection capability</li>
+                                    <li><strong>Integration:</strong> Ensure the system integrates with other security controls</li>
+                                    <li><strong>Maintenance:</strong> Regularly update signatures and rules to detect new threats</li>
+                                </ol>
+                                
+                                <div class="warning-box">
+                                    <strong>IPS Challenges:</strong> Intrusion Prevention Systems can potentially block legitimate traffic if not properly configured. Thorough testing and gradual deployment are recommended to minimize business disruption.
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(3, 1, 3)">
+                                <span class="lesson-number">3</span>
+                                <span class="lesson-title">Virtual Private Networks (VPNs)</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-3-1-3">
+                                <h4>Understanding VPN Technology</h4>
+                                <p>A Virtual Private Network (VPN) extends a private network across a public network, enabling users to send and receive data as if their devices were directly connected to the private network. VPNs provide secure remote access and site-to-site connectivity.</p>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-user-lock" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">VPNs create secure encrypted tunnels over public networks</div>
+                                </div>
+                                
+                                <h4>Types of VPNs</h4>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Remote Access VPN</h5>
+                                        <p>Connects individual users to a private network from remote locations</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Site-to-Site VPN</h5>
+                                        <p>Connects entire networks to each other over the internet</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>SSL VPN</h5>
+                                        <p>Uses SSL/TLS protocol to provide secure remote access via web browsers</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>IPsec VPN</h5>
+                                        <p>Uses IPsec protocol suite to secure IP communications</p>
+                                    </div>
+                                </div>
+                                
+                                <h4>VPN Protocols and Encryption</h4>
+                                <p>VPNs use various protocols to establish secure connections:</p>
+                                
+                                <div class="responsive-table">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Protocol</th>
+                                                <th>Security Features</th>
+                                                <th>Common Use Cases</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>IPsec</td>
+                                                <td>Strong encryption, authentication, integrity checking</td>
+                                                <td>Site-to-site VPNs, enterprise remote access</td>
+                                            </tr>
+                                            <tr>
+                                                <td>OpenVPN</td>
+                                                <td>Open-source, highly configurable, strong security</td>
+                                                <td>Remote access, cross-platform compatibility</td>
+                                            </tr>
+                                            <tr>
+                                                <td>WireGuard</td>
+                                                <td>Modern, fast, simple cryptography</td>
+                                                <td>Performance-sensitive applications</td>
+                                            </tr>
+                                            <tr>
+                                                <td>SSL/TLS</td>
+                                                <td>Web-based, no client software needed</td>
+                                                <td>Clientless remote access, web applications</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <h4>VPN Security Best Practices</h4>
+                                <ol>
+                                    <li><strong>Strong authentication:</strong> Use multi-factor authentication for VPN access</li>
+                                    <li><strong>Encryption strength:</strong> Implement strong encryption algorithms</li>
+                                    <li><strong>Access controls:</strong> Restrict VPN access based on user roles and needs</li>
+                                    <li><strong>Network segmentation:</strong> Limit access to specific network segments via VPN</li>
+                                    <li><strong>Monitoring and logging:</strong> Monitor VPN connections for suspicious activity</li>
+                                    <li><strong>Regular updates:</strong> Keep VPN software and firmware updated</li>
+                                </ol>
+                                
+                                <div class="tip-box">
+                                    <strong>Zero Trust Network Access (ZTNA):</strong> Modern security approaches are moving beyond traditional VPNs to Zero Trust models that verify every access request regardless of network location, providing more granular security controls.
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-buttons">
+        <button class="nav-btn" id="prev-btn" onclick="navigateLesson(-1)">
+            <i class="fas fa-arrow-left"></i> Previous
+        </button>
+        <button class="nav-btn" id="next-btn" onclick="navigateLesson(1)">
+            Next <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+
+    <script>
+        // Track current lesson
+        let currentModule = 1;
+        let currentUnit = 1;
+        let currentLesson = 1;
+        let completedLessons = new Set();
+
+        // Initialize the course
+        document.addEventListener('DOMContentLoaded', function() {
+            // Open the first module and unit by default
+            toggleModule(1, true);
+            toggleUnit(1, 1, true);
+            
+            // Update progress bar
+            updateProgress();
+            
+            // Add search functionality
+            document.getElementById('search-input').addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                if (searchTerm.length < 2) return;
+                
+                // Search through lesson titles and content
+                const lessons = document.querySelectorAll('.lesson-item');
+                lessons.forEach(lesson => {
+                    const title = lesson.querySelector('.lesson-title').textContent.toLowerCase();
+                    const lessonId = lesson.getAttribute('onclick').match(/\d+/g);
+                    const content = document.getElementById(`lesson-${lessonId[0]}-${lessonId[1]}-${lessonId[2]}`);
+                    const contentText = content ? content.textContent.toLowerCase() : '';
+                    
+                    if (title.includes(searchTerm) || contentText.includes(searchTerm)) {
+                        lesson.style.backgroundColor = '#fff3cd';
+                        // Expand parent modules and units
+                        const moduleId = lessonId[0];
+                        const unitId = lessonId[1];
+                        toggleModule(parseInt(moduleId), true);
+                        toggleUnit(parseInt(moduleId), parseInt(unitId), true);
+                    } else {
+                        lesson.style.backgroundColor = '';
+                    }
+                });
+            });
+        });
+
+        // Toggle module visibility
+        function toggleModule(moduleId, forceOpen = false) {
+            const moduleContent = document.getElementById(`module-${moduleId}`);
+            const moduleHeader = moduleContent.previousElementSibling;
+            const icon = moduleHeader.querySelector('.icon');
+            
+            if (forceOpen || moduleContent.style.display !== 'block') {
+                moduleContent.style.display = 'block';
+                moduleContent.classList.add('active');
+                icon.classList.add('rotated');
+            } else {
+                moduleContent.style.display = 'none';
+                moduleContent.classList.remove('active');
+                icon.classList.remove('rotated');
+            }
+        }
+
+        // Toggle unit visibility
+        function toggleUnit(moduleId, unitId, forceOpen = false) {
+            const unitContent = document.getElementById(`unit-${moduleId}-${unitId}`);
+            const unitHeader = unitContent.previousElementSibling;
+            const icon = unitHeader.querySelector('.icon');
+            
+            if (forceOpen || unitContent.style.display !== 'block') {
+                unitContent.style.display = 'block';
+                unitContent.classList.add('active');
+                icon.classList.add('rotated');
+            } else {
+                unitContent.style.display = 'none';
+                unitContent.classList.remove('active');
+                icon.classList.remove('rotated');
+            }
+        }
+
+        // Toggle lesson content
+        function toggleLesson(moduleId, unitId, lessonId) {
+            const lessonContent = document.getElementById(`lesson-${moduleId}-${unitId}-${lessonId}`);
+            const lessonItem = lessonContent.previousElementSibling;
+            
+            // Close all other lesson contents in the same unit
+            const unitContent = document.getElementById(`unit-${moduleId}-${unitId}`);
+            const allLessonContents = unitContent.querySelectorAll('.lesson-content');
+            allLessonContents.forEach(content => {
+                if (content !== lessonContent) {
+                    content.style.display = 'none';
+                    content.classList.remove('active');
+                }
+            });
+            
+            // Toggle current lesson content
+            if (lessonContent.style.display !== 'block') {
+                lessonContent.style.display = 'block';
+                lessonContent.classList.add('active');
+                
+                // Mark as completed
+                if (!completedLessons.has(`${moduleId}-${unitId}-${lessonId}`)) {
+                    completedLessons.add(`${moduleId}-${unitId}-${lessonId}`);
+                    lessonItem.classList.add('completed');
+                    updateProgress();
+                }
+                
+                // Update current lesson tracking
+                currentModule = moduleId;
+                currentUnit = unitId;
+                currentLesson = lessonId;
+            } else {
+                lessonContent.style.display = 'none';
+                lessonContent.classList.remove('active');
+            }
+        }
+
+        // Navigate between lessons
+        function navigateLesson(direction) {
+            // This is a simplified navigation - in a real implementation,
+            // you would need to track the current lesson and find the next/previous one
+            alert(`Navigation would go to the ${direction > 0 ? 'next' : 'previous'} lesson in a full implementation.`);
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            const totalLessons = document.querySelectorAll('.lesson-item').length;
+            const progress = (completedLessons.size / totalLessons) * 100;
+            document.getElementById('progress').style.width = `${progress}%`;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICT Integration Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Base Styles */
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --accent: #f72585;
+            --success: #4cc9f0;
+            --warning: #ff9e00;
+            --danger: #ef476f;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --radius: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            max-width: 100%;
+            overflow-x: hidden;
+            padding-bottom: 80px;
+        }
+        
+        .container {
+            width: 100%;
+            padding: 0 15px;
+        }
+        
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo-icon {
+            font-size: 1.8rem;
+        }
+        
+        .logo-text {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+        }
+        
+        /* Search Bar */
+        .search-container {
+            padding: 15px;
+            background-color: white;
+            margin: 15px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+        
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background-color: var(--light);
+            border-radius: 50px;
+            padding: 10px 15px;
+        }
+        
+        .search-bar i {
+            color: #6c757d;
+            margin-right: 10px;
+        }
+        
+        .search-bar input {
+            border: none;
+            background: transparent;
+            width: 100%;
+            font-size: 1rem;
+            outline: none;
+        }
+        
+        /* Dashboard Stats */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            padding: 0 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        /* Main Content Cards */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 0;
+            margin: 15px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-header h2 {
+            color: var(--dark);
+            font-size: 1.3rem;
+            margin: 0;
+        }
+        
+        .view-all {
+            color: var(--primary);
+            font-size: 0.9rem;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .card-content {
+            padding: 20px;
+        }
+        
+        /* Section Tabs */
+        .section-tabs {
+            display: flex;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            padding: 0 15px;
+            gap: 10px;
+        }
+        
+        .section-tabs::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            background-color: white;
+            border-radius: 30px;
+            font-weight: 500;
+            white-space: nowrap;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        /* Content Sections */
+        .content-section {
+            display: none;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        /* Feature Grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .feature-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 1.5rem;
+            color: white;
+        }
+        
+        .feature-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .feature-desc {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        /* Benefits & Challenges */
+        .benefits-list, .challenges-list {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .benefits-list li, .challenges-list li {
+            margin-bottom: 10px;
+            padding-left: 10px;
+        }
+        
+        .benefits-list li::marker {
+            color: var(--success);
+        }
+        
+        .challenges-list li::marker {
+            color: var(--danger);
+        }
+        
+        /* E-commerce Types */
+        .ecommerce-types {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .type-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .type-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            color: white;
+        }
+        
+        .type-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .type-desc {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        /* E-government Services */
+        .service-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        .service-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .service-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .service-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.2rem;
+            color: white;
+        }
+        
+        .service-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .service-desc {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #6c757d;
+            font-size: 0.8rem;
+        }
+        
+        .nav-item.active {
+            color: var(--primary);
+        }
+        
+        .nav-icon {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .feature-grid, .ecommerce-types {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Color variations */
+        .color-1 { background-color: #4361ee; }
+        .color-2 { background-color: #7209b7; }
+        .color-3 { background-color: #f72585; }
+        .color-4 { background-color: #4cc9f0; }
+        .color-5 { background-color: #4895ef; }
+        .color-6 { background-color: #560bad; }
+        .color-7 { background-color: #3a0ca3; }
+        .color-8 { background-color: #3f37c9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-network-wired"></i>
+                    </div>
+                    <div class="logo-text">ICT Hub</div>
+                </div>
+                <div class="user-actions">
+                    <a href="#" class="icon-btn">
+                        <i class="fas fa-bell"></i>
+                    </a>
+                    <a href="#" class="icon-btn">
+                        <i class="fas fa-user"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Search Bar -->
+        <div class="search-container">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search ICT topics...">
+            </div>
+        </div>
+        
+        <!-- Dashboard Stats -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-value">3</div>
+                <div class="stat-label">ICT Areas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">15+</div>
+                <div class="stat-label">Benefits</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">12+</div>
+                <div class="stat-label">Tools</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">10+</div>
+                <div class="stat-label">Challenges</div>
+            </div>
+        </div>
+        
+        <!-- Section Tabs -->
+        <div class="section-tabs">
+            <div class="tab active" data-target="overview">Overview</div>
+            <div class="tab" data-target="elearning">E-Learning</div>
+            <div class="tab" data-target="ecommerce">E-Commerce</div>
+            <div class="tab" data-target="egovernment">E-Government</div>
+        </div>
+        
+        <!-- Overview Section -->
+        <div class="content-section active" id="overview">
+            <div class="card">
+                <div class="card-header">
+                    <h2>ICT Integration Overview</h2>
+                </div>
+                <div class="card-content">
+                    <p>Information and Communication Technology (ICT) has transformed various sectors by improving accessibility, efficiency, and convenience.</p>
+                    
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon color-1">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <div class="feature-title">E-Learning</div>
+                            <div class="feature-desc">Digital education platforms</div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon color-2">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div class="feature-title">E-Commerce</div>
+                            <div class="feature-desc">Online business transactions</div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon color-3">
+                                <i class="fas fa-landmark"></i>
+                            </div>
+                            <div class="feature-title">E-Government</div>
+                            <div class="feature-desc">Digital public services</div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon color-4">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="feature-title">Benefits</div>
+                            <div class="feature-desc">Increased productivity & efficiency</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>Key Takeaways</h2>
+                </div>
+                <div class="card-content">
+                    <ul class="benefits-list">
+                        <li><strong>E-Learning:</strong> Enhances education accessibility, engagement, and personalization</li>
+                        <li><strong>E-Commerce:</strong> Facilitates global trade, improves customer experience, and streamlines transactions</li>
+                        <li><strong>E-Government:</strong> Boosts transparency, service efficiency, and public engagement</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- E-Learning Section -->
+        <div class="content-section" id="elearning">
+            <div class="card">
+                <div class="card-header">
+                    <h2>E-Learning</h2>
+                </div>
+                <div class="card-content">
+                    <p>E-Learning refers to the use of digital technologies and internet-based platforms to facilitate teaching and learning.</p>
+                    
+                    <h3 style="margin: 20px 0 10px;">Key Components</h3>
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon color-1">
+                                <i class="fas fa-tachometer-alt"></i>
+                            </div>
+                            <div class="feature-title">LMS</div>
+                            <div class="feature-desc">Learning Management Systems</div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon color-2">
+                                <i class="fas fa-video"></i>
+                            </div>
+                            <div class="feature-title">Multimedia</div>
+                            <div class="feature-desc">Videos, podcasts, animations</div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon color-3">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <div class="feature-title">Virtual Classrooms</div>
+                            <div class="feature-desc">Real-time remote learning</div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon color-4">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <div class="feature-title">Online Assessments</div>
+                            <div class="feature-desc">Quizzes & automated grading</div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin: 20px 0 10px;">Benefits</h3>
+                    <ul class="benefits-list">
+                        <li>Enhanced Accessibility: Learn anytime, anywhere</li>
+                        <li>Personalized Learning: Adaptive to individual styles</li>
+                        <li>Cost Reduction: Less physical infrastructure needed</li>
+                        <li>Increased Engagement: Interactive tools make learning effective</li>
+                        <li>Data-Driven Insights: Analytics improve teaching methods</li>
+                    </ul>
+                    
+                    <h3 style="margin: 20px 0 10px;">Challenges</h3>
+                    <ul class="challenges-list">
+                        <li>Digital Divide: Lack of internet access in some regions</li>
+                        <li>High Initial Costs: Infrastructure development requires investment</li>
+                        <li>Resistance to Change: Some struggle to adapt to digital learning</li>
+                        <li>Cybersecurity Concerns: Risk of data breaches and online fraud</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- E-Commerce Section -->
+        <div class="content-section" id="ecommerce">
+            <div class="card">
+                <div class="card-header">
+                    <h2>E-Commerce</h2>
+                </div>
+                <div class="card-content">
+                    <p>E-Commerce refers to buying and selling goods or services online. ICT has revolutionized commerce by enabling businesses to reach global audiences.</p>
+                    
+                    <h3 style="margin: 20px 0 10px;">Types of E-Commerce</h3>
+                    <div class="ecommerce-types">
+                        <div class="type-card">
+                            <div class="type-icon color-1">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="type-title">B2B</div>
+                            <div class="type-desc">Business to Business</div>
+                        </div>
+                        
+                        <div class="type-card">
+                            <div class="type-icon color-2">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <div class="type-title">B2C</div>
+                            <div class="type-desc">Business to Consumer</div>
+                        </div>
+                        
+                        <div class="type-card">
+                            <div class="type-icon color-3">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="type-title">C2C</div>
+                            <div class="type-desc">Consumer to Consumer</div>
+                        </div>
+                        
+                        <div class="type-card">
+                            <div class="type-icon color-4">
+                                <i class="fas fa-briefcase"></i>
+                            </div>
+                            <div class="type-title">C2B</div>
+                            <div class="type-desc">Consumer to Business</div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin: 20px 0 10px;">ICT Tools in E-Commerce</h3>
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon color-5">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <div class="feature-title">E-Payment Systems</div>
+                            <div class="feature-desc">Secure digital transactions</div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon color-6">
+                                <i class="fas fa-store"></i>
+                            </div>
+                            <div class="feature-title">Online Marketplaces</div>
+                            <div class="feature-desc">Platforms for online selling</div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon color-7">
+                                <i class="fas fa-bullhorn"></i>
+                            </div>
+                            <div class="feature-title">Digital Marketing</div>
+                            <div class="feature-desc">SEO, ads, social media</div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon color-8">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="feature-title">AI & Chatbots</div>
+                            <div class="feature-desc">Enhanced customer service</div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin: 20px 0 10px;">Benefits</h3>
+                    <ul class="benefits-list">
+                        <li>Wider Market Reach: Operate globally</li>
+                        <li>Operational Efficiency: Automation reduces manual tasks</li>
+                        <li>Improved Customer Experience: AI-driven recommendations</li>
+                        <li>Data Analytics: Understand customer behavior</li>
+                        <li>Secure Transactions: Encryption and blockchain</li>
+                    </ul>
+                    
+                    <h3 style="margin: 20px 0 10px;">Challenges</h3>
+                    <ul class="challenges-list">
+                        <li>Cybersecurity Threats: Hacking and fraud risks</li>
+                        <li>Digital Literacy: Some struggle with online platforms</li>
+                        <li>Intense Competition: Many businesses compete online</li>
+                        <li>Regulatory Compliance: Varying legal requirements</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- E-Government Section -->
+        <div class="content-section" id="egovernment">
+            <div class="card">
+                <div class="card-header">
+                    <h2>E-Government</h2>
+                </div>
+                <div class="card-content">
+                    <p>E-Government refers to the use of ICT to deliver public services, enhance transparency, and improve interactions between citizens, businesses, and government.</p>
+                    
+                    <h3 style="margin: 20px 0 10px;">Types of E-Government Services</h3>
+                    <div class="service-grid">
+                        <div class="service-card">
+                            <div class="service-header">
+                                <div class="service-icon color-1">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="service-title">Government-to-Citizen (G2C)</div>
+                            </div>
+                            <div class="service-desc">Online tax filing, digital ID applications, e-voting</div>
+                        </div>
+                        
+                        <div class="service-card">
+                            <div class="service-header">
+                                <div class="service-icon color-2">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div class="service-title">Government-to-Business (G2B)</div>
+                            </div>
+                            <div class="service-desc">Business registration, compliance systems, digital procurement</div>
+                        </div>
+                        
+                        <div class="service-card">
+                            <div class="service-header">
+                                <div class="service-icon color-3">
+                                    <i class="fas fa-landmark"></i>
+                                </div>
+                                <div class="service-title">Government-to-Government (G2G)</div>
+                            </div>
+                            <div class="service-desc">Data sharing and collaboration between government agencies</div>
+                        </div>
+                        
+                        <div class="service-card">
+                            <div class="service-header">
+                                <div class="service-icon color-4">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+                                <div class="service-title">Government-to-Employee (G2E)</div>
+                            </div>
+                            <div class="service-desc">Payroll processing, HR management systems</div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin: 20px 0 10px;">ICT Tools in E-Government</h3>
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon color-5">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <div class="feature-title">E-Portals</div>
+                            <div class="feature-desc">Platforms for government services</div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon color-6">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                            </div>
+                            <div class="feature-title">E-Tax Systems</div>
+                            <div class="feature-desc">Online tax submission</div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon color-7">
+                                <i class="fas fa-mobile-alt"></i>
+                            </div>
+                            <div class="feature-title">Mobile Apps</div>
+                            <div class="feature-desc">Access to public services</div>
+                        </div>
+                        
+                        <div class="feature-card">
+                            <div class="feature-icon color-8">
+                                <i class="fas fa-database"></i>
+                            </div>
+                            <div class="feature-title">Big Data & AI</div>
+                            <div class="feature-desc">Improve policy-making</div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin: 20px 0 10px;">Benefits</h3>
+                    <ul class="benefits-list">
+                        <li>Increased Transparency: Reduces corruption</li>
+                        <li>Efficient Service Delivery: Faster processing</li>
+                        <li>Public Engagement: Citizen participation in governance</li>
+                        <li>Cost Reduction: Less manual processes</li>
+                        <li>Improved Collaboration: Data sharing among agencies</li>
+                    </ul>
+                    
+                    <h3 style="margin: 20px 0 10px;">Challenges</h3>
+                    <ul class="challenges-list">
+                        <li>Data Security Risks: Vulnerability to cyberattacks</li>
+                        <li>Infrastructure Limitations: High implementation costs</li>
+                        <li>Resistance to Digital Transformation: Employees may resist technology</li>
+                        <li>Limited Digital Literacy: Citizens may face challenges accessing services</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <a href="#" class="nav-item active">
+                <div class="nav-icon">
+                    <i class="fas fa-home"></i>
+                </div>
+                <div>Home</div>
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div>Learn</div>
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div>Stats</div>
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <div>Settings</div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Tab functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tab');
+            const sections = document.querySelectorAll('.content-section');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs and sections
+                    tabs.forEach(t => t.classList.remove('active'));
+                    sections.forEach(s => s.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding section
+                    this.classList.add('active');
+                    const targetId = this.getAttribute('data-target');
+                    document.getElementById(targetId).classList.add('active');
+                });
+            });
+            
+            // Add click events to feature cards
+            const featureCards = document.querySelectorAll('.feature-card');
+            featureCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const title = this.querySelector('.feature-title').textContent;
+                    alert('Learn more about: ' + title);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PowerPoint Training - Mobile LMS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #f32222;
+            --primary-dark: #74a8f5;
+            --secondary: #fc5b5b;
+            --accent: #ff6b00;
+            --light: #f8f9fa;
+            --dark: #333;
+            --gray: #6c757d;
+            --border: #e0e0e0;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+            --mobile-padding: 1rem;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f5f5f5;
+            padding-bottom: 80px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 100%;
+            padding: 0;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1rem var(--mobile-padding);
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .module {
+            background: white;
+            margin: 1rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .module-header {
+            background: var(--secondary);
+            color: white;
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .module-header:hover {
+            background: var(--primary-dark);
+        }
+
+        .module-header h2 {
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .module-content {
+            display: none;
+            padding: 0;
+        }
+
+        .module-content.active {
+            display: block;
+        }
+
+        .unit {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .unit:last-child {
+            border-bottom: none;
+        }
+
+        .unit-header {
+            background: var(--light);
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .unit-header:hover {
+            background: #e9ecef;
+        }
+
+        .unit-header h3 {
+            font-size: 1rem;
+            margin: 0;
+            color: var(--secondary);
+        }
+
+        .unit-content {
+            display: none;
+            padding: 0;
+        }
+
+        .unit-content.active {
+            display: block;
+        }
+
+        .lesson-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .lesson-item {
+            padding: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .lesson-item:hover {
+            background: var(--light);
+        }
+
+        .lesson-item:last-child {
+            border-bottom: none;
+        }
+
+        .lesson-item.completed .lesson-title {
+            text-decoration: line-through;
+            color: var(--gray);
+        }
+
+        .lesson-number {
+            background: var(--secondary);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .lesson-item.completed .lesson-number {
+            background: var(--gray);
+        }
+
+        .lesson-title {
+            font-size: 0.95rem;
+            color: var(--dark);
+            flex-grow: 1;
+        }
+
+        .lesson-content {
+            display: none;
+            padding: 1.2rem;
+            background: #f9f9f9;
+            border-top: 1px solid var(--border);
+        }
+
+        .lesson-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .lesson-content h4 {
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+            font-size: 1.05rem;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
+        }
+
+        .lesson-content p {
+            margin-bottom: 1rem;
+        }
+
+        .lesson-content ul, .lesson-content ol {
+            margin-left: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .lesson-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .keyboard-shortcut {
+            display: inline-block;
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 0.2rem 0.5rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            margin: 0.2rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .code-example {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 1rem 0;
+            overflow-x: auto;
+            border-left: 4px solid var(--accent);
+            font-size: 0.9rem;
+        }
+
+        .illustration {
+            width: 100%;
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 1rem 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+        }
+
+        .tip-box {
+            background: #e7f4ff;
+            border-left: 4px solid #2196F3;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .warning-box {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .icon {
+            transition: transform 0.3s ease;
+        }
+
+        .icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .progress {
+            height: 100%;
+            background: var(--secondary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .nav-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .nav-btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .search-container {
+            padding: 0.8rem;
+            background: white;
+            margin: 0.8rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 100px;
+            z-index: 99;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.7rem;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            outline: none;
+            padding-left: 2.5rem;
+        }
+
+        .search-input:focus {
+            border-color: var(--secondary);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        .completion-badge {
+            background: var(--accent);
+            color: white;
+            border-radius: 12px;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.7rem;
+            margin-left: 0.5rem;
+        }
+
+        /* Mobile-first responsive design */
+        @media (max-width: 768px) {
+            .header {
+                padding: 0.8rem var(--mobile-padding);
+            }
+            
+            .header h1 {
+                font-size: 1.2rem;
+            }
+            
+            .module {
+                margin: 0.8rem;
+            }
+            
+            .module-header, .unit-header {
+                padding: 0.8rem;
+            }
+            
+            .module-header h2 {
+                font-size: 1rem;
+            }
+            
+            .unit-header h3 {
+                font-size: 0.9rem;
+            }
+            
+            .lesson-item {
+                padding: 0.8rem;
+            }
+            
+            .lesson-title {
+                font-size: 0.9rem;
+            }
+            
+            .lesson-content {
+                padding: 1rem;
+            }
+            
+            .nav-btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.85rem;
+            }
+            
+            .search-container {
+                margin: 0.8rem;
+                padding: 0.7rem;
+            }
+            
+            .keyboard-shortcut {
+                font-size: 0.8rem;
+                padding: 0.15rem 0.4rem;
+            }
+            
+            .code-example {
+                padding: 0.8rem;
+                font-size: 0.85rem;
+            }
+            
+            .tip-box, .warning-box {
+                padding: 0.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.1rem;
+            }
+            
+            .module-header h2 {
+                font-size: 0.95rem;
+            }
+            
+            .unit-header h3 {
+                font-size: 0.85rem;
+            }
+            
+            .lesson-title {
+                font-size: 0.85rem;
+            }
+            
+            .lesson-number {
+                width: 24px;
+                height: 24px;
+                font-size: 0.75rem;
+                margin-right: 0.8rem;
+            }
+            
+            .nav-btn {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Animation for smooth transitions */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .module-content.active,
+        .unit-content.active {
+            animation: fadeIn 0.3s ease;
+        }
+
+        .function-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .function-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--secondary);
+        }
+
+        .function-card h5 {
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .function-card p {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .function-syntax {
+            background: #f5f5f5;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+
+        /* Mobile-specific grid adjustments */
+        @media (max-width: 768px) {
+            .function-grid {
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+            }
+            
+            .function-card {
+                padding: 0.8rem;
+            }
+        }
+
+        /* Enhanced illustration styling */
+        .illustration-container {
+            position: relative;
+            margin: 1.2rem 0;
+            text-align: center;
+        }
+
+        .illustration-caption {
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        /* Mobile touch improvements */
+        .lesson-item, .module-header, .unit-header {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Better mobile scrolling */
+        .lesson-content.active {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        /* Mobile-friendly tables */
+        .responsive-table {
+            width: 100%;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .responsive-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .responsive-table th, .responsive-table td {
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .responsive-table th {
+            background-color: var(--light);
+        }
+
+        .presentation-interface {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .presentation-interface .component {
+            margin-bottom: 0.8rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px dashed #dee2e6;
+        }
+
+        .presentation-interface .component:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .step-example {
+            background: #e7f3ff;
+            border-left: 4px solid #4a90e2;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .step-example .step {
+            font-family: monospace;
+            background: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin: 0.5rem 0;
+        }
+
+        .chart-container {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .chart-placeholder {
+            height: 200px;
+            background: linear-gradient(135deg, #f0f8ff 0%, #e6f7ff 100%);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4a90e2;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar">
+        <div class="progress" id="progress"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>PowerPoint Presentation Training</h1>
+            <p>Create Powerful Presentations with Impact</p>
+        </div>
+
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="search-input" placeholder="Search PowerPoint features and techniques..." id="search-input">
+        </div>
+
+        <!-- Module 1: Introduction to PowerPoint -->
+        <div class="module">
+            <div class="module-header" onclick="toggleModule(1)">
+                <h2>Module 1: Introduction to PowerPoint</h2>
+                <span class="icon">▼</span>
+            </div>
+            <div class="module-content" id="module-1">
+                <!-- Unit 1.1 -->
+                <div class="unit">
+                    <div class="unit-header" onclick="toggleUnit(1, 1)">
+                        <h3>Unit 1.1: Getting Started with PowerPoint</h3>
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="unit-content" id="unit-1-1">
+                        <ul class="lesson-list">
+                            <li class="lesson-item" onclick="toggleLesson(1, 1, 1)">
+                                <span class="lesson-number">1</span>
+                                <span class="lesson-title">What is Presentation Software?</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-1-1-1">
+                                <h4>Understanding Presentation Software</h4>
+                                <p>Presentation software is an application used to prepare slide show based presentations with a graphical approach. A PowerPoint presentation helps complement oral presentations.</p>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-desktop" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Presentation software creates visual aids for presentations</div>
+                                </div>
+                                
+                                <p><strong>Key Functions of Presentation Software:</strong></p>
+                                <ul>
+                                    <li>An editor that allows text to be inserted and formatted</li>
+                                    <li>A method for inserting and manipulating graphic images</li>
+                                    <li>A slide-show system to display the content</li>
+                                </ul>
+                                
+                                <div class="tip-box">
+                                    <strong>Presentation Software Options:</strong> Microsoft PowerPoint, Google Slides, Apple Keynote, OpenOffice Impress, and Adobe Flash.
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(1, 1, 2)">
+                                <span class="lesson-number">2</span>
+                                <span class="lesson-title">PowerPoint Interface Overview</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-1-1-2">
+                                <h4>Navigating the PowerPoint Interface</h4>
+                                <p>When you open PowerPoint, you'll see several key components that make up the interface:</p>
+                                
+                                <div class="presentation-interface">
+                                    <div class="component">
+                                        <strong>Stage/Canvas:</strong> Area used to design each PowerPoint slide by adding text, images, charts, graphs and tables
+                                    </div>
+                                    <div class="component">
+                                        <strong>Outline Pane:</strong> Contains the text from the slides. One can quickly locate a slide and by clicking on it from the outline pane, have it loaded on the stage for editing.
+                                    </div>
+                                    <div class="component">
+                                        <strong>Notes Pane:</strong> Used to provide additional details or notes that would not otherwise fit in the stage area, or that provide additional information for the slide.
+                                    </div>
+                                    <div class="component">
+                                        <strong>Slide Layout:</strong> Used to format the order of tables, charts, graphs and text on a slide.
+                                    </div>
+                                    <div class="component">
+                                        <strong>Ribbon:</strong> Collection of horizontal tabbed toolbars: Home, Insert, Design, Animations, Slideshow and Review.
+                                    </div>
+                                </div>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-window-maximize" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">PowerPoint interface with key components labeled</div>
+                                </div>
+                                
+                                <h4>PowerPoint Views</h4>
+                                <p>PowerPoint offers different views for creating and presenting your slides:</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Normal View</h5>
+                                        <p>Default view used to design presentations</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Slide Sorter View</h5>
+                                        <p>Changes slides to thumbnails for easy organization</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Notes Page</h5>
+                                        <p>Allows additional notes to be created or modified</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Slide Show View</h5>
+                                        <p>Full-screen presentation mode</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(1, 1, 3)">
+                                <span class="lesson-number">3</span>
+                                <span class="lesson-title">Creating Your First Presentation</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-1-1-3">
+                                <h4>Building a Basic PowerPoint Presentation</h4>
+                                <p>Creating a presentation in PowerPoint is straightforward. Follow these steps to create your first presentation:</p>
+                                
+                                <div class="step-example">
+                                    <p><strong>Step 1: Start PowerPoint</strong></p>
+                                    <div class="step">Start → Microsoft Office → Microsoft PowerPoint</div>
+                                </div>
+                                
+                                <div class="step-example">
+                                    <p><strong>Step 2: Add Content to First Slide</strong></p>
+                                    <div class="step">First Place Holder - Enter Your Name</div>
+                                    <div class="step">Second Place Holder - "My first PowerPoint Presentation"</div>
+                                </div>
+                                
+                                <div class="step-example">
+                                    <p><strong>Step 3: Save Your Presentation</strong></p>
+                                    <div class="step">File → Save As → Choose location</div>
+                                    <div class="step">File Name: My First Presentation - Your Name</div>
+                                    <div class="step">Save as Type: PowerPoint Presentation</div>
+                                </div>
+                                
+                                <div class="step-example">
+                                    <p><strong>Step 4: Add New Slides</strong></p>
+                                    <div class="step">Click on New Slide button or press Ctrl+M</div>
+                                    <div class="step">Select appropriate layout (Title and Content, Two Content, etc.)</div>
+                                </div>
+                                
+                                <h4>PowerPoint Templates</h4>
+                                <p>A PowerPoint template is a pattern or blueprint of a slide or group of slides that you save as a .potx file. Templates can contain:</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Layouts</h5>
+                                        <p>Predefined arrangements of content placeholders</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Theme Colors</h5>
+                                        <p>Coordinated color schemes</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Theme Fonts</h5>
+                                        <p>Coordinated font combinations</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Background Styles</h5>
+                                        <p>Predefined background designs</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="tip-box">
+                                    <strong>Quick Tip:</strong> To quickly create a professional-looking presentation, start with one of PowerPoint's built-in templates rather than a blank presentation.
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 2: Working with Tables and Excel -->
+        <div class="module">
+            <div class="module-header" onclick="toggleModule(2)">
+                <h2>Module 2: Working with Tables and Excel</h2>
+                <span class="icon">▼</span>
+            </div>
+            <div class="module-content" id="module-2">
+                <!-- Unit 2.1 -->
+                <div class="unit">
+                    <div class="unit-header" onclick="toggleUnit(2, 1)">
+                        <h3>Unit 2.1: Creating and Formatting Tables</h3>
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="unit-content" id="unit-2-1">
+                        <ul class="lesson-list">
+                            <li class="lesson-item" onclick="toggleLesson(2, 1, 1)">
+                                <span class="lesson-number">1</span>
+                                <span class="lesson-title">Inserting and Formatting Tables</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-2-1-1">
+                                <h4>Adding Tables to Your Presentation</h4>
+                                <p>Tables are excellent for presenting structured data in a clear, organized manner. PowerPoint allows you to create and format tables directly within your presentation.</p>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-table" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Tables organize data in rows and columns for clear presentation</div>
+                                </div>
+                                
+                                <h4>Creating a Table</h4>
+                                <p>Follow these steps to add a table to your presentation:</p>
+                                
+                                <div class="step-example">
+                                    <p><strong>Step 1: Insert Table</strong></p>
+                                    <div class="step">Go to Insert tab → Table</div>
+                                    <div class="step">Select the number of columns and rows</div>
+                                </div>
+                                
+                                <div class="step-example">
+                                    <p><strong>Step 2: Add Content</strong></p>
+                                    <div class="step">Click in each cell and type your data</div>
+                                </div>
+                                
+                                <div class="step-example">
+                                    <p><strong>Step 3: Format the Table</strong></p>
+                                    <div class="step">Use Table Design tab to apply styles</div>
+                                    <div class="step">Use Layout tab to modify structure</div>
+                                </div>
+                                
+                                <h4>Table Modification Techniques</h4>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Split Cells</h5>
+                                        <p>Divide a single cell into multiple cells</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Merge Cells</h5>
+                                        <p>Combine multiple cells into one</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Add Rows/Columns</h5>
+                                        <p>Insert new rows or columns as needed</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Apply Styles</h5>
+                                        <p>Use predefined table styles for professional look</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="tip-box">
+                                    <strong>Table Style Tip:</strong> Use the Table Styles gallery in the Design tab to quickly apply professional formatting to your tables. Hover over different styles to see a live preview.
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(2, 1, 2)">
+                                <span class="lesson-number">2</span>
+                                <span class="lesson-title">Working with Excel in PowerPoint</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-2-1-2">
+                                <h4>Integrating Excel Data with PowerPoint</h4>
+                                <p>PowerPoint allows you to embed Excel worksheets directly into your presentations, maintaining the functionality of Excel within PowerPoint.</p>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-file-excel" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Excel worksheets can be embedded in PowerPoint slides</div>
+                                </div>
+                                
+                                <h4>Embedding Excel Worksheets</h4>
+                                <p>To add an Excel worksheet to your presentation:</p>
+                                
+                                <div class="step-example">
+                                    <p><strong>Method 1: Insert Excel Spreadsheet</strong></p>
+                                    <div class="step">Insert tab → Table → Excel Spreadsheet</div>
+                                    <div class="step">An embedded Excel worksheet will appear</div>
+                                    <div class="step">Enter data as you would in Excel</div>
+                                </div>
+                                
+                                <div class="step-example">
+                                    <p><strong>Method 2: Copy from Excel</strong></p>
+                                    <div class="step">In Excel, select and copy the data (Ctrl+C)</div>
+                                    <div class="step">In PowerPoint, paste using Paste Special</div>
+                                    <div class="step">Choose to keep source formatting or link to Excel</div>
+                                </div>
+                                
+                                <h4>Linking Excel Workbooks</h4>
+                                <p>For data that updates frequently, you can create links between Excel and PowerPoint:</p>
+                                
+                                <div class="step-example">
+                                    <p><strong>Creating Linked Data</strong></p>
+                                    <div class="step">Insert tab → Text grouping → Object</div>
+                                    <div class="step">Select "Create from File"</div>
+                                    <div class="step">Browse to your Excel file and check "Link" box</div>
+                                    <div class="step">Click OK to insert the linked object</div>
+                                </div>
+                                
+                                <div class="warning-box">
+                                    <strong>Important:</strong> When using linked Excel data, always close and restart PowerPoint to ensure links are updated properly. PowerPoint will prompt you to update links when reopening the presentation.
+                                </div>
+                                
+                                <h4>Benefits of Linking vs. Embedding</h4>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Linking</h5>
+                                        <p>Data updates when source Excel file changes</p>
+                                        <p>Smaller file size</p>
+                                        <p>Requires maintaining the source file</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Embedding</h5>
+                                        <p>Data is static (doesn't update)</p>
+                                        <p>Larger file size</p>
+                                        <p>Self-contained - no external files needed</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 3: Working with Multimedia -->
+        <div class="module">
+            <div class="module-header" onclick="toggleModule(3)">
+                <h2>Module 3: Working with Multimedia</h2>
+                <span class="icon">▼</span>
+            </div>
+            <div class="module-content" id="module-3">
+                <!-- Unit 3.1 -->
+                <div class="unit">
+                    <div class="unit-header" onclick="toggleUnit(3, 1)">
+                        <h3>Unit 3.1: Adding Graphics and Illustrations</h3>
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="unit-content" id="unit-3-1">
+                        <ul class="lesson-list">
+                            <li class="lesson-item" onclick="toggleLesson(3, 1, 1)">
+                                <span class="lesson-number">1</span>
+                                <span class="lesson-title">Images, Clip Art, and WordArt</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-3-1-1">
+                                <h4>Enhancing Presentations with Visual Elements</h4>
+                                <p>Adding graphics to a presentation makes it easier to highlight important aspects and create visually appealing content that engages your audience.</p>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-images" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Graphics enhance the visual appeal of your presentations</div>
+                                </div>
+                                
+                                <h4>Inserting Pictures</h4>
+                                <p>To add images from your computer to a presentation:</p>
+                                
+                                <div class="step-example">
+                                    <p><strong>Method 1: Insert Picture</strong></p>
+                                    <div class="step">Insert tab → Images group → Pictures</div>
+                                    <div class="step">Browse to locate your image file</div>
+                                    <div class="step">Select and click Insert</div>
+                                </div>
+                                
+                                <div class="step-example">
+                                    <p><strong>Method 2: Drag and Drop</strong></p>
+                                    <div class="step">Open File Explorer and locate your image</div>
+                                    <div class="step">Drag the image file directly onto the slide</div>
+                                </div>
+                                
+                                <h4>Working with Clip Art</h4>
+                                <p>Clip Art are pre-defined pictures and symbols that come with PowerPoint or can be downloaded from the Internet:</p>
+                                
+                                <div class="step-example">
+                                    <p><strong>Inserting Clip Art</strong></p>
+                                    <div class="step">Insert tab → Images group → Online Pictures</div>
+                                    <div class="step">Search for relevant clip art</div>
+                                    <div class="step">Select and insert into your presentation</div>
+                                </div>
+                                
+                                <h4>Creating WordArt</h4>
+                                <p>WordArt is a text-modifying feature that allows text to be presented with additional visual effects:</p>
+                                
+                                <div class="step-example">
+                                    <p><strong>Adding WordArt</strong></p>
+                                    <div class="step">Insert tab → Text group → WordArt</div>
+                                    <div class="step">Select a WordArt style from the gallery</div>
+                                    <div class="step">Type your text in the WordArt box</div>
+                                    <div class="step">Use Format tab to customize appearance</div>
+                                </div>
+                                
+                                <h4>Image Formatting Options</h4>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Crop</h5>
+                                        <p>Remove unwanted parts of an image</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Adjustments</h5>
+                                        <p>Modify brightness, contrast, and color</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Artistic Effects</h5>
+                                        <p>Apply special effects like blur, sketch, etc.</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Picture Styles</h5>
+                                        <p>Apply frames, shadows, and 3D effects</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="tip-box">
+                                    <strong>Design Tip:</strong> Use high-quality images that are relevant to your content. Avoid stretching images disproportionately as this reduces quality. Use the crop tool to focus on the most important parts of an image.
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(3, 1, 2)">
+                                <span class="lesson-number">2</span>
+                                <span class="lesson-title">SmartArt and Charts</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-3-1-2">
+                                <h4>Visualizing Information with SmartArt and Charts</h4>
+                                <p>SmartArt graphics and charts help you communicate information visually, making complex concepts easier to understand.</p>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-project-diagram" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">SmartArt and charts help visualize relationships and data</div>
+                                </div>
+                                
+                                <h4>Working with SmartArt</h4>
+                                <p>SmartArt graphics are visual representations of information that can quickly and effectively communicate your message:</p>
+                                
+                                <div class="step-example">
+                                    <p><strong>Creating SmartArt</strong></p>
+                                    <div class="step">Insert tab → Illustrations group → SmartArt</div>
+                                    <div class="step">Choose a category and layout</div>
+                                    <div class="step">Enter text in the Text pane or directly in shapes</div>
+                                </div>
+                                
+                                <h4>SmartArt Categories</h4>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>List</h5>
+                                        <p>Show non-sequential information</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Process</h5>
+                                        <p>Show steps in a process or timeline</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Cycle</h5>
+                                        <p>Show a continual process</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Hierarchy</h5>
+                                        <p>Show hierarchical relationships</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Relationship</h5>
+                                        <p>Show connections between elements</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Matrix</h5>
+                                        <p>Show how parts relate to a whole</p>
+                                    </div>
+                                </div>
+                                
+                                <h4>Creating Charts</h4>
+                                <p>Charts are effective for presenting numerical data in a visual format:</p>
+                                
+                                <div class="step-example">
+                                    <p><strong>Inserting a Chart</strong></p>
+                                    <div class="step">Insert tab → Illustrations group → Chart</div>
+                                    <div class="step">Select chart type (Column, Line, Pie, etc.)</div>
+                                    <div class="step">Enter data in the Excel worksheet that opens</div>
+                                    <div class="step">Close Excel to see the chart in PowerPoint</div>
+                                </div>
+                                
+                                <h4>Common Chart Types</h4>
+                                
+                                <div class="chart-container">
+                                    <div class="chart-placeholder">Column Chart - Compare values across categories</div>
+                                </div>
+                                
+                                <div class="chart-container">
+                                    <div class="chart-placeholder">Line Chart - Show trends over time</div>
+                                </div>
+                                
+                                <div class="chart-container">
+                                    <div class="chart-placeholder">Pie Chart - Show parts of a whole</div>
+                                </div>
+                                
+                                <div class="chart-container">
+                                    <div class="chart-placeholder">Bar Chart - Compare values horizontally</div>
+                                </div>
+                                
+                                <div class="tip-box">
+                                    <strong>Chart Selection Tip:</strong> Choose the chart type that best represents your data. Use column charts for comparisons, line charts for trends over time, pie charts for proportions, and bar charts for ranking items.
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 4: Advanced PowerPoint Features -->
+        <div class="module">
+            <div class="module-header" onclick="toggleModule(4)">
+                <h2>Module 4: Advanced PowerPoint Features</h2>
+                <span class="icon">▼</span>
+            </div>
+            <div class="module-content" id="module-4">
+                <!-- Unit 4.1 -->
+                <div class="unit">
+                    <div class="unit-header" onclick="toggleUnit(4, 1)">
+                        <h3>Unit 4.1: Animation and Transition Effects</h3>
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="unit-content" id="unit-4-1">
+                        <ul class="lesson-list">
+                            <li class="lesson-item" onclick="toggleLesson(4, 1, 1)">
+                                <span class="lesson-number">1</span>
+                                <span class="lesson-title">Applying Animations to Objects</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-4-1-1">
+                                <h4>Bringing Your Presentation to Life with Animations</h4>
+                                <p>Animations are visual effects applied to individual elements on a slide. They can help control the flow of information and keep your audience engaged.</p>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-film" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Animations add movement and visual interest to slide elements</div>
+                                </div>
+                                
+                                <h4>Animation Types</h4>
+                                <p>PowerPoint offers four main types of animations:</p>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Entrance</h5>
+                                        <p>How an object enters the slide</p>
+                                        <p>Examples: Fade, Fly In, Zoom</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Emphasis</h5>
+                                        <p>Draws attention to an already visible object</p>
+                                        <p>Examples: Pulse, Spin, Grow/Shrink</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Exit</h5>
+                                        <p>How an object leaves the slide</p>
+                                        <p>Examples: Fade, Fly Out, Disappear</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Motion Paths</h5>
+                                        <p>Moves an object along a predefined path</p>
+                                        <p>Examples: Lines, Arcs, Loops</p>
+                                    </div>
+                                </div>
+                                
+                                <h4>Applying Animations</h4>
+                                <p>To add animations to objects on your slides:</p>
+                                
+                                <div class="step-example">
+                                    <p><strong>Step 1: Select Object</strong></p>
+                                    <div class="step">Click on the text, image, or shape you want to animate</div>
+                                </div>
+                                
+                                <div class="step-example">
+                                    <p><strong>Step 2: Choose Animation</strong></p>
+                                    <div class="step">Go to Animations tab</div>
+                                    <div class="step">Select an animation from the gallery</div>
+                                </div>
+                                
+                                <div class="step-example">
+                                    <p><strong>Step 3: Customize Animation</strong></p>
+                                    <div class="step">Use Effect Options to modify direction</div>
+                                    <div class="step">Set timing (Start, Duration, Delay)</div>
+                                    <div class="step">Use Animation Pane for complex sequences</div>
+                                </div>
+                                
+                                <h4>Animation Best Practices</h4>
+                                
+                                <div class="tip-box">
+                                    <strong>Use Animations Purposefully:</strong> Animations should enhance your message, not distract from it. Use subtle animations for professional presentations and save more dramatic effects for informal or creative presentations.
+                                </div>
+                                
+                                <div class="warning-box">
+                                    <strong>Avoid Animation Overload:</strong> Using too many different animations can make your presentation look unprofessional and distract your audience from your content. Stick to 2-3 consistent animation styles throughout your presentation.
+                                </div>
+                                
+                                <h4>Animation Timing Options</h4>
+                                
+                                <div class="responsive-table">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Start Option</th>
+                                                <th>Description</th>
+                                                <th>Use Case</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>On Click</td>
+                                                <td>Animation starts when you click the mouse</td>
+                                                <td>When you want full control over timing</td>
+                                            </tr>
+                                            <tr>
+                                                <td>With Previous</td>
+                                                <td>Animation starts at the same time as previous animation</td>
+                                                <td>For simultaneous animations</td>
+                                            </tr>
+                                            <tr>
+                                                <td>After Previous</td>
+                                                <td>Animation starts after previous animation finishes</td>
+                                                <td>For sequenced animations</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(4, 1, 2)">
+                                <span class="lesson-number">2</span>
+                                <span class="lesson-title">Slide Transitions and Timing</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-4-1-2">
+                                <h4>Creating Smooth Transitions Between Slides</h4>
+                                <p>Transitions are visual effects that occur when you move from one slide to the next during a presentation. They can help create a polished, professional flow.</p>
+                                
+                                <div class="illustration-container">
+                                    <div class="illustration" style="background-color:#f0f0f0;height:200px;display:flex;align-items:center;justify-content:center;color:#666;">
+                                        <i class="fas fa-exchange-alt" style="font-size:3rem;"></i>
+                                    </div>
+                                    <div class="illustration-caption">Transitions control how slides change during a presentation</div>
+                                </div>
+                                
+                                <h4>Applying Transitions</h4>
+                                <p>To add transitions between slides:</p>
+                                
+                                <div class="step-example">
+                                    <p><strong>Step 1: Select Slides</strong></p>
+                                    <div class="step">Select the slide(s) you want to apply transition to</div>
+                                </div>
+                                
+                                <div class="step-example">
+                                    <p><strong>Step 2: Choose Transition</strong></p>
+                                    <div class="step">Go to Transitions tab</div>
+                                    <div class="step">Select a transition from the gallery</div>
+                                </div>
+                                
+                                <div class="step-example">
+                                    <p><strong>Step 3: Customize Transition</strong></p>
+                                    <div class="step">Set Effect Options (direction, style)</div>
+                                    <div class="step">Set timing (Duration, Sound)</div>
+                                    <div class="step">Choose Advance Slide option (On Mouse Click or After)</div>
+                                </div>
+                                
+                                <h4>Transition Categories</h4>
+                                
+                                <div class="function-grid">
+                                    <div class="function-card">
+                                        <h5>Subtle</h5>
+                                        <p>Simple, professional transitions</p>
+                                        <p>Examples: Fade, Push, Wipe</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Exciting</h5>
+                                        <p>More noticeable transitions</p>
+                                        <p>Examples: Random Bars, Vortex, Ripple</p>
+                                    </div>
+                                    <div class="function-card">
+                                        <h5>Dynamic Content</h5>
+                                        <p>Transitions that move content separately from background</p>
+                                        <p>Examples: Pan, Conveyor, Ferris Wheel</p>
+                                    </div>
+                                </div>
+                                
+                                <h4>Automatic Slide Advance</h4>
+                                <p>You can set slides to advance automatically after a specified time:</p>
+                                
+                                <div class="step-example">
+                                    <p><strong>Setting Automatic Timing</strong></p>
+                                    <div class="step">Select the slide(s) you want to set timing for</div>
+                                    <div class="step">In Transitions tab, uncheck "On Mouse Click"</div>
+                                    <div class="step">Check "After" and set the time (e.g., 00:05.00 for 5 seconds)</div>
+                                    <div class="step">Click "Apply To All" to use the same timing for all slides</div>
+                                </div>
+                                
+                                <h4>Rehearsing Timings</h4>
+                                <p>PowerPoint can help you practice and set appropriate slide timings:</p>
+                                
+                                <div class="step-example">
+                                    <p><strong>Using Rehearse Timings</strong></p>
+                                    <div class="step">Go to Slide Show tab → Rehearse Timings</div>
+                                    <div class="step">Practice your presentation naturally</div>
+                                    <div class="step">PowerPoint records time spent on each slide</div>
+                                    <div class="step">Save the timings when finished</div>
+                                </div>
+                                
+                                <div class="tip-box">
+                                    <strong>Professional Transition Tip:</strong> For business presentations, use subtle transitions like "Fade" or "Push" consistently throughout your presentation. Avoid using different transitions for each slide as this can be distracting.
+                                </div>
+                                
+                                <div class="warning-box">
+                                    <strong>Timing Consideration:</strong> When using automatic slide advancement, make sure to allocate enough time for your audience to read and understand each slide. A good rule of thumb is 1-2 minutes per slide for text-heavy slides, and 30-60 seconds for visual slides.
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-buttons">
+        <button class="nav-btn" id="prev-btn" onclick="navigateLesson(-1)">
+            <i class="fas fa-arrow-left"></i> Previous
+        </button>
+        <button class="nav-btn" id="next-btn" onclick="navigateLesson(1)">
+            Next <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+
+    <script>
+        // Track current open lesson
+        let currentModule = 1;
+        let currentUnit = 1;
+        let currentLesson = 1;
+        
+        // Function to toggle module visibility
+        function toggleModule(moduleId) {
+            const moduleContent = document.getElementById(`module-${moduleId}`);
+            const icon = moduleContent.previousElementSibling.querySelector('.icon');
+            
+            // Toggle active class
+            moduleContent.classList.toggle('active');
+            
+            // Rotate icon
+            icon.classList.toggle('rotated');
+            
+            // Close other modules if this one is opening
+            if (moduleContent.classList.contains('active')) {
+                // Close other modules
+                document.querySelectorAll('.module-content').forEach(content => {
+                    if (content.id !== `module-${moduleId}`) {
+                        content.classList.remove('active');
+                        content.previousElementSibling.querySelector('.icon').classList.remove('rotated');
+                    }
+                });
+                
+                // Update current module
+                currentModule = moduleId;
+            }
+            
+            updateProgress();
+        }
+        
+        // Function to toggle unit visibility
+        function toggleUnit(moduleId, unitId) {
+            const unitContent = document.getElementById(`unit-${moduleId}-${unitId}`);
+            const icon = unitContent.previousElementSibling.querySelector('.icon');
+            
+            // Toggle active class
+            unitContent.classList.toggle('active');
+            
+            // Rotate icon
+            icon.classList.toggle('rotated');
+            
+            // Update current unit
+            if (unitContent.classList.contains('active')) {
+                currentUnit = unitId;
+            }
+            
+            updateProgress();
+        }
+        
+        // Function to toggle lesson content
+        function toggleLesson(moduleId, unitId, lessonId) {
+            const lessonContent = document.getElementById(`lesson-${moduleId}-${unitId}-${lessonId}`);
+            const lessonItem = lessonContent.previousElementSibling;
+            
+            // Close all other lessons in the same unit
+            document.querySelectorAll(`#unit-${moduleId}-${unitId} .lesson-content`).forEach(content => {
+                if (content.id !== `lesson-${moduleId}-${unitId}-${lessonId}`) {
+                    content.classList.remove('active');
+                }
+            });
+            
+            // Remove active class from all lesson items in the same unit
+            document.querySelectorAll(`#unit-${moduleId}-${unitId} .lesson-item`).forEach(item => {
+                if (item !== lessonItem) {
+                    item.classList.remove('active');
+                }
+            });
+            
+            // Toggle active class for clicked lesson
+            lessonContent.classList.toggle('active');
+            lessonItem.classList.toggle('active');
+            
+            // Update current lesson
+            if (lessonContent.classList.contains('active')) {
+                currentModule = moduleId;
+                currentUnit = unitId;
+                currentLesson = lessonId;
+            }
+            
+            updateProgress();
+        }
+        
+        // Function to navigate between lessons
+        function navigateLesson(direction) {
+            // Get all lessons in the current unit
+            const lessons = Array.from(document.querySelectorAll(`#unit-${currentModule}-${currentUnit} .lesson-item`));
+            
+            if (lessons.length === 0) return;
+            
+            // Find current lesson index
+            let currentIndex = -1;
+            for (let i = 0; i < lessons.length; i++) {
+                if (lessons[i].classList.contains('active')) {
+                    currentIndex = i;
+                    break;
+                }
+            }
+            
+            // Calculate new index
+            let newIndex = currentIndex + direction;
+            
+            // If we're at the first lesson and going backwards, go to previous unit
+            if (newIndex < 0) {
+                // Find previous unit
+                const units = Array.from(document.querySelectorAll(`#module-${currentModule} .unit`));
+                let currentUnitIndex = -1;
+                for (let i = 0; i < units.length; i++) {
+                    if (units[i].querySelector('.unit-content').id === `unit-${currentModule}-${currentUnit}`) {
+                        currentUnitIndex = i;
+                        break;
+                    }
+                }
+                
+                if (currentUnitIndex > 0) {
+                    // Go to last lesson of previous unit
+                    const prevUnit = units[currentUnitIndex - 1];
+                    const prevUnitId = prevUnit.querySelector('.unit-content').id.split('-')[2];
+                    const prevLessons = Array.from(prevUnit.querySelectorAll('.lesson-item'));
+                    
+                    if (prevLessons.length > 0) {
+                        // Close current unit and lesson
+                        document.getElementById(`unit-${currentModule}-${currentUnit}`).classList.remove('active');
+                        document.querySelector(`#unit-${currentModule}-${currentUnit} .unit-header .icon`).classList.remove('rotated');
+                        
+                        // Open previous unit
+                        prevUnit.querySelector('.unit-content').classList.add('active');
+                        prevUnit.querySelector('.unit-header .icon').classList.add('rotated');
+                        
+                        // Open last lesson of previous unit
+                        const lastLesson = prevLessons[prevLessons.length - 1];
+                        const lessonId = lastLesson.querySelector('.lesson-number').textContent;
+                        const moduleId = currentModule;
+                        
+                        toggleLesson(moduleId, prevUnitId, parseInt(lessonId));
+                    }
+                }
+                return;
+            }
+            
+            // If we're at the last lesson and going forwards, go to next unit
+            if (newIndex >= lessons.length) {
+                // Find next unit
+                const units = Array.from(document.querySelectorAll(`#module-${currentModule} .unit`));
+                let currentUnitIndex = -1;
+                for (let i = 0; i < units.length; i++) {
+                    if (units[i].querySelector('.unit-content').id === `unit-${currentModule}-${currentUnit}`) {
+                        currentUnitIndex = i;
+                        break;
+                    }
+                }
+                
+                if (currentUnitIndex < units.length - 1) {
+                    // Go to first lesson of next unit
+                    const nextUnit = units[currentUnitIndex + 1];
+                    const nextUnitId = nextUnit.querySelector('.unit-content').id.split('-')[2];
+                    const nextLessons = Array.from(nextUnit.querySelectorAll('.lesson-item'));
+                    
+                    if (nextLessons.length > 0) {
+                        // Close current unit and lesson
+                        document.getElementById(`unit-${currentModule}-${currentUnit}`).classList.remove('active');
+                        document.querySelector(`#unit-${currentModule}-${currentUnit} .unit-header .icon`).classList.remove('rotated');
+                        
+                        // Open next unit
+                        nextUnit.querySelector('.unit-content').classList.add('active');
+                        nextUnit.querySelector('.unit-header .icon').classList.add('rotated');
+                        
+                        // Open first lesson of next unit
+                        const firstLesson = nextLessons[0];
+                        const lessonId = firstLesson.querySelector('.lesson-number').textContent;
+                        const moduleId = currentModule;
+                        
+                        toggleLesson(moduleId, nextUnitId, parseInt(lessonId));
+                    }
+                }
+                return;
+            }
+            
+            // Otherwise, navigate to the next/previous lesson in the same unit
+            if (newIndex >= 0 && newIndex < lessons.length) {
+                // Close current lesson
+                document.querySelector(`#unit-${currentModule}-${currentUnit} .lesson-content.active`).classList.remove('active');
+                document.querySelector(`#unit-${currentModule}-${currentUnit} .lesson-item.active`).classList.remove('active');
+                
+                // Open new lesson
+                const newLesson = lessons[newIndex];
+                const lessonId = newLesson.querySelector('.lesson-number').textContent;
+                
+                toggleLesson(currentModule, currentUnit, parseInt(lessonId));
+            }
+        }
+        
+        // Function to update progress bar
+        function updateProgress() {
+            // Calculate progress based on completed lessons
+            const totalLessons = document.querySelectorAll('.lesson-item').length;
+            const completedLessons = document.querySelectorAll('.lesson-item.completed').length;
+            const progressPercentage = (completedLessons / totalLessons) * 100;
+            
+            document.getElementById('progress').style.width = `${progressPercentage}%`;
+        }
+        
+        // Initialize the first module and lesson
+        document.addEventListener('DOMContentLoaded', function() {
+            // Open first module, unit, and lesson by default
+            toggleModule(1);
+            toggleUnit(1, 1);
+            toggleLesson(1, 1, 1);
+            
+            // Add search functionality
+            document.getElementById('search-input').addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                
+                // Show/hide lessons based on search
+                document.querySelectorAll('.lesson-item').forEach(item => {
+                    const title = item.querySelector('.lesson-title').textContent.toLowerCase();
+                    const content = item.nextElementSibling.textContent.toLowerCase();
+                    
+                    if (title.includes(searchTerm) || content.includes(searchTerm)) {
+                        item.style.display = 'flex';
+                        // Make sure parent units and modules are visible
+                        item.closest('.unit-content').style.display = 'block';
+                        item.closest('.module-content').style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
