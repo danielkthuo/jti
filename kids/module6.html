@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOSHCAB Training Institute -Digital Foundation </title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <!-- Add this after your existing Firebase scripts -->
+<script src="../auth-manager.js"></script>
+<!-- Add to head section -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1a2b4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="JOSHCAB INSTITUTE">
+<link rel="apple-touch-icon" href="../icons/icon-192x192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f0f4f8;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 100%;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .module-header {
+            background: linear-gradient(135deg, #1abc9c, #16a085);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .module-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .session {
+            padding: 25px 20px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .session:last-child {
+            border-bottom: none;
+        }
+        
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #1abc9c;
+        }
+        
+        .session-title {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .session-duration {
+            background: #1abc9c;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            color: #16a085;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eaeaea;
+            font-weight: 600;
+        }
+        
+        .content-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #1abc9c;
+        }
+        
+        .security-box {
+            background: #e8f6f3;
+            border-left: 4px solid #1abc9c;
+        }
+        
+        .activity-box {
+            background: #e8f6f3;
+            border-left: 4px solid #16a085;
+        }
+        
+        .tip-box {
+            background: #fef9e7;
+            border-left: 4px solid #f1c40f;
+        }
+        
+        .warning-box {
+            background: #fdedec;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .privacy-box {
+            background: #e8f4fd;
+            border-left: 4px solid #3498db;
+        }
+        
+        ul, ol {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .key-term {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .instructor-note {
+            background: #fff8e1;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-style: italic;
+            border-left: 3px solid #ffc107;
+        }
+        
+        .security-elements {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .security-item {
+            flex: 1;
+            min-width: 150px;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .security-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .demo-steps {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .demo-step {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .demo-step:before {
+            content: "➜";
+            position: absolute;
+            left: 0;
+            color: #1abc9c;
+        }
+        
+        .troubleshooting {
+            background: #ffebee;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .assessment {
+            background: #e8f5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .password-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .password-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .bad-password {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .good-password {
+            border-left: 4px solid #2ecc71;
+        }
+        
+        .password-display {
+            font-family: monospace;
+            background: #2c3e50;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 1rem;
+        }
+        
+        .phishing-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .phishing-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .red-flag {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .footprint-visual {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px dashed #bdc3c7;
+        }
+        
+        .privacy-settings {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .privacy-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .privacy-icon {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .wellness-plan {
+            background: #e8f6f3;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 2px solid #1abc9c;
+        }
+        
+        .plan-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #bdc3c7;
+        }
+        
+        .plan-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .security-elements {
+                flex-direction: column;
+            }
+            
+            .security-item {
+                min-width: 100%;
+            }
+            
+            .password-examples, .phishing-examples, .privacy-settings {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .scenario-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .scenario-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .scenario-question {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .checkbox-item input {
+            margin-right: 10px;
+        }
+          /* progress tracking styles */
+        .session {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.session.completed {
+    background: #f8fff8;
+    border-left: 4px solid #2ecc71;
+}
+
+.session-status {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: #2ecc71;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.complete-session-btn {
+    margin-left: 10px;
+    font-size: 0.9rem;
+    padding: 8px 15px;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="module-header">
+            <h1>Module 6: Digital Citizenship & Online Safety</h1>
+            <div class="module-subtitle">Instructor's Detailed Teaching Notes</div>
+        </div>
+        
+        <!-- SESSION 6.1 -->
+        <div class="session">
+            <div class="session-header">
+                <div class="session-title">Session 6.1: Cyber Hygiene & Security</div>
+                <div class="session-duration">2 Hours</div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Learning Objectives</div>
+                <ul>
+                    <li>Create and manage strong, unique passwords</li>
+                    <li>Understand and enable two-factor authentication</li>
+                    <li>Identify and avoid phishing scams and online threats</li>
+                    <li>Implement basic security practices for online accounts</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Core Concepts</div>
+                
+                <div class="content-box security-box">
+                    <div class="section-title">Password Security Fundamentals</div>
+                    
+                    <div class="password-examples">
+                        <div class="password-item bad-password">
+                            <div class="key-term">Weak Passwords</div>
+                            <div class="password-display">password123</div>
+                            <div class="password-display">john2005</div>
+                            <div class="password-display">qwerty</div>
+                            <div class="password-display">123456</div>
+                            <ul>
+                                <li>Easy to guess</li>
+                                <li>Common patterns</li>
+                                <li>Personal information</li>
+                                <li>Hackable in seconds</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="password-item good-password">
+                            <div class="key-term">Strong Passphrases</div>
+                            <div class="password-display">BlueTiger$Eats-8Pizzas!</div>
+                            <div class="password-display">PurpleRain@Falls2Ocean</div>
+                            <div class="password-display">Coffee#Makes3MorningsBetter</div>
+                            <ul>
+                                <li>Long and memorable</li>
+                                <li>Mix of character types</li>
+                                <li>Unrelated words</li>
+                                <li>Takes years to crack</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="instructor-note">
+                        <strong>Teaching Analogy:</strong> A weak password is like a cheap lock anyone can pick. A strong passphrase is like a bank vault with multiple security layers.
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Password Creation Strategy</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>Step 1:</strong> Choose 4-5 unrelated words</div>
+                        <div class="demo-step"><strong>Step 2:</strong> Mix uppercase and lowercase letters</div>
+                        <div class="demo-step"><strong>Step 3:</strong> Add numbers and symbols</div>
+                        <div class="demo-step"><strong>Step 4:</strong> Make it memorable but not personal</div>
+                        <div class="demo-step"><strong>Step 5:</strong> Use different passwords for important accounts</div>
+                    </div>
+                    
+                    <div class="tip-box">
+                        <p><strong>Memory Technique:</strong> Create a story from your passphrase. "Blue Tiger Eats 8 Pizzas" creates a funny mental image that's easy to remember.</p>
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Password Managers</div>
+                    
+                    <div class="security-elements">
+                        <div class="security-item">
+                            <div class="security-icon">🔐</div>
+                            <div class="key-term">What They Do</div>
+                            <p>Store all passwords securely</p>
+                            <p>Generate strong passwords</p>
+                            <p>Auto-fill login forms</p>
+                            <p>Sync across devices</p>
+                        </div>
+                        
+                        <div class="security-item">
+                            <div class="security-icon">👍</div>
+                            <div class="key-term">Benefits</div>
+                            <p>No need to remember multiple passwords</p>
+                            <p>Automatic strong password generation</p>
+                            <p>Secure sharing with family</p>
+                            <p>Breach alerts</p>
+                        </div>
+                        
+                        <div class="security-item">
+                            <div class="security-icon">🛡️</div>
+                            <div class="key-term">Options</div>
+                            <p>Google Password Manager (free)</p>
+                            <p>Bitwarden (free/paid)</p>
+                            <p>LastPass (free/paid)</p>
+                            <p>1Password (paid)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="instructor-note">
+                        <strong>Important:</strong> Emphasize that the master password for the password manager must be EXTREMELY strong and memorable, as it protects all other passwords.
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Two-Factor Authentication (2FA)</div>
+                    
+                    <div class="security-elements">
+                        <div class="security-item">
+                            <div class="security-icon">🔒</div>
+                            <div class="key-term">What is 2FA?</div>
+                            <p>"Double lock" for accounts</p>
+                            <p>Something you KNOW (password)</p>
+                            <p>Something you HAVE (phone)</p>
+                            <p>Extra security layer</p>
+                        </div>
+                        
+                        <div class="security-item">
+                            <div class="security-icon">📱</div>
+                            <div class="key-term">How It Works</div>
+                            <p>Enter password</p>
+                            <p>Get code on phone</p>
+                            <p>Enter code to login</p>
+                            <p>Even with password, hacker can't access</p>
+                        </div>
+                        
+                        <div class="security-item">
+                            <div class="security-icon">⭐</div>
+                            <div class="key-term">Where to Enable</div>
+                            <p>Email accounts</p>
+                            <p>Social media</p>
+                            <p>Banking apps</p>
+                            <p>Any important account</p>
+                        </div>
+                    </div>
+                    
+                    <div class="warning-box">
+                        <p><strong>Mandatory for:</strong> Email accounts (they control password resets for everything else), social media, financial accounts.</p>
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Phishing Scams - Recognizing the Bait</div>
+                    
+                    <div class="phishing-examples">
+                        <div class="phishing-item">
+                            <div class="key-term">Example 1: Fake Netflix Email</div>
+                            <p>"Your Netflix account is on hold! Click here to update payment."</p>
+                            <p><span class="red-flag">Red Flags:</span></p>
+                            <ul>
+                                <li>Creates false urgency</li>
+                                <li>Generic greeting ("Dear User")</li>
+                                <li>Suspicious sender address</li>
+                                <li>Poor grammar/spelling</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="phishing-item">
+                            <div class="key-term">Example 2: Prize Scam</div>
+                            <p>"You've won a $1000 gift card! Send us your details to claim it."</p>
+                            <p><span class="red-flag">Red Flags:</span></p>
+                            <ul>
+                                <li>Too good to be true</li>
+                                <li>Asks for personal information</li>
+                                <li>No prior contact or entry</li>
+                                <li>Pressure to act quickly</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="phishing-item">
+                            <div class="key-term">Example 3: Fake Bank Alert</div>
+                            <p>"Suspicious activity detected! Verify your account now."</p>
+                            <p><span class="red-flag">Red Flags:</span></p>
+                            <ul>
+                                <li>Uses fear and urgency</li>
+                                <li>Asks for login credentials</li>
+                                <li>Link goes to fake website</li>
+                                <li>No specific account details</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Link Hover Technique</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>Step 1:</strong> Hover your mouse over any suspicious link</div>
+                        <div class="demo-step"><strong>Step 2:</strong> Look at the bottom-left of your browser</div>
+                        <div class="demo-step"><strong>Step 3:</strong> Check the actual URL that appears</div>
+                        <div class="demo-step"><strong>Step 4:</strong> Compare to the legitimate website address</div>
+                        <div class="demo-step"><strong>Example:</strong> Link says "netflix.com" but hover shows "netf1ix-security.com"</div>
+                    </div>
+                    
+                    <div class="instructor-note">
+                        <strong>Teaching Tip:</strong> Show real examples (safe ones) of phishing emails and demonstrate the hover technique. This visual demonstration makes the concept concrete.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Teaching Activities & Timeline</div>
+                
+                <div class="activity-box">
+                    <div class="section-title">Password Power-Up (60 mins)</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>"I Do"</strong> - Demonstrate password security:</div>
+                        <div class="demo-step">Show how hackers guess simple passwords instantly</div>
+                        <div class="demo-step">Introduce passphrase concept with examples</div>
+                        <div class="demo-step">Explain password managers and their benefits</div>
+                        <div class="demo-step"><strong>"We Do"</strong> - Class brainstorming:</div>
+                        <div class="demo-step">Create strong passphrases for fictional social media site</div>
+                        <div class="demo-step">Write examples on (virtual) whiteboard</div>
+                        <div class="demo-step"><strong>"You Do"</strong> - Security checkup:</div>
+                        <div class="demo-step">Students go to myaccount.google.com/security</div>
+                        <div class="demo-step">Run Password Checkup and Security Checkup</div>
+                        <div class="demo-step">Encourage turning on 2FA if comfortable</div>
+                    </div>
+                </div>
+                
+                <div class="activity-box">
+                    <div class="section-title">Phishing Fishing (60 mins)</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>"I Do"</strong> - Show real phishing examples:</div>
+                        <div class="demo-step">Display safe examples of phishing emails/SMS</div>
+                        <div class="demo-step">Point out red flags in each example</div>
+                        <div class="demo-step">Demonstrate link hover technique</div>
+                        <div class="demo-step"><strong>"We Do"</strong> - "Phish or No Phish?" game:</div>
+                        <div class="demo-step">Show 5 emails/SMS messages</div>
+                        <div class="demo-step">Class votes legitimate vs. scam</div>
+                        <div class="demo-step">Discuss reasoning for each decision</div>
+                        <div class="demo-step"><strong>"You Do"</strong> - Phishing identification:</div>
+                        <div class="demo-step">Worksheet with 3 email screenshots</div>
+                        <div class="demo-step">Identify at least two red flags in each</div>
+                        <div class="demo-step">Explain why each is suspicious</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SESSION 6.2 -->
+        <div class="session">
+            <div class="session-header">
+                <div class="session-title">Session 6.2: Digital Footprint & Wellness</div>
+                <div class="session-duration">2 Hours</div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Learning Objectives</div>
+                <ul>
+                    <li>Understand and manage digital footprint</li>
+                    <li>Configure social media privacy settings</li>
+                    <li>Recognize and respond to cyberbullying</li>
+                    <li>Develop healthy digital wellness habits</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Core Concepts</div>
+                
+                <div class="content-box">
+                    <div class="section-title">Digital Footprint - Your Online Shadow</div>
+                    
+                    <div class="footprint-visual">
+                        <div class="security-icon">👣</div>
+                        <div class="key-term">Everything you do online leaves traces</div>
+                        <p>Social media posts • Comments • Photos • Likes • Shares</p>
+                        <p>Search history • Online purchases • App usage • Location data</p>
+                        <p>Text messages • Emails • Video calls • Game chats</p>
+                    </div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>Permanence:</strong> Nothing truly disappears online</div>
+                        <div class="demo-step"><strong>Screenshots:</strong> "Disappearing" messages can be captured</div>
+                        <div class="demo-step"><strong>Archives:</strong> Websites archive deleted content</div>
+                        <div class="demo-step"><strong>Future Impact:</strong> Colleges and employers check digital footprints</div>
+                    </div>
+                    
+                    <div class="instructor-note">
+                        <strong>Teaching Analogy:</strong> Your digital footprint is like wet cement - everything leaves an impression, and it becomes permanent very quickly.
+                    </div>
+                </div>
+                
+                <div class="content-box privacy-box">
+                    <div class="section-title">Social Media Privacy Settings</div>
+                    
+                    <div class="privacy-settings">
+                        <div class="privacy-item">
+                            <div class="privacy-icon">🔒</div>
+                            <div class="key-term">Private Accounts</div>
+                            <p>Control who sees your content</p>
+                            <p>Approve followers manually</p>
+                            <p>Limit exposure to strangers</p>
+                            <p>Basic privacy protection</p>
+                        </div>
+                        
+                        <div class="privacy-item">
+                            <div class="privacy-icon">🏷️</div>
+                            <div class="key-term">Tag Review</div>
+                            <p>Approve tags before they appear</p>
+                            <p>Control your associated content</p>
+                            <p>Prevent unwanted associations</p>
+                            <p>Manage your online image</p>
+                        </div>
+                        
+                        <div class="privacy-item">
+                            <div class="privacy-icon">🚫</div>
+                            <div class="key-term">Block & Report</div>
+                            <p>Remove unwanted interactions</p>
+                            <p>Report abusive behavior</p>
+                            <p>Protect your mental health</p>
+                            <p>Platform safety tools</p>
+                        </div>
+                        
+                        <div class="privacy-item">
+                            <div class="privacy-icon">👁️</div>
+                            <div class="key-term">Visibility Settings</div>
+                            <p>Control who sees posts</p>
+                            <p>Limit past post visibility</p>
+                            <p>Manage story viewers</p>
+                            <p>Custom audience selection</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Cyberbullying Awareness & Response</div>
+                    
+                    <div class="scenario-cards">
+                        <div class="scenario-card">
+                            <div class="scenario-question">What is Cyberbullying?</div>
+                            <ul>
+                                <li>Harassment through digital devices</li>
+                                <li>Repeated, hostile behavior</li>
+                                <li>Spreading rumors or lies</li>
+                                <li>Exclusion from online groups</li>
+                                <li>Impersonation or fake profiles</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="scenario-card">
+                            <div class="scenario-question">If You're Being Cyberbullied</div>
+                            <ul>
+                                <li>Don't respond or retaliate</li>
+                                <li>Save evidence (screenshots)</li>
+                                <li>Block the person immediately</li>
+                                <li>Report to platform and school</li>
+                                <li>Talk to trusted adult</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="scenario-card">
+                            <div class="scenario-question">If You Witness Cyberbullying</div>
+                            <ul>
+                                <li>Don't forward or like harmful content</li>
+                                <li>Support the victim privately</li>
+                                <li>Report the content to platform</li>
+                                <li>Be an upstander, not bystander</li>
+                                <li>Encourage seeking adult help</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Digital Wellness & Mental Health</div>
+                    
+                    <div class="security-elements">
+                        <div class="security-item">
+                            <div class="security-icon">⚖️</div>
+                            <div class="key-term">Balance</div>
+                            <p>Online vs. offline life</p>
+                            <p>Screen time limits</p>
+                            <p>Digital-free zones</p>
+                            <p>Real-world connections</p>
+                        </div>
+                        
+                        <div class="security-item">
+                            <div class="security-icon">😔</div>
+                            <div class="key-term">Compare & Despair</div>
+                            <p>Social media isn't reality</p>
+                            <p>Curated highlight reels</p>
+                            <p>Filters and editing</p>
+                            <p>Don't compare your behind-the-scenes to others' highlight reels</p>
+                        </div>
+                        
+                        <div class="security-item">
+                            <div class="security-icon">🧠</div>
+                            <div class="key-term">Mental Health</div>
+                            <p>Take regular breaks</p>
+                            <p>Notice mood changes</p>
+                            <p>Seek help when needed</p>
+                            <p>Prioritize sleep</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Teaching Activities & Timeline</div>
+                
+                <div class="activity-box">
+                    <div class="section-title">Digital Footprint Audit (60 mins)</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>"I Do"</strong> - Demonstrate footprint checking:</div>
+                        <div class="demo-step">Project screen, Google your name in quotes</div>
+                        <div class="demo-step">Show Google Image search as well</div>
+                        <div class="demo-step">Discuss findings and what they reveal</div>
+                        <div class="demo-step"><strong>"We Do"</strong> - Class analysis:</div>
+                        <div class="demo-step">Google a public figure popular with teens</div>
+                        <div class="demo-step">Analyze first page of results</div>
+                        <div class="demo-step">Discuss their "digital story"</div>
+                        <div class="demo-step"><strong>"You Do"</strong> - Self-reflection:</div>
+                        <div class="demo-step">Students Google their own names privately</div>
+                        <div class="demo-step">Write down three discoveries</div>
+                        <div class="demo-step">Private exercise for reflection</div>
+                    </div>
+                </div>
+                
+                <div class="activity-box">
+                    <div class="section-title">Social Media Lab & Digital Wellness (60 mins)</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>"I Do"</strong> - Demonstrate privacy settings:</div>
+                        <div class="demo-step">Use dummy account/screenshots of Instagram</div>
+                        <div class="demo-step">Show how to make account Private</div>
+                        <div class="demo-step">Demonstrate reviewing and removing Tags</div>
+                        <div class="demo-step">Show Block and Report functions</div>
+                        <div class="demo-step"><strong>"We Do"</strong> - Cyberbullying scenarios:</div>
+                        <div class="demo-step">Discuss: "What would you do if you saw bullying in a group chat?"</div>
+                        <div class="demo-step">Brainstorm strategies together</div>
+                        <div class="demo-step"><strong>"You Do" - Digital Detox Plan:</strong></div>
+                        <div class="demo-step">Students create personal wellness plan</div>
+                        <div class="demo-step">Answer three key questions</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Digital Detox Plan Activity</div>
+                
+                <div class="wellness-plan">
+                    <div class="plan-item">
+                        <div class="key-term">1. App Reduction</div>
+                        <p>"One app I will use less is: ___________"</p>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="social-media">
+                            <label for="social-media">Social media apps</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="games">
+                            <label for="games">Mobile games</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="video">
+                            <label for="video">Video streaming</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="other-app">
+                            <label for="other-app">Other: ___________</label>
+                        </div>
+                    </div>
+                    
+                    <div class="plan-item">
+                        <div class="key-term">2. Phone-Free Times</div>
+                        <p>"I will not use my phone during: ___________"</p>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="morning">
+                            <label for="morning">First hour after waking up</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="meals">
+                            <label for="meals">Meal times</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="homework">
+                            <label for="homework">Homework time</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="bedtime">
+                            <label for="bedtime">One hour before bed</label>
+                        </div>
+                    </div>
+                    
+                    <div class="plan-item">
+                        <div class="key-term">3. Real-World Activities</div>
+                        <p>"One real-world activity I will do more is: ___________"</p>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="reading">
+                            <label for="reading">Reading physical books</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="sports">
+                            <label for="sports">Sports or exercise</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="hobbies">
+                            <label for="hobbies">Hobbies (art, music, etc.)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="friends">
+                            <label for="friends">Spending time with friends/family</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="other-activity">
+                            <label for="other-activity">Other: ___________</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Common Challenges & Solutions</div>
+                
+                <div class="troubleshooting">
+                    <p><strong>Issue:</strong> "But I have nothing to hide!"</p>
+                    <p><strong>Solution:</strong> Privacy isn't about hiding - it's about controlling your information and how it's used</p>
+                    
+                    <p><strong>Issue:</strong> "Everyone else shares everything"</p>
+                    <p><strong>Solution:</strong> You control your boundaries. What feels comfortable for others may not be right for you</p>
+                    
+                    <p><strong>Issue:</strong> Difficulty managing screen time</p>
+                    <p><strong>Solution:</strong> Use built-in screen time controls, set specific limits, create phone-free zones</p>
+                    
+                    <p><strong>Issue:</strong> Fear of missing out (FOMO)</p>
+                    <p><strong>Solution:</strong> Schedule specific times to check social media, focus on quality real-world connections</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Advanced Tips for Digital Leaders</div>
+                
+                <div class="tip-box">
+                    <p><strong>Digital Literacy:</strong> Learn to identify misinformation and biased sources</p>
+                    <p><strong>Positive Digital Citizenship:</strong> Use online platforms to spread positivity and support others</p>
+                    <p><strong>Privacy Advocacy:</strong> Understand data privacy laws and your rights</p>
+                    <p><strong>Mental Health First Aid:</strong> Learn to recognize when friends might need help</p>
+                    <p><strong>Digital Legacy:</strong> Consider what you want your long-term digital footprint to be</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Module 6 Summary & Transition</div>
+            
+            <div class="content-box">
+                <p><strong>Key Takeaways:</strong></p>
+                <ul>
+                    <li>Strong, unique passwords and 2FA protect your accounts from unauthorized access</li>
+                    <li>Critical thinking helps identify and avoid phishing scams and online threats</li>
+                    <li>Your digital footprint is permanent and can impact future opportunities</li>
+                    <li>Privacy settings give you control over your personal information</li>
+                    <li>Cyberbullying requires specific response strategies for victims and witnesses</li>
+                    <li>Digital wellness involves balancing online and offline life for mental health</li>
+                </ul>
+                
+                <p><strong>Looking Ahead to Module 7:</strong> "Now that you're equipped to stay safe online, we'll explore how computers think by learning computational thinking and beginning your coding journey with Scratch."</p>
+            </div>
+        </div>
+    </div>
+    <script>
+    // Get current module number from URL or page structure
+    const currentModule = 1; // Change this number for each module
+    
+    // Track session completion
+    let sessionProgress = {
+        '1.1': false,
+        '1.2': false
+    };
+    
+    // Load progress from localStorage
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSessionProgress();
+        updateModuleProgress();
+    });
+    
+    // Load session progress from localStorage
+    function loadSessionProgress() {
+        const savedProgress = localStorage.getItem(`module${currentModule}Progress`);
+        if (savedProgress) {
+            sessionProgress = JSON.parse(savedProgress);
+        }
+        updateSessionUI();
+    }
+    
+    // Save session progress to localStorage
+    function saveSessionProgress() {
+        localStorage.setItem(`module${currentModule}Progress`, JSON.stringify(sessionProgress));
+        updateModuleProgress();
+    }
+    
+    // Mark a session as completed
+    function completeSession(sessionId) {
+        sessionProgress[sessionId] = true;
+        saveSessionProgress();
+        
+        // Check if all sessions are completed
+        const allCompleted = Object.values(sessionProgress).every(val => val === true);
+        if (allCompleted) {
+            // Update dashboard progress
+            updateDashboardProgress(100);
+            
+            // Show completion message
+            setTimeout(() => {
+                alert(`Congratulations! You've completed all sessions in Module ${currentModule}. Return to the dashboard to continue.`);
+            }, 500);
+        }
+    }
+    
+    // Update session UI based on completion status
+    function updateSessionUI() {
+        for (const [sessionId, completed] of Object.entries(sessionProgress)) {
+            const sessionElement = document.querySelector(`[data-session="${sessionId}"]`);
+            if (sessionElement) {
+                if (completed) {
+                    sessionElement.classList.add('completed');
+                    // Add checkmark or other indicator
+                    let statusIndicator = sessionElement.querySelector('.session-status');
+                    if (!statusIndicator) {
+                        statusIndicator = document.createElement('div');
+                        statusIndicator.className = 'session-status';
+                        statusIndicator.innerHTML = '✓';
+                        sessionElement.querySelector('.session-header').appendChild(statusIndicator);
+                    }
+                }
+            }
+        }
+    }
+    
+    // Calculate and update module progress
+    function updateModuleProgress() {
+        const completedSessions = Object.values(sessionProgress).filter(val => val === true).length;
+        const totalSessions = Object.keys(sessionProgress).length;
+        const progressPercentage = (completedSessions / totalSessions) * 100;
+        
+        // Update dashboard
+        updateDashboardProgress(progressPercentage);
+    }
+    
+    // Update dashboard progress via localStorage
+    function updateDashboardProgress(progress) {
+        // Get current dashboard progress
+        const dashboardProgress = JSON.parse(localStorage.getItem('moduleProgress') || '{}');
+        
+        // Update current module progress
+        if (dashboardProgress[currentModule]) {
+            dashboardProgress[currentModule].progress = progress;
+            
+            // If progress is 100%, mark as completed
+            if (progress >= 100) {
+                dashboardProgress[currentModule].status = 'completed';
+                
+                // Unlock next module if exists
+                const nextModule = currentModule + 1;
+                if (dashboardProgress[nextModule]) {
+                    dashboardProgress[nextModule].status = 'current';
+                }
+            }
+            
+            // Save back to localStorage
+            localStorage.setItem('moduleProgress', JSON.stringify(dashboardProgress));
+        }
+    }
+    
+    // Add session completion buttons to each session
+    document.querySelectorAll('.session').forEach(session => {
+        const sessionId = session.querySelector('.session-title').textContent.match(/\d+\.\d+/);
+        if (sessionId) {
+            session.setAttribute('data-session', sessionId[0]);
+            
+            // Add completion button if not already present
+            if (!session.querySelector('.complete-session-btn')) {
+                const completeBtn = document.createElement('button');
+                completeBtn.className = 'btn btn-complete complete-session-btn';
+                completeBtn.textContent = 'Mark Session Complete';
+                completeBtn.onclick = function() {
+                    completeSession(sessionId[0]);
+                    this.disabled = true;
+                    this.textContent = 'Completed';
+                };
+                
+                // Check if session is already completed
+                if (sessionProgress[sessionId[0]]) {
+                    completeBtn.disabled = true;
+                    completeBtn.textContent = 'Completed';
+                }
+                
+                session.querySelector('.session-header').appendChild(completeBtn);
+            }
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOSHCAB Training Institute -Digital Foundation </title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <!-- Add this after your existing Firebase scripts -->
+<script src="../auth-manager.js"></script>
+<!-- Add to head section -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1a2b4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="JOSHCAB INSTITUTE">
+<link rel="apple-touch-icon" href="../icons/icon-192x192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .app-container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #4a6fa5, #2c3e50);
+            color: white;
+            padding: 20px 15px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        
+        .logo-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .module-container {
+            width: 100%;
+            margin-bottom: 0;
+            background: white;
+            border-radius: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        
+        .module-header {
+            background: #4a6fa5;
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .module-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .module-number {
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .module-content {
+            padding: 20px 15px;
+        }
+        
+        .session {
+            margin-bottom: 25px;
+            border-left: 3px solid #4a6fa5;
+            padding-left: 15px;
+        }
+        
+        .session-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .session-duration {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+        
+        .session-content {
+            font-size: 0.95rem;
+        }
+        
+        .key-points {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .key-points li {
+            margin-bottom: 8px;
+        }
+        
+        .activity {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .activity-title {
+            font-weight: 600;
+            color: #4a6fa5;
+            margin-bottom: 8px;
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: #ecf0f1;
+            border-radius: 3px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: #2ecc71;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .module-footer {
+            padding: 15px;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #4a6fa5;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .completed .module-header {
+            background: #27ae60;
+        }
+        
+        .completed .progress {
+            width: 100%;
+        }
+        
+        .current .module-header {
+            background: #e74c3c;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 0.8rem;
+        }
+        
+        /* Module-specific colors */
+        .module-1 .module-header { background: #3498db; }
+        .module-2 .module-header { background: #2ecc71; }
+        .module-3 .module-header { background: #e74c3c; }
+        .module-4 .module-header { background: #f39c12; }
+        .module-5 .module-header { background: #9b59b6; }
+        .module-6 .module-header { background: #1abc9c; }
+        .module-7 .module-header { background: #d35400; }
+        .module-8 .module-header { background: #34495e; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">💻</div>
+                <div>
+                    <h1>Digital Foundations for Teens</h1>
+                    <div class="subtitle">Your journey to digital mastery</div>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress" id="overall-progress"></div>
+            </div>
+        </header>
+        
+        <!-- MODULE 1 -->
+        <div class="module-container module-1">
+            <div class="module-header">
+                <div class="module-title">Module 1: Welcome to the Digital World</div>
+                <div class="module-number">1</div>
+            </div>
+            <div class="module-content">
+                <div class="session">
+                    <div class="session-title">Session 1.1: Hardware & The Operating System</div>
+                    <div class="session-duration">2 Hours</div>
+                    <div class="session-content">
+                        <p>Learn about computer components and how to navigate your operating system.</p>
+                        <ul class="key-points">
+                            <li>CPU, RAM, Storage (HDD/SSD)</li>
+                            <li>Input and Output Devices</li>
+                            <li>Windows, macOS, and Chrome OS</li>
+                            <li>File Explorer and Finder</li>
+                        </ul>
+                        <div class="activity">
+                            <div class="activity-title">Hands-On Activity</div>
+                            <p>Tech in Your Pocket - Identify computers you use daily</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="session">
+                    <div class="session-title">Session 1.2: File Management Mastery</div>
+                    <div class="session-duration">2 Hours</div>
+                    <div class="session-content">
+                        <p>Master organizing files and folders on your computer.</p>
+                        <ul class="key-points">
+                            <li>Files vs. Folders</li>
+                            <li>Creating, renaming, copying, moving files</li>
+                            <li>Safe software installation</li>
+                        </ul>
+                        <div class="activity">
+                            <div class="activity-title">Hands-On Activity</div>
+                            <p>The Great File Hunt - Organize a chaotic downloads folder</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="module-footer">
+                <button class="btn btn-secondary">Resources</button>
+                <button class="btn btn-primary">Start Module</button>
+            </div>
+        </div>
+        
+        <!-- MODULE 2 -->
+        <div class="module-container module-2">
+            <div class="module-header">
+                <div class="module-title">Module 2: Mastering the Internet</div>
+                <div class="module-number">2</div>
+            </div>
+            <div class="module-content">
+                <div class="session">
+                    <div class="session-title">Session 2.1: Web Browsing & Smart Research</div>
+                    <div class="session-duration">2 Hours</div>
+                    <div class="session-content">
+                        <p>Become an expert at finding information online and evaluating sources.</p>
+                        <ul class="key-points">
+                            <li>Browser features and shortcuts</li>
+                            <li>Effective search techniques</li>
+                            <li>CRAAP Test for source evaluation</li>
+                        </ul>
+                        <div class="activity">
+                            <div class="activity-title">Hands-On Activity</div>
+                            <p>Research Challenge - Find credible sources on a topic</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="session">
+                    <div class="session-title">Session 2.2: Email & Cloud Storage</div>
+                    <div class="session-duration">2 Hours</div>
+                    <div class="session-content">
+                        <p>Learn professional communication and cloud-based file management.</p>
+                        <ul class="key-points">
+                            <li>Email etiquette</li>
+                            <li>Attachments and signatures</li>
+                            <li>Google Drive and OneDrive</li>
+                            <li>Collaborative document editing</li>
+                        </ul>
+                        <div class="activity">
+                            <div class="activity-title">Hands-On Activity</div>
+                            <p>Collaborative Story - Create a story together in Google Docs</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="module-footer">
+                <button class="btn btn-secondary">Resources</button>
+                <button class="btn btn-primary">Start Module</button>
+            </div>
+        </div>
+        
+        <!-- MODULE 3 -->
+        <div class="module-container module-3">
+            <div class="module-header">
+                <div class="module-title">Module 3: Word Processing Powerhouse</div>
+                <div class="module-number">3</div>
+            </div>
+            <div class="module-content">
+                <div class="session">
+                    <div class="session-title">Session 3.1: Document Basics & Formatting</div>
+                    <div class="session-duration">2 Hours</div>
+                    <div class="session-content">
+                        <p>Create professional-looking documents with proper formatting.</p>
+                        <ul class="key-points">
+                            <li>Text and paragraph formatting</li>
+                            <li>Using styles for consistency</li>
+                            <li>Bulleted and numbered lists</li>
+                        </ul>
+                        <div class="activity">
+                            <div class="activity-title">Hands-On Activity</div>
+                            <p>My Bio - Create a formatted personal biography</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="session">
+                    <div class="session-title">Session 3.2: Layout, Tools & Collaboration</div>
+                    <div class="session-duration">2 Hours</div>
+                    <div class="session-content">
+                        <p>Advanced document features and collaborative editing.</p>
+                        <ul class="key-points">
+                            <li>Page layout and margins</li>
+                            <li>Inserting images and page breaks</li>
+                            <li>Spell check and thesaurus</li>
+                            <li>Commenting and peer review</li>
+                        </ul>
+                        <div class="activity">
+                            <div class="activity-title">Hands-On Activity</div>
+                            <p>Peer Review - Exchange and comment on documents</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="module-footer">
+                <button class="btn btn-secondary">Resources</button>
+                <button class="btn btn-primary">Start Module</button>
+            </div>
+        </div>
+        
+        <!-- MODULE 4 -->
+        <div class="module-container module-4">
+            <div class="module-header">
+                <div class="module-title">Module 4: Spreadsheets Made Simple</div>
+                <div class="module-number">4</div>
+            </div>
+            <div class="module-content">
+                <div class="session">
+                    <div class="session-title">Session 4.1: Spreadsheet Basics & Data Entry</div>
+                    <div class="session-duration">2 Hours</div>
+                    <div class="session-content">
+                        <p>Introduction to spreadsheets and basic data management.</p>
+                        <ul class="key-points">
+                            <li>Cells, rows, and columns</li>
+                            <li>Data entry and formatting</li>
+                            <li>Basic formulas (SUM, AVERAGE, COUNT)</li>
+                        </ul>
+                        <div class="activity">
+                            <div class="activity-title">Hands-On Activity</div>
+                            <p>Party Budget - Create and calculate a party budget</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="session">
+                    <div class="session-title">Session 4.2: Data Analysis & Visualization</div>
+                    <div class="session-duration">2 Hours</div>
+                    <div class="session-content">
+                        <p>Analyze data and create visual representations.</p>
+                        <ul class="key-points">
+                            <li>Sorting and filtering data</li>
+                            <li>Creating charts and graphs</li>
+                            <li>Bar charts and pie charts</li>
+                        </ul>
+                        <div class="activity">
+                            <div class="activity-title">Hands-On Activity</div>
+                            <p>Chart Challenge - Visualize your party budget data</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="module-footer">
+                <button class="btn btn-secondary">Resources</button>
+                <button class="btn btn-primary">Start Module</button>
+            </div>
+        </div>
+        
+        <!-- MODULE 5 -->
+        <div class="module-container module-5">
+            <div class="module-header">
+                <div class="module-title">Module 5: Creative Presentations</div>
+                <div class="module-number">5</div>
+            </div>
+            <div class="module-content">
+                <div class="session">
+                    <div class="session-title">Session 5.1: Slide Design & Structure</div>
+                    <div class="session-duration">2 Hours</div>
+                    <div class="session-content">
+                        <p>Design visually appealing and effective presentations.</p>
+                        <ul class="key-points">
+                            <li>Color schemes and fonts</li>
+                            <li>Slide layouts and consistency</li>
+                            <li>The "No Clown Colors" rule</li>
+                        </ul>
+                        <div class="activity">
+                            <div class="activity-title">Hands-On Activity</div>
+                            <p>Before & After Makeover - Transform a poorly designed slide</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="session">
+                    <div class="session-title">Session 5.2: Media & Delivery</div>
+                    <div class="session-duration">2 Hours</div>
+                    <div class="session-content">
+                        <p>Enhance presentations with media and develop delivery skills.</p>
+                        <ul class="key-points">
+                            <li>Inserting images, shapes, and video</li>
+                            <li>Transitions and animations</li>
+                            <li>Presentation skills and practice</li>
+                        </ul>
+                        <div class="activity">
+                            <div class="activity-title">Hands-On Activity</div>
+                            <p>Mini-TED Talks - Present your passion project</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="module-footer">
+                <button class="btn btn-secondary">Resources</button>
+                <button class="btn btn-primary">Start Module</button>
+            </div>
+        </div>
+        
+        <!-- MODULE 6 -->
+        <div class="module-container module-6">
+            <div class="module-header">
+                <div class="module-title">Module 6: Digital Citizenship & Safety</div>
+                <div class="module-number">6</div>
+            </div>
+            <div class="module-content">
+                <div class="session">
+                    <div class="session-title">Session 6.1: Cyber Hygiene & Security</div>
+                    <div class="session-duration">2 Hours</div>
+                    <div class="session-content">
+                        <p>Protect yourself and your information online.</p>
+                        <ul class="key-points">
+                            <li>Strong passwords and passphrases</li>
+                            <li>Two-factor authentication</li>
+                            <li>Identifying phishing scams</li>
+                        </ul>
+                        <div class="activity">
+                            <div class="activity-title">Hands-On Activity</div>
+                            <p>Phish or No Phish? - Identify scam emails</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="session">
+                    <div class="session-title">Session 6.2: Digital Footprint & Wellness</div>
+                    <div class="session-duration">2 Hours</div>
+                    <div class="session-content">
+                        <p>Manage your online presence and maintain digital wellness.</p>
+                        <ul class="key-points">
+                            <li>Digital footprint awareness</li>
+                            <li>Social media privacy settings</li>
+                            <li>Cyberbullying prevention</li>
+                            <li>Digital detox strategies</li>
+                        </ul>
+                        <div class="activity">
+                            <div class="activity-title">Hands-On Activity</div>
+                            <p>Digital Footprint Audit - Google yourself</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="module-footer">
+                <button class="btn btn-secondary">Resources</button>
+                <button class="btn btn-primary">Start Module</button>
+            </div>
+        </div>
+        
+        <!-- MODULE 7 -->
+        <div class="module-container module-7">
+            <div class="module-header">
+                <div class="module-title">Module 7: Computational Thinking</div>
+                <div class="module-number">7</div>
+            </div>
+            <div class="module-content">
+                <div class="session">
+                    <div class="session-title">Session 7.1: Unplugged Thinking & Logic</div>
+                    <div class="session-duration">2 Hours</div>
+                    <div class="session-content">
+                        <p>Develop problem-solving skills without computers.</p>
+                        <ul class="key-points">
+                            <li>Decomposition</li>
+                            <li>Pattern Recognition</li>
+                            <li>Abstraction</li>
+                            <li>Algorithm Design</li>
+                        </ul>
+                        <div class="activity">
+                            <div class="activity-title">Hands-On Activity</div>
+                            <p>Robot Teacher Game - Give precise instructions</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="session">
+                    <div class="session-title">Session 7.2: Introduction to Block Coding</div>
+                    <div class="session-duration">2 Hours</div>
+                    <div class="session-content">
+                        <p>Create your first programs using Scratch.</p>
+                        <ul class="key-points">
+                            <li>Scratch interface</li>
+                            <li>Motion, looks, and control blocks</li>
+                            <li>Creating simple animations</li>
+                        </ul>
+                        <div class="activity">
+                            <div class="activity-title">Hands-On Activity</div>
+                            <p>Dancing Sprite - Animate a character in Scratch</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="module-footer">
+                <button class="btn btn-secondary">Resources</button>
+                <button class="btn btn-primary">Start Module</button>
+            </div>
+        </div>
+        
+        <!-- MODULE 8 -->
+        <div class="module-container module-8">
+            <div class="module-header">
+                <div class="module-title">Module 8: Capstone Project</div>
+                <div class="module-number">8</div>
+            </div>
+            <div class="module-content">
+                <div class="session">
+                    <div class="session-title">Session 8.1: Project Planning & Work Session</div>
+                    <div class="session-duration">2 Hours</div>
+                    <div class="session-content">
+                        <p>Plan and create your final portfolio project.</p>
+                        <ul class="key-points">
+                            <li>Brainstorming project topics</li>
+                            <li>Creating a project plan</li>
+                            <li>Working session with instructor support</li>
+                        </ul>
+                        <div class="activity">
+                            <div class="activity-title">Hands-On Activity</div>
+                            <p>Project Planning - Outline your capstone project</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="session">
+                    <div class="session-title">Session 8.2: Presentations & Certification</div>
+                    <div class="session-duration">2 Hours</div>
+                    <div class="session-content">
+                        <p>Showcase your work and receive your certificate.</p>
+                        <ul class="key-points">
+                            <li>Final presentation rehearsal</li>
+                            <li>Capstone project showcase</li>
+                            <li>Certificate distribution</li>
+                        </ul>
+                        <div class="activity">
+                            <div class="activity-title">Hands-On Activity</div>
+                            <p>Capstone Showcase - Present your portfolio</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="module-footer">
+                <button class="btn btn-secondary">Resources</button>
+                <button class="btn btn-primary">Start Module</button>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Digital Foundations for Teens &copy; 2023</p>
+        </footer>
+    </div>
+
+    <script>
+        // Simple progress tracking
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressBar = document.getElementById('overall-progress');
+            
+            // Simulate progress (in a real app, this would come from user data)
+            setTimeout(() => {
+                progressBar.style.width = '25%';
+            }, 500);
+            
+            // Add click handlers for module buttons
+            const moduleButtons = document.querySelectorAll('.btn-primary');
+            moduleButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const module = this.closest('.module-container');
+                    const moduleTitle = module.querySelector('.module-title').textContent;
+                    alert(`Starting ${moduleTitle}`);
+                    
+                    // In a real app, you would navigate to the module content
+                });
+            });
+        });
+    </script>
+</body>
+</html>

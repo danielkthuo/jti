@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOSHCAB Training Institute -Digital Foundation </title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <!-- Add this after your existing Firebase scripts -->
+<script src="../auth-manager.js"></script>
+<!-- Add to head section -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1a2b4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="JOSHCAB INSTITUTE">
+<link rel="apple-touch-icon" href="../icons/icon-192x192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f0f4f8;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 100%;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .module-header {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .module-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .session {
+            padding: 25px 20px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .session:last-child {
+            border-bottom: none;
+        }
+        
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f39c12;
+        }
+        
+        .session-title {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .session-duration {
+            background: #f39c12;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            color: #e67e22;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eaeaea;
+            font-weight: 600;
+        }
+        
+        .content-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .analogy-box {
+            background: #fef5e7;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .activity-box {
+            background: #e8f6f3;
+            border-left: 4px solid #16a085;
+        }
+        
+        .tip-box {
+            background: #fef9e7;
+            border-left: 4px solid #f1c40f;
+        }
+        
+        .warning-box {
+            background: #fdedec;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .formula-box {
+            background: #e8f4fd;
+            border-left: 4px solid #3498db;
+        }
+        
+        ul, ol {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .key-term {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .instructor-note {
+            background: #fff8e1;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-style: italic;
+            border-left: 3px solid #ffc107;
+        }
+        
+        .spreadsheet-elements {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .element-item {
+            flex: 1;
+            min-width: 150px;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .element-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .demo-steps {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .demo-step {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .demo-step:before {
+            content: "➜";
+            position: absolute;
+            left: 0;
+            color: #f39c12;
+        }
+        
+        .troubleshooting {
+            background: #ffebee;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .assessment {
+            background: #e8f5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .formula-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .formula-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .formula-example {
+            font-family: monospace;
+            background: #2c3e50;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+        
+        .keyboard-shortcut {
+            display: inline-block;
+            background: #2c3e50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 0 2px;
+        }
+        
+        .chart-comparison {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .chart-type {
+            flex: 1;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .chart-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        
+        .bar-chart { background: #e8f6f3; border: 2px solid #2ecc71; }
+        .pie-chart { background: #fef5e7; border: 2px solid #f39c12; }
+        .line-chart { background: #e8f4fd; border: 2px solid #3498db; }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .data-table th {
+            background: #f39c12;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .data-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .cell-reference {
+            display: inline-block;
+            background: #34495e;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .spreadsheet-elements, .chart-comparison {
+                flex-direction: column;
+            }
+            
+            .element-item, .chart-type {
+                min-width: 100%;
+            }
+            
+            .formula-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .fill-handle-demo {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px dashed #bdc3c7;
+        }
+        
+        .filter-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .filter-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+          /* progress tracking styles */
+        .session {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.session.completed {
+    background: #f8fff8;
+    border-left: 4px solid #2ecc71;
+}
+
+.session-status {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: #2ecc71;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.complete-session-btn {
+    margin-left: 10px;
+    font-size: 0.9rem;
+    padding: 8px 15px;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="module-header">
+            <h1>Module 4: Spreadsheets Made Simple: Data & Analysis</h1>
+            <div class="module-subtitle">Instructor's Detailed Teaching Notes</div>
+        </div>
+        
+        <!-- SESSION 4.1 -->
+        <div class="session">
+            <div class="session-header">
+                <div class="session-title">Session 4.1: Spreadsheet Basics & Data Entry</div>
+                <div class="session-duration">2 Hours</div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Learning Objectives</div>
+                <ul>
+                    <li>Navigate spreadsheet interface and understand cell referencing</li>
+                    <li>Enter and format different types of data appropriately</li>
+                    <li>Use basic formulas for calculations (SUM, AVERAGE, COUNT)</li>
+                    <li>Apply the fill handle to efficiently copy formulas</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Core Concepts</div>
+                
+                <div class="content-box">
+                    <div class="section-title">Spreadsheet Grid System</div>
+                    
+                    <div class="spreadsheet-elements">
+                        <div class="element-item">
+                            <div class="element-icon">📊</div>
+                            <div class="key-term">Worksheet</div>
+                            <p>The entire grid where you work</p>
+                            <p>Contains rows and columns</p>
+                            <p>Files can have multiple worksheets (tabs)</p>
+                        </div>
+                        
+                        <div class="element-item">
+                            <div class="element-icon">📏</div>
+                            <div class="key-term">Rows</div>
+                            <p>Horizontal lines</p>
+                            <p>Numbered: 1, 2, 3, 4...</p>
+                            <p>1,048,576 rows in modern spreadsheets</p>
+                        </div>
+                        
+                        <div class="element-item">
+                            <div class="element-icon">📐</div>
+                            <div class="key-term">Columns</div>
+                            <p>Vertical lines</p>
+                            <p>Lettered: A, B, C, D... AA, AB...</p>
+                            <p>16,384 columns in modern spreadsheets</p>
+                        </div>
+                        
+                        <div class="element-item">
+                            <div class="element-icon">🔲</div>
+                            <div class="key-term">Cells</div>
+                            <p>Where rows and columns meet</p>
+                            <p>Referenced by column then row: <span class="cell-reference">A1</span>, <span class="cell-reference">B5</span></p>
+                            <p>The fundamental unit of spreadsheets</p>
+                        </div>
+                    </div>
+                    
+                    <div class="instructor-note">
+                        <strong>Analogy:</strong> A spreadsheet is like a giant digital ledger or notebook with perfectly aligned rows and columns - much more organized than paper!
+                    </div>
+                </div>
+                
+                <div class="content-box analogy-box">
+                    <div class="section-title">Data Entry & Navigation</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>Entering Data:</strong> Click cell and type, then press <span class="keyboard-shortcut">Enter</span> (moves down) or <span class="keyboard-shortcut">Tab</span> (moves right)</div>
+                        <div class="demo-step"><strong>Editing Data:</strong> Double-click cell or press <span class="keyboard-shortcut">F2</span></div>
+                        <div class="demo-step"><strong>Selecting Multiple Cells:</strong> Click and drag, or <span class="keyboard-shortcut">Shift</span> + Arrow keys</div>
+                        <div class="demo-step"><strong>Selecting Entire Sheet:</strong> Click corner button between A and 1, or <span class="keyboard-shortcut">Ctrl+A</span></div>
+                    </div>
+                    
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Navigation Shortcut</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="keyboard-shortcut">Enter</span></td>
+                                <td>Move down one cell</td>
+                            </tr>
+                            <tr>
+                                <td><span class="keyboard-shortcut">Tab</span></td>
+                                <td>Move right one cell</td>
+                            </tr>
+                            <tr>
+                                <td><span class="keyboard-shortcut">Shift+Enter</span></td>
+                                <td>Move up one cell</td>
+                            </tr>
+                            <tr>
+                                <td><span class="keyboard-shortcut">Shift+Tab</span></td>
+                                <td>Move left one cell</td>
+                            </tr>
+                            <tr>
+                                <td><span class="keyboard-shortcut">Ctrl+Arrow</span></td>
+                                <td>Jump to edge of data region</td>
+                            </tr>
+                            <tr>
+                                <td><span class="keyboard-shortcut">Ctrl+Home</span></td>
+                                <td>Go to cell A1</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Data Formatting</div>
+                    
+                    <div class="spreadsheet-elements">
+                        <div class="element-item">
+                            <div class="element-icon">🔢</div>
+                            <div class="key-term">Numbers</div>
+                            <p>Default right-aligned</p>
+                            <p>Formats: General, Number, Currency, Percentage</p>
+                            <p>Use for calculations</p>
+                        </div>
+                        
+                        <div class="element-item">
+                            <div class="element-icon">📝</div>
+                            <div class="key-term">Text</div>
+                            <p>Default left-aligned</p>
+                            <p>Letters, words, descriptions</p>
+                            <p>Not used in calculations</p>
+                        </div>
+                        
+                        <div class="element-item">
+                            <div class="element-icon">📅</div>
+                            <div class="key-term">Dates</div>
+                            <p>Special number format</p>
+                            <p>Various display options</p>
+                            <p>Can be used in calculations</p>
+                        </div>
+                        
+                        <div class="element-item">
+                            <div class="element-icon">💲</div>
+                            <div class="key-term">Currency</div>
+                            <p>Numbers with currency symbols</p>
+                            <p>Automatic decimal places</p>
+                            <p>Consistent formatting</p>
+                        </div>
+                    </div>
+                    
+                    <div class="instructor-note">
+                        <strong>Common Mistake:</strong> Students often format numbers as text by accident (adding apostrophe before number). This prevents calculations!
+                    </div>
+                </div>
+                
+                <div class="content-box formula-box">
+                    <div class="section-title">Basic Formulas - The Magic Begins!</div>
+                    
+                    <p><strong>Golden Rule:</strong> ALL formulas start with an equal sign <span class="cell-reference">=</span></p>
+                    
+                    <div class="formula-grid">
+                        <div class="formula-item">
+                            <div class="key-term">SUM</div>
+                            <p>Adds up a range of numbers</p>
+                            <div class="formula-example">=SUM(B2:B10)</div>
+                            <p>Adds all numbers from cell B2 through B10</p>
+                            <p><strong>Use for:</strong> Totals, running sums</p>
+                        </div>
+                        
+                        <div class="formula-item">
+                            <div class="key-term">AVERAGE</div>
+                            <p>Calculates the mean of numbers</p>
+                            <div class="formula-example">=AVERAGE(B2:B10)</div>
+                            <p>Finds average of numbers from B2 through B10</p>
+                            <p><strong>Use for:</strong> Grades, performance metrics</p>
+                        </div>
+                        
+                        <div class="formula-item">
+                            <div class="key-term">COUNT</div>
+                            <p>Counts how many cells contain numbers</p>
+                            <div class="formula-example">=COUNT(B2:B10)</div>
+                            <p>Counts cells with numbers from B2 through B10</p>
+                            <p><strong>Use for:</strong> Attendance, inventory counts</p>
+                        </div>
+                        
+                        <div class="formula-item">
+                            <div class="key-term">MAX/MIN</div>
+                            <p>Finds highest/lowest value</p>
+                            <div class="formula-example">=MAX(B2:B10)</div>
+                            <div class="formula-example">=MIN(B2:B10)</div>
+                            <p><strong>Use for:</strong> Finding best/worst performance</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">The Fill Handle - Superpower Tool</div>
+                    
+                    <div class="fill-handle-demo">
+                        <div class="element-icon">⬇️</div>
+                        <div class="key-term">Fill Handle</div>
+                        <p>The small square at the bottom-right corner of a selected cell</p>
+                        <p><strong>Drag down</strong> to copy formulas to multiple cells</p>
+                        <p><strong>Smart filling</strong> - automatically adjusts cell references</p>
+                    </div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step">Type formula in first cell: <span class="cell-reference">=B2*C2</span></div>
+                        <div class="demo-step">Click cell to select it</div>
+                        <div class="demo-step">Hover over bottom-right corner until cursor changes to +</div>
+                        <div class="demo-step">Click and drag down to fill other cells</div>
+                        <div class="demo-step">Watch formulas automatically adjust: <span class="cell-reference">=B3*C3</span>, <span class="cell-reference">=B4*C4</span>, etc.</div>
+                    </div>
+                    
+                    <div class="instructor-note">
+                        <strong>Teaching Tip:</strong> The fill handle is one of the most powerful time-saving features. Emphasize how it eliminates repetitive typing and prevents errors.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Teaching Activities & Timeline</div>
+                
+                <div class="activity-box">
+                    <div class="section-title">The Grid is Your Canvas (30 mins)</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>"I Do"</strong> - Demonstrate spreadsheet basics:</div>
+                        <div class="demo-step">Open Google Sheets/Microsoft Excel</div>
+                        <div class="demo-step">Explain cells (<span class="cell-reference">A1</span>, <span class="cell-reference">B2</span>), rows (1,2,3), columns (A,B,C)</div>
+                        <div class="demo-step">Show clicking and typing in cells</div>
+                        <div class="demo-step">Demonstrate <span class="keyboard-shortcut">Enter</span> (down) vs <span class="keyboard-shortcut">Tab</span> (right)</div>
+                        <div class="demo-step"><strong>"We Do"</strong> - "Cell Bingo" game:</div>
+                        <div class="demo-step">Call out cell references: "<span class="cell-reference">C4</span>", "<span class="cell-reference">E1</span>"</div>
+                        <div class="demo-step">First student to click that cell and type initial wins point</div>
+                    </div>
+                </div>
+                
+                <div class="activity-box">
+                    <div class="section-title">Data Entry & Formatting (30 mins)</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>"I Do"</strong> - Create class attendance sheet:</div>
+                        <div class="demo-step"><span class="cell-reference">A1</span>: "Student Name", <span class="cell-reference">B1</span>: "Test Score", <span class="cell-reference">C1</span>: "Date"</div>
+                        <div class="demo-step">Enter 5 sample names and scores</div>
+                        <div class="demo-step">Format "Test Score" as number with 0 decimal places</div>
+                        <div class="demo-step">Format "Date" column as Date format</div>
+                        <div class="demo-step"><strong>"We Do"</strong> - Guided practice:</div>
+                        <div class="demo-step">Students create same sheet on their computers</div>
+                    </div>
+                </div>
+                
+                <div class="activity-box">
+                    <div class="section-title">Formulas: The Magic of Spreadsheets (60 mins)</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>"I Do"</strong> - Demonstrate formulas:</div>
+                        <div class="demo-step"><span class="cell-reference">A7</span>: "Class Average:"</div>
+                        <div class="demo-step"><span class="cell-reference">B7</span>: <span class="cell-reference">=AVERAGE(B2:B6)</span> → Press Enter</div>
+                        <div class="demo-step">Explain syntax: =, function name, range in parentheses</div>
+                        <div class="demo-step">Show <span class="cell-reference">=SUM(B2:B6)</span> to add all scores</div>
+                        <div class="demo-step"><strong>"We Do"</strong> - Guided practice:</div>
+                        <div class="demo-step">Students add AVERAGE and SUM formulas to their sheets</div>
+                        <div class="demo-step"><strong>"You Do" - Party Budget Project:</strong></div>
+                        <div class="demo-step">Columns: A1="Item", B1="Quantity", C1="Unit Price", D1="Total Cost"</div>
+                        <div class="demo-step">List 5 party items with quantities and prices</div>
+                        <div class="demo-step">In column D: <span class="cell-reference">=B2*C2</span> for each item</div>
+                        <div class="demo-step">Use Fill Handle to copy formula down</div>
+                        <div class="demo-step">Use <span class="cell-reference">=SUM(D2:D6)</span> for total party cost</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SESSION 4.2 -->
+        <div class="session">
+            <div class="session-header">
+                <div class="session-title">Session 4.2: Data Analysis & Visualization</div>
+                <div class="session-duration">2 Hours</div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Learning Objectives</div>
+                <ul>
+                    <li>Sort data to organize and find patterns</li>
+                    <li>Use filters to focus on specific information</li>
+                    <li>Create appropriate charts for different data types</li>
+                    <li>Customize charts for effective communication</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Core Concepts</div>
+                
+                <div class="content-box">
+                    <div class="section-title">Data Organization Techniques</div>
+                    
+                    <div class="spreadsheet-elements">
+                        <div class="element-item">
+                            <div class="element-icon">🔺🔻</div>
+                            <div class="key-term">Sorting</div>
+                            <p>Reorganizing data in order</p>
+                            <p>A-Z, Z-A, Smallest to Largest, etc.</p>
+                            <p>Helps find patterns and extremes</p>
+                        </div>
+                        
+                        <div class="element-item">
+                            <div class="element-icon">🔍</div>
+                            <div class="key-term">Filtering</div>
+                            <p>Showing only specific data</p>
+                            <p>Hides rows that don't match criteria</p>
+                            <p>Great for focusing on subsets</p>
+                        </div>
+                        
+                        <div class="element-item">
+                            <div class="element-icon">📋</div>
+                            <div class="key-term">Data Range</div>
+                            <p>The cells containing your data</p>
+                            <p>Always select entire range before sorting/filtering</p>
+                            <p>Prevents mismatched data</p>
+                        </div>
+                    </div>
+                    
+                    <div class="instructor-note">
+                        <strong>Critical Point:</strong> Always include headers in your selection when sorting! Otherwise, headers get sorted with data and everything gets mixed up.
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Sorting Data</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>Simple Sort:</strong> Select data → Data → Sort Range → Choose column and order</div>
+                        <div class="demo-step"><strong>Multiple Level Sort:</strong> Sort by primary column, then add secondary sort</div>
+                        <div class="demo-step"><strong>Example:</strong> Sort students by last name, then by first name</div>
+                    </div>
+                    
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Sort Type</th>
+                                <th>Use When</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>A → Z</td>
+                                <td>Alphabetical order</td>
+                                <td>Names, categories</td>
+                            </tr>
+                            <tr>
+                                <td>Z → A</td>
+                                <td>Reverse alphabetical</td>
+                                <td>Finding items at end</td>
+                            </tr>
+                            <tr>
+                                <td>Smallest → Largest</td>
+                                <td>Numerical ascending</td>
+                                <td>Prices, scores, dates</td>
+                            </tr>
+                            <tr>
+                                <td>Largest → Smallest</td>
+                                <td>Numerical descending</td>
+                                <td>Top performers, expensive items</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Filtering Data</div>
+                    
+                    <div class="filter-options">
+                        <div class="filter-item">
+                            <div class="key-term">Text Filters</div>
+                            <p>Filter by text content</p>
+                            <p>Contains, begins with, ends with</p>
+                            <p>Equals, does not equal</p>
+                        </div>
+                        
+                        <div class="filter-item">
+                            <div class="key-term">Number Filters</div>
+                            <p>Filter by numerical values</p>
+                            <p>Greater than, less than</p>
+                            <p>Between, top 10</p>
+                        </div>
+                        
+                        <div class="filter-item">
+                            <div class="key-term">Date Filters</div>
+                            <p>Filter by dates</p>
+                            <p>Before, after, between</p>
+                            <p>Last week, next month</p>
+                        </div>
+                        
+                        <div class="filter-item">
+                            <div class="key-term">Checkbox Filters</div>
+                            <p>Simple selection</p>
+                            <p>Choose specific items</p>
+                            <p>Quick and visual</p>
+                        </div>
+                    </div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>Turning on Filters:</strong> Select data → Data → Filter (funnel icon)</div>
+                        <div class="demo-step"><strong>Using Filters:</strong> Click filter arrow in column header</div>
+                        <div class="demo-step"><strong>Clearing Filters:</strong> Data → Turn off filter, or click Clear</div>
+                    </div>
+                </div>
+                
+                <div class="content-box formula-box">
+                    <div class="section-title">Chart Types & When to Use Them</div>
+                    
+                    <div class="chart-comparison">
+                        <div class="chart-type bar-chart">
+                            <div class="chart-icon">📊</div>
+                            <div class="key-term">Bar/Column Chart</div>
+                            <p><strong>Use for:</strong> Comparing amounts across categories</p>
+                            <p><strong>Examples:</strong> Sales by month, scores by student</p>
+                            <p><strong>Best when:</strong> Categories have distinct names</p>
+                        </div>
+                        
+                        <div class="chart-type pie-chart">
+                            <div class="chart-icon">🥧</div>
+                            <div class="key-term">Pie Chart</div>
+                            <p><strong>Use for:</strong> Showing parts of a whole</p>
+                            <p><strong>Examples:</strong> Budget breakdown, survey results</p>
+                            <p><strong>Best when:</strong> Few categories (2-7)</p>
+                        </div>
+                        
+                        <div class="chart-type line-chart">
+                            <div class="chart-icon">📈</div>
+                            <div class="key-term">Line Chart</div>
+                            <p><strong>Use for:</strong> Showing trends over time</p>
+                            <p><strong>Examples:</strong> Temperature changes, stock prices</p>
+                            <p><strong>Best when:</strong> Continuous data points</p>
+                        </div>
+                    </div>
+                    
+                    <div class="instructor-note">
+                        <strong>Chart Selection Rule:</strong> Ask "What story am I trying to tell?" Comparison → Bar chart, Composition → Pie chart, Trend → Line chart.
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Creating Effective Charts</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>Step 1:</strong> Select your data (include headers!)</div>
+                        <div class="demo-step"><strong>Step 2:</strong> Insert → Chart</div>
+                        <div class="demo-step"><strong>Step 3:</strong> Choose appropriate chart type</div>
+                        <div class="demo-step"><strong>Step 4:</strong> Customize title, colors, labels</div>
+                        <div class="demo-step"><strong>Step 5:</strong> Position chart appropriately</div>
+                    </div>
+                    
+                    <div class="tip-box">
+                        <p><strong>Chart Best Practices:</strong></p>
+                        <ul>
+                            <li>Clear, descriptive title</li>
+                            <li>Label axes clearly</li>
+                            <li>Use contrasting colors</li>
+                            <li>Keep it simple - avoid 3D effects</li>
+                            <li>Ensure data is accurately represented</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Teaching Activities & Timeline</div>
+                
+                <div class="activity-box">
+                    <div class="section-title">Making Data Talk: Sorting & Filtering (60 mins)</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>"I Do"</strong> - Use Party Budget sheet:</div>
+                        <div class="demo-step">Select all data (A1:D6) → Data → Sort Range</div>
+                        <div class="demo-step">Sort by "Total Cost" Z to A (largest to smallest)</div>
+                        <div class="demo-step">Show how list reorders automatically</div>
+                        <div class="demo-step">Click Filter button (funnel icon)</div>
+                        <div class="demo-step">Filter "Item" column to show only items with "Total Cost" > 10</div>
+                        <div class="demo-step"><strong>"We Do"</strong> - Guided practice:</div>
+                        <div class="demo-step">Students practice sorting and filtering their party budgets</div>
+                        <div class="demo-step"><strong>"You Do"</strong> - Individual practice:</div>
+                        <div class="demo-step">Take Class Test Score sheet from previous session</div>
+                        <div class="demo-step">Sort students by test score from highest to lowest</div>
+                    </div>
+                </div>
+                
+                <div class="activity-box">
+                    <div class="section-title">Charts: A Picture is Worth 1000 Numbers (60 mins)</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>"I Do"</strong> - Demonstrate chart creation:</div>
+                        <div class="demo-step">Select "Item" and "Total Cost" columns in Party Budget</div>
+                        <div class="demo-step">Insert → Chart</div>
+                        <div class="demo-step">Try different chart types: Column vs Pie</div>
+                        <div class="demo-step">Explain when to use each type</div>
+                        <div class="demo-step">Edit chart title and colors</div>
+                        <div class="demo-step"><strong>"We Do"</strong> - Guided practice:</div>
+                        <div class="demo-step">Students create Column Chart for Party Budget</div>
+                        <div class="demo-step"><strong>"You Do" - Chart Challenge:</strong></div>
+                        <div class="demo-step">Create Pie Chart from Party Budget data</div>
+                        <div class="demo-step">Title: "My Party Budget Breakdown"</div>
+                        <div class="demo-step">Share chart by copying link to shared class document</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Practical Project: Entertainment Budget</div>
+                
+                <div class="content-box">
+                    <p><strong>Assignment:</strong> Create a personal "Entertainment Budget" for one month</p>
+                    
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Column</th>
+                                <th>Content</th>
+                                <th>Format</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>A1</td>
+                                <td>"Item"</td>
+                                <td>Text</td>
+                            </tr>
+                            <tr>
+                                <td>B1</td>
+                                <td>"Cost"</td>
+                                <td>Currency</td>
+                            </tr>
+                            <tr>
+                                <td>A2-A6</td>
+                                <td>Netflix, Cinema, Games, Music, Other</td>
+                                <td>Text</td>
+                            </tr>
+                            <tr>
+                                <td>B2-B6</td>
+                                <td>Entertainment costs</td>
+                                <td>Currency</td>
+                            </tr>
+                            <tr>
+                                <td>B7</td>
+                                <td><span class="cell-reference">=SUM(B2:B6)</span></td>
+                                <td>Formula</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <p><strong>Requirements:</strong></p>
+                    <ul>
+                        <li>Use SUM formula for total cost</li>
+                        <li>Create Pie Chart to visualize spending</li>
+                        <li>Sort items by cost (largest to smallest)</li>
+                        <li>Apply currency formatting to costs</li>
+                        <li>Add descriptive chart title</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Common Challenges & Solutions</div>
+                
+                <div class="troubleshooting">
+                    <p><strong>Issue:</strong> Formula shows error (#VALUE!, #DIV/0!)</p>
+                    <p><strong>Solution:</strong> Check for text in number cells, empty cells in calculations, division by zero</p>
+                    
+                    <p><strong>Issue:</strong> Fill handle not working properly</p>
+                    <p><strong>Solution:</strong> Ensure you're dragging the small square in corner, not the cell border</p>
+                    
+                    <p><strong>Issue:</strong> Chart shows wrong data</p>
+                    <p><strong>Solution:</strong> Reselect correct data range, check if headers are included</p>
+                    
+                    <p><strong>Issue:</strong> Sorting mixes up data</p>
+                    <p><strong>Solution:</strong> Always select entire data range including headers before sorting</p>
+                    
+                    <p><strong>Issue:</strong> Filter not showing all options</p>
+                    <p><strong>Solution:</strong> Clear existing filters, ensure no blank rows in data</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Advanced Tips for Quick Learners</div>
+                
+                <div class="tip-box">
+                    <p><strong>Conditional Formatting:</strong> Automatically color cells based on values (great for highlighting high/low numbers)</p>
+                    <p><strong>Sparklines:</strong> Mini charts within single cells to show trends</p>
+                    <p><strong>Data Validation:</strong> Restrict what can be entered in cells (dropdown lists, number ranges)</p>
+                    <p><strong>Pivot Tables:</strong> Advanced data summarization (introduce concept only)</p>
+                    <p><strong>Named Ranges:</strong> Give cell ranges meaningful names for easier formula writing</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Module 4 Summary & Transition</div>
+            
+            <div class="content-box">
+                <p><strong>Key Takeaways:</strong></p>
+                <ul>
+                    <li>Spreadsheets organize data in rows and columns with cell references</li>
+                    <li>Formulas (starting with =) perform calculations automatically</li>
+                    <li>The fill handle efficiently copies formulas and adjusts references</li>
+                    <li>Sorting and filtering help organize and focus on specific data</li>
+                    <li>Charts visualize data to reveal patterns and tell stories</li>
+                    <li>Different chart types serve different communication purposes</li>
+                </ul>
+                
+                <p><strong>Looking Ahead to Module 5:</strong> "Now that you can analyze data with spreadsheets, we'll learn how to present your findings effectively using presentation software and storytelling techniques."</p>
+            </div>
+        </div>
+    </div>
+    <script>
+    // Get current module number from URL or page structure
+    const currentModule = 1; // Change this number for each module
+    
+    // Track session completion
+    let sessionProgress = {
+        '1.1': false,
+        '1.2': false
+    };
+    
+    // Load progress from localStorage
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSessionProgress();
+        updateModuleProgress();
+    });
+    
+    // Load session progress from localStorage
+    function loadSessionProgress() {
+        const savedProgress = localStorage.getItem(`module${currentModule}Progress`);
+        if (savedProgress) {
+            sessionProgress = JSON.parse(savedProgress);
+        }
+        updateSessionUI();
+    }
+    
+    // Save session progress to localStorage
+    function saveSessionProgress() {
+        localStorage.setItem(`module${currentModule}Progress`, JSON.stringify(sessionProgress));
+        updateModuleProgress();
+    }
+    
+    // Mark a session as completed
+    function completeSession(sessionId) {
+        sessionProgress[sessionId] = true;
+        saveSessionProgress();
+        
+        // Check if all sessions are completed
+        const allCompleted = Object.values(sessionProgress).every(val => val === true);
+        if (allCompleted) {
+            // Update dashboard progress
+            updateDashboardProgress(100);
+            
+            // Show completion message
+            setTimeout(() => {
+                alert(`Congratulations! You've completed all sessions in Module ${currentModule}. Return to the dashboard to continue.`);
+            }, 500);
+        }
+    }
+    
+    // Update session UI based on completion status
+    function updateSessionUI() {
+        for (const [sessionId, completed] of Object.entries(sessionProgress)) {
+            const sessionElement = document.querySelector(`[data-session="${sessionId}"]`);
+            if (sessionElement) {
+                if (completed) {
+                    sessionElement.classList.add('completed');
+                    // Add checkmark or other indicator
+                    let statusIndicator = sessionElement.querySelector('.session-status');
+                    if (!statusIndicator) {
+                        statusIndicator = document.createElement('div');
+                        statusIndicator.className = 'session-status';
+                        statusIndicator.innerHTML = '✓';
+                        sessionElement.querySelector('.session-header').appendChild(statusIndicator);
+                    }
+                }
+            }
+        }
+    }
+    
+    // Calculate and update module progress
+    function updateModuleProgress() {
+        const completedSessions = Object.values(sessionProgress).filter(val => val === true).length;
+        const totalSessions = Object.keys(sessionProgress).length;
+        const progressPercentage = (completedSessions / totalSessions) * 100;
+        
+        // Update dashboard
+        updateDashboardProgress(progressPercentage);
+    }
+    
+    // Update dashboard progress via localStorage
+    function updateDashboardProgress(progress) {
+        // Get current dashboard progress
+        const dashboardProgress = JSON.parse(localStorage.getItem('moduleProgress') || '{}');
+        
+        // Update current module progress
+        if (dashboardProgress[currentModule]) {
+            dashboardProgress[currentModule].progress = progress;
+            
+            // If progress is 100%, mark as completed
+            if (progress >= 100) {
+                dashboardProgress[currentModule].status = 'completed';
+                
+                // Unlock next module if exists
+                const nextModule = currentModule + 1;
+                if (dashboardProgress[nextModule]) {
+                    dashboardProgress[nextModule].status = 'current';
+                }
+            }
+            
+            // Save back to localStorage
+            localStorage.setItem('moduleProgress', JSON.stringify(dashboardProgress));
+        }
+    }
+    
+    // Add session completion buttons to each session
+    document.querySelectorAll('.session').forEach(session => {
+        const sessionId = session.querySelector('.session-title').textContent.match(/\d+\.\d+/);
+        if (sessionId) {
+            session.setAttribute('data-session', sessionId[0]);
+            
+            // Add completion button if not already present
+            if (!session.querySelector('.complete-session-btn')) {
+                const completeBtn = document.createElement('button');
+                completeBtn.className = 'btn btn-complete complete-session-btn';
+                completeBtn.textContent = 'Mark Session Complete';
+                completeBtn.onclick = function() {
+                    completeSession(sessionId[0]);
+                    this.disabled = true;
+                    this.textContent = 'Completed';
+                };
+                
+                // Check if session is already completed
+                if (sessionProgress[sessionId[0]]) {
+                    completeBtn.disabled = true;
+                    completeBtn.textContent = 'Completed';
+                }
+                
+                session.querySelector('.session-header').appendChild(completeBtn);
+            }
+        }
+    });
+</script>
+</body>
+</html>

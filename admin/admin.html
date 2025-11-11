@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - JOSHCAB Training Institute</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="admin.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="admin-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-cogs"></i>
+                    <h1>Admin Panel</h1>
+                </div>
+                <div class="admin-info">
+                    <span id="adminName">Administrator</span>
+                    <div class="user-actions">
+                        <a href="../index.html" class="nav-btn">
+                            <i class="fas fa-home"></i> Main Site
+                        </a>
+                        <button class="nav-btn" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <div class="container">
+            <!-- Dashboard Stats -->
+            <section class="dashboard-stats">
+                <h2>Dashboard Overview</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon total-users">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalUsers">0</h3>
+                            <p>Total Users</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon coding">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalCoding">0</h3>
+                            <p>Coding</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon packages">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalPackages">0</h3>
+                            <p>Packages</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon kids">
+                            <i class="fas fa-child"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalKids">0</h3>
+                            <p>Kids</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bookkeeping">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalBookkeeping">0</h3>
+                            <p>Bookkeeping</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon admins">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalAdmins">0</h3>
+                            <p>Admins</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- User Management -->
+            <section class="user-management">
+                <div class="section-header">
+                    <h2>User Management</h2>
+                    <button class="btn-primary" id="addUserBtn">
+                        <i class="fas fa-plus"></i> Add New User
+                    </button>
+                </div>
+
+                <!-- Users Table -->
+                <div class="table-container">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Registration Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Users will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Add/Edit User Modal -->
+    <div class="modal" id="userModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add New User</h3>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm">
+                    <div class="form-group">
+                        <label for="userName">Full Name *</label>
+                        <input type="text" id="userName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userEmail">Email *</label>
+                        <input type="email" id="userEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userPassword">Password *</label>
+                        <input type="password" id="userPassword" required>
+                        <small>Minimum 6 characters</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="userRole">Role *</label>
+                        <select id="userRole" required>
+                            <option value="">Select Role</option>
+                            <option value="coding">Coding</option>
+                            <option value="packages">Packages</option>
+                            <option value="kid">Kid</option>
+                            <option value="bookkeeping">Bookkeeping</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="cancelBtn">Cancel</button>
+                        <button type="submit" class="btn-primary" id="saveUserBtn">Save User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirm Delete</h3>
+                <button class="close-btn" id="closeDeleteModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this user? This action cannot be undone.</p>
+                <div class="user-to-delete" id="userToDeleteInfo">
+                    <!-- User info will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelDelete">Cancel</button>
+                <button class="btn-danger" id="confirmDelete">Delete User</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner" id="loadingSpinner">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        // Firebase configuration (MUST match your index.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyD44h0Uak9EeQs2A_aAfSvyRKT4jgdSuHg",
+            authDomain: "jtimwiki.firebaseapp.com",
+            projectId: "jtimwiki",
+            storageBucket: "jtimwiki.firebasestorage.app",
+            messagingSenderId: "125581944053",
+            appId: "1:125581944053:web:e314fcdd288daf97c1d1bc",
+            measurementId: "G-WNVG1L3CZK"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // DOM Elements
+        const adminName = document.getElementById('adminName');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const addUserBtn = document.getElementById('addUserBtn');
+        const usersTableBody = document.getElementById('usersTableBody');
+        const userModal = document.getElementById('userModal');
+        const deleteModal = document.getElementById('deleteModal');
+        const userForm = document.getElementById('userForm');
+        const closeModal = document.getElementById('closeModal');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const closeDeleteModal = document.getElementById('closeDeleteModal');
+        const cancelDelete = document.getElementById('cancelDelete');
+        const confirmDelete = document.getElementById('confirmDelete');
+        const saveUserBtn = document.getElementById('saveUserBtn');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+
+        // Statistics elements
+        const totalUsers = document.getElementById('totalUsers');
+        const totalCoding = document.getElementById('totalCoding');
+        const totalPackages = document.getElementById('totalPackages');
+        const totalKids = document.getElementById('totalKids');
+        const totalBookkeeping = document.getElementById('totalBookkeeping');
+        const totalAdmins = document.getElementById('totalAdmins');
+
+        // Current user and editing state
+        let currentUser = null;
+        let editingUserId = null;
+
+        // Check authentication and load data
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthState();
+            loadDashboardStats();
+            loadUsers();
+        });
+
+        // Check if user is authenticated and is admin
+        function checkAuthState() {
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    currentUser = user;
+                    try {
+                        const userDoc = await db.collection('students').doc(user.uid).get();
+                        if (userDoc.exists) {
+                            const userData = userDoc.data();
+                            if (userData.role === 'admin') {
+                                adminName.textContent = userData.name || 'Administrator';
+                                // User is admin, allow access
+                            } else {
+                                // User is not admin, redirect to their role page
+                                redirectToRolePage(userData.role);
+                            }
+                        } else {
+                            // User document doesn't exist, redirect to login
+                            window.location.href = '../index.html';
+                        }
+                    } catch (error) {
+                        console.error('Error checking user role:', error);
+                        showNotification('Error verifying admin access', 'error');
+                        window.location.href = '../index.html';
+                    }
+                } else {
+                    // No user logged in, redirect to login
+                    window.location.href = '../index.html';
+                }
+            });
+        }
+
+        // Redirect to role-specific page
+        function redirectToRolePage(role) {
+            const rolePages = {
+                'coding': '../coding/index.html',
+                'packages': '../packages/home.html',
+                'kid': '../kids/dashboard.html',
+                'bookkeeping': '../bookkeeping/index.html',
+                'admin': 'admin.html'
+            };
+            window.location.href = rolePages[role] || '../index.html';
+        }
+
+        // Load dashboard statistics
+        async function loadDashboardStats() {
+            try {
+                showLoading();
+                const snapshot = await db.collection('students').get();
+                
+                let stats = {
+                    total: 0,
+                    coding: 0,
+                    packages: 0,
+                    kids: 0,
+                    bookkeeping: 0,
+                    admins: 0
+                };
+
+                snapshot.forEach(doc => {
+                    const user = doc.data();
+                    stats.total++;
+                    
+                    switch(user.role) {
+                        case 'coding':
+                            stats.coding++;
+                            break;
+                        case 'packages':
+                            stats.packages++;
+                            break;
+                        case 'kid':
+                            stats.kids++;
+                            break;
+                        case 'bookkeeping':
+                            stats.bookkeeping++;
+                            break;
+                        case 'admin':
+                            stats.admins++;
+                            break;
+                    }
+                });
+
+                // Update UI with statistics
+                totalUsers.textContent = stats.total;
+                totalCoding.textContent = stats.coding;
+                totalPackages.textContent = stats.packages;
+                totalKids.textContent = stats.kids;
+                totalBookkeeping.textContent = stats.bookkeeping;
+                totalAdmins.textContent = stats.admins;
+
+                hideLoading();
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+                showNotification('Error loading dashboard statistics', 'error');
+                hideLoading();
+            }
+        }
+
+        // Load users for management
+        async function loadUsers() {
+            try {
+                showLoading();
+                const snapshot = await db.collection('students').get();
+                usersTableBody.innerHTML = '';
+
+                if (snapshot.empty) {
+                    usersTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="no-data">No users found</td>
+                        </tr>
+                    `;
+                    hideLoading();
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const user = doc.data();
+                    const row = document.createElement('tr');
+                    
+                    const regDate = user.createdAt ? 
+                        new Date(user.createdAt.toDate()).toLocaleDateString() : 
+                        'N/A';
+
+                    row.innerHTML = `
+                        <td>${user.name || 'N/A'}</td>
+                        <td>${user.email || 'N/A'}</td>
+                        <td><span class="role-badge ${user.role}">${user.role}</span></td>
+                        <td>${regDate}</td>
+                        <td><span class="status-badge active">Active</span></td>
+                        <td>
+                            <button class="btn-edit" data-id="${doc.id}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn-delete" data-id="${doc.id}" data-name="${user.name}" data-email="${user.email}">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    `;
+                    
+                    usersTableBody.appendChild(row);
+                });
+
+                // Add event listeners to action buttons
+                document.querySelectorAll('.btn-edit').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const userId = e.target.closest('button').getAttribute('data-id');
+                        editUser(userId);
+                    });
+                });
+
+                document.querySelectorAll('.btn-delete').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const button = e.target.closest('button');
+                        const userId = button.getAttribute('data-id');
+                        const userName = button.getAttribute('data-name');
+                        const userEmail = button.getAttribute('data-email');
+                        confirmDeleteUser(userId, userName, userEmail);
+                    });
+                });
+
+                hideLoading();
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showNotification('Error loading users', 'error');
+                hideLoading();
+            }
+        }
+
+        // Add new user
+        addUserBtn.addEventListener('click', () => {
+            editingUserId = null;
+            document.getElementById('modalTitle').textContent = 'Add New User';
+            userForm.reset();
+            userModal.style.display = 'block';
+        });
+
+        // Edit user
+        async function editUser(userId) {
+            try {
+                showLoading();
+                const userDoc = await db.collection('students').doc(userId).get();
+                
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    editingUserId = userId;
+                    
+                    document.getElementById('modalTitle').textContent = 'Edit User';
+                    document.getElementById('userName').value = userData.name || '';
+                    document.getElementById('userEmail').value = userData.email || '';
+                    document.getElementById('userPassword').value = ''; // Don't show current password
+                    document.getElementById('userPassword').required = false; // Make optional for edit
+                    document.getElementById('userRole').value = userData.role || '';
+                    
+                    userModal.style.display = 'block';
+                } else {
+                    showNotification('User not found', 'error');
+                }
+                hideLoading();
+            } catch (error) {
+                console.error('Error loading user for edit:', error);
+                showNotification('Error loading user data', 'error');
+                hideLoading();
+            }
+        }
+
+        // Save user (create or update)
+        userForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('userName').value;
+            const email = document.getElementById('userEmail').value;
+            const password = document.getElementById('userPassword').value;
+            const role = document.getElementById('userRole').value;
+
+            if (!name || !email || !role) {
+                showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+
+            if (!editingUserId && !password) {
+                showNotification('Password is required for new users', 'error');
+                return;
+            }
+
+            if (password && password.length < 6) {
+                showNotification('Password must be at least 6 characters', 'error');
+                return;
+            }
+
+            try {
+                showLoading();
+                saveUserBtn.disabled = true;
+                saveUserBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+                if (editingUserId) {
+                    // Update existing user
+                    const updateData = {
+                        name: name,
+                        email: email,
+                        role: role,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+
+                    // Only update password if provided
+                    if (password) {
+                        // Note: Updating password requires Firebase Admin SDK or reauthentication
+                        // For now, we'll just update the Firestore document
+                        // In a production app, you'd use a Cloud Function to update password
+                    }
+
+                    await db.collection('students').doc(editingUserId).update(updateData);
+                    showNotification('User updated successfully', 'success');
+                } else {
+                    // Create new user
+                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                    const user = userCredential.user;
+
+                    await db.collection('students').doc(user.uid).set({
+                        name: name,
+                        email: email,
+                        role: role,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        enrolledCourses: {},
+                        completedCourses: {},
+                        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    showNotification('User created successfully', 'success');
+                }
+
+                // Refresh data and close modal
+                loadDashboardStats();
+                loadUsers();
+                userModal.style.display = 'none';
+                userForm.reset();
+
+            } catch (error) {
+                console.error('Error saving user:', error);
+                let errorMessage = 'Error saving user';
+                
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = 'Email address is already in use';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = 'Invalid email address';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = 'Password is too weak';
+                }
+                
+                showNotification(errorMessage, 'error');
+            } finally {
+                saveUserBtn.disabled = false;
+                saveUserBtn.innerHTML = 'Save User';
+                hideLoading();
+            }
+        });
+
+        // Confirm delete user
+        function confirmDeleteUser(userId, userName, userEmail) {
+            document.getElementById('userToDeleteInfo').innerHTML = `
+                <strong>Name:</strong> ${userName}<br>
+                <strong>Email:</strong> ${userEmail}
+            `;
+            
+            confirmDelete.onclick = () => deleteUser(userId);
+            deleteModal.style.display = 'block';
+        }
+
+        // Delete user
+        async function deleteUser(userId) {
+            try {
+                showLoading();
+                
+                // Delete from Firestore
+                await db.collection('students').doc(userId).delete();
+                
+                // Note: In production, you'd also delete from Firebase Auth using a Cloud Function
+                // For now, we only delete from Firestore
+                
+                showNotification('User deleted successfully', 'success');
+                deleteModal.style.display = 'none';
+                
+                // Refresh data
+                loadDashboardStats();
+                loadUsers();
+                
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showNotification('Error deleting user', 'error');
+                hideLoading();
+            }
+        }
+
+        // Logout
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut().then(() => {
+                window.location.href = '../index.html';
+            }).catch((error) => {
+                console.error('Error signing out:', error);
+            });
+        });
+
+        // Modal controls
+        closeModal.addEventListener('click', () => {
+            userModal.style.display = 'none';
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            userModal.style.display = 'none';
+        });
+
+        closeDeleteModal.addEventListener('click', () => {
+            deleteModal.style.display = 'none';
+        });
+
+        cancelDelete.addEventListener('click', () => {
+            deleteModal.style.display = 'none';
+        });
+
+        // Close modals when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === userModal) {
+                userModal.style.display = 'none';
+            }
+            if (e.target === deleteModal) {
+                deleteModal.style.display = 'none';
+            }
+        });
+
+        // Utility functions
+        function showLoading() {
+            loadingSpinner.style.display = 'flex';
+        }
+
+        function hideLoading() {
+            loadingSpinner.style.display = 'none';
+        }
+
+        function showNotification(message, type = 'info') {
+            // Remove existing notifications
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notification => notification.remove());
+
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <span>${message}</span>
+                <button class="notification-close">&times;</button>
+            `;
+
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${getNotificationColor(type)};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 5px;
+                z-index: 10000;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                max-width: 300px;
+                animation: slideInRight 0.3s ease;
+            `;
+
+            document.body.appendChild(notification);
+
+            // Add close button functionality
+            notification.querySelector('.notification-close').addEventListener('click', () => {
+                notification.remove();
+            });
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        function getNotificationColor(type) {
+            const colors = {
+                success: '#2ecc71',
+                error: '#e74c3c',
+                warning: '#f39c12',
+                info: '#3498db'
+            };
+            return colors[type] || colors.info;
+        }
+
+        // Add CSS for animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            .role-badge {
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 600;
+                text-transform: capitalize;
+            }
+            
+            .role-badge.coding { background: #3498db; color: white; }
+            .role-badge.packages { background: #9b59b6; color: white; }
+            .role-badge.kid { background: #f39c12; color: white; }
+            .role-badge.bookkeeping { background: #1abc9c; color: white; }
+            .role-badge.admin { background: #e74c3c; color: white; }
+            
+            .status-badge.active { background: #2ecc71; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; }
+            
+            .no-data { text-align: center; padding: 20px; color: #666; }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

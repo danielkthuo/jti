@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOSHCAB Training Institute -Digital Foundation </title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <!-- Add this after your existing Firebase scripts -->
+<script src="../auth-manager.js"></script>
+<!-- Add to head section -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1a2b4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="JOSHCAB INSTITUTE">
+<link rel="apple-touch-icon" href="../icons/icon-192x192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f0f4f8;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 100%;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .module-header {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .module-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .session {
+            padding: 25px 20px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .session:last-child {
+            border-bottom: none;
+        }
+        
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e74c3c;
+        }
+        
+        .session-title {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .session-duration {
+            background: #e74c3c;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            color: #c0392b;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eaeaea;
+            font-weight: 600;
+        }
+        
+        .content-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .analogy-box {
+            background: #fdedec;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .activity-box {
+            background: #e8f6f3;
+            border-left: 4px solid #16a085;
+        }
+        
+        .tip-box {
+            background: #fef9e7;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .warning-box {
+            background: #fdedec;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .toolbox {
+            background: #e8f4fd;
+            border-left: 4px solid #3498db;
+        }
+        
+        ul, ol {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .key-term {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .instructor-note {
+            background: #fff8e1;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-style: italic;
+            border-left: 3px solid #ffc107;
+        }
+        
+        .interface-elements {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .interface-item {
+            flex: 1;
+            min-width: 150px;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .interface-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .demo-steps {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .demo-step {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .demo-step:before {
+            content: "➜";
+            position: absolute;
+            left: 0;
+            color: #e74c3c;
+        }
+        
+        .troubleshooting {
+            background: #ffebee;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .assessment {
+            background: #e8f5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .formatting-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .format-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .format-example {
+            font-size: 1.2rem;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .bad-example {
+            background: #ffebee;
+            border-color: #e74c3c;
+        }
+        
+        .good-example {
+            background: #e8f6f3;
+            border-color: #2ecc71;
+        }
+        
+        .keyboard-shortcut {
+            display: inline-block;
+            background: #2c3e50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 0 2px;
+        }
+        
+        .before-after {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .before, .after {
+            flex: 1;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .before {
+            background: #ffebee;
+            border: 2px solid #e74c3c;
+        }
+        
+        .after {
+            background: #e8f6f3;
+            border: 2px solid #2ecc71;
+        }
+        
+        @media (max-width: 768px) {
+            .interface-elements, .formatting-grid {
+                flex-direction: column;
+            }
+            
+            .interface-item, .format-item {
+                min-width: 100%;
+            }
+            
+            .before-after {
+                flex-direction: column;
+            }
+        }
+        
+        .collaboration-levels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .collab-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .collab-icon {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .viewer { border-left: 4px solid #e74c3c; }
+        .commenter { border-left: 4px solid #f39c12; }
+        .editor { border-left: 4px solid #2ecc71; }
+
+          /* progress tracking styles */
+        .session {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.session.completed {
+    background: #f8fff8;
+    border-left: 4px solid #2ecc71;
+}
+
+.session-status {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: #2ecc71;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.complete-session-btn {
+    margin-left: 10px;
+    font-size: 0.9rem;
+    padding: 8px 15px;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="module-header">
+            <h1>Module 3: Productivity Powerhouse: Word Processing</h1>
+            <div class="module-subtitle">Instructor's Detailed Teaching Notes</div>
+        </div>
+        
+        <!-- SESSION 3.1 -->
+        <div class="session">
+            <div class="session-header">
+                <div class="session-title">Session 3.1: Document Basics & Formatting</div>
+                <div class="session-duration">2 Hours</div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Learning Objectives</div>
+                <ul>
+                    <li>Navigate word processing interface efficiently</li>
+                    <li>Apply text and paragraph formatting consistently</li>
+                    <li>Use styles to create professional document structure</li>
+                    <li>Create organized lists and properly formatted documents</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Core Concepts</div>
+                
+                <div class="content-box">
+                    <div class="section-title">Word Processing Interface</div>
+                    
+                    <div class="interface-elements">
+                        <div class="interface-item">
+                            <div class="interface-icon">🎛️</div>
+                            <div class="key-term">Toolbar/Ribbon</div>
+                            <p>Contains tabs with grouped commands (Home, Insert, Layout, etc.)</p>
+                        </div>
+                        
+                        <div class="interface-item">
+                            <div class="interface-icon">📏</div>
+                            <div class="key-term">Ruler</div>
+                            <p>Shows margins, indents, and tab stops for precise formatting</p>
+                        </div>
+                        
+                        <div class="interface-item">
+                            <div class="interface-icon">📄</div>
+                            <div class="key-term">Document Area</div>
+                            <p>The main workspace where you type and format content</p>
+                        </div>
+                    </div>
+                    
+                    <div class="instructor-note">
+                        <strong>Platform Note:</strong> This session works with both Google Docs and Microsoft Word. Adjust demonstrations based on which platform students are using.
+                    </div>
+                </div>
+                
+                <div class="content-box analogy-box">
+                    <div class="section-title">Text Formatting - The "What"</div>
+                    <p>Controls how individual characters and words appear.</p>
+                    
+                    <div class="formatting-grid">
+                        <div class="format-item">
+                            <div class="key-term">Font Type</div>
+                            <div class="format-example" style="font-family: Arial;">Arial</div>
+                            <div class="format-example" style="font-family: 'Times New Roman';">Times New Roman</div>
+                            <div class="format-example" style="font-family: Calibri;">Calibri</div>
+                            <p>Stick to 1-2 professional fonts per document</p>
+                        </div>
+                        
+                        <div class="format-item">
+                            <div class="key-term">Font Size</div>
+                            <div class="format-example" style="font-size: 12px;">12pt - Body text</div>
+                            <div class="format-example" style="font-size: 14px;">14pt - Subheadings</div>
+                            <div class="format-example" style="font-size: 18px;">18pt - Main headings</div>
+                            <p>Use larger sizes for headings to create hierarchy</p>
+                        </div>
+                        
+                        <div class="format-item">
+                            <div class="key-term">Font Styles</div>
+                            <div class="format-example"><strong>Bold</strong> for emphasis</div>
+                            <div class="format-example"><em>Italic</em> for titles or foreign words</div>
+                            <div class="format-example"><u>Underline</u> for hyperlinks only</div>
+                            <p>Avoid excessive styling - less is more!</p>
+                        </div>
+                        
+                        <div class="format-item">
+                            <div class="key-term">Colors & Highlights</div>
+                            <div class="format-example" style="color: #2c3e50;">Font Color for emphasis</div>
+                            <div class="format-example" style="background-color: #ffff00;">Highlight for key points</div>
+                            <p>Use sparingly and maintain readability</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Paragraph Formatting - The "How"</div>
+                    <p>Controls how blocks of text are arranged and spaced.</p>
+                    
+                    <div class="formatting-grid">
+                        <div class="format-item">
+                            <div class="key-term">Alignment</div>
+                            <div class="format-example" style="text-align: left;">Left Align<br>Standard for most documents</div>
+                            <div class="format-example" style="text-align: center;">Center Align<br>For titles and headings</div>
+                            <div class="format-example" style="text-align: right;">Right Align<br>For dates and page numbers</div>
+                            <div class="format-example" style="text-align: justify;">Justified<br>Creates clean edges on both sides</div>
+                        </div>
+                        
+                        <div class="format-item">
+                            <div class="key-term">Line Spacing</div>
+                            <div class="format-example" style="line-height: 1.0;">1.0 - Single spacing<br>Compact but can feel crowded</div>
+                            <div class="format-example" style="line-height: 1.5;">1.5 - One and a half<br>Good balance for readability</div>
+                            <div class="format-example" style="line-height: 2.0;">2.0 - Double spacing<br>Standard for academic papers</div>
+                        </div>
+                        
+                        <div class="format-item">
+                            <div class="key-term">Lists</div>
+                            <div class="format-example">
+                                <strong>Bulleted Lists:</strong><br>
+                                • Item one<br>
+                                • Item two<br>
+                                • Item three
+                            </div>
+                            <div class="format-example">
+                                <strong>Numbered Lists:</strong><br>
+                                1. First step<br>
+                                2. Second step<br>
+                                3. Third step
+                            </div>
+                            <p>Use for steps, features, or any sequential information</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-box toolbox">
+                    <div class="section-title">Styles - The Professional's Secret Weapon</div>
+                    
+                    <p><strong>What are styles?</strong> Pre-defined formatting combinations that can be applied with one click.</p>
+                    
+                    <div class="before-after">
+                        <div class="before">
+                            <div class="key-term">Without Styles</div>
+                            <ul>
+                                <li>Manually format each heading</li>
+                                <li>Inconsistent sizes and spacing</li>
+                                <li>Hard to update globally</li>
+                                <li>No automatic table of contents</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="after">
+                            <div class="key-term">With Styles</div>
+                            <ul>
+                                <li>One-click consistent formatting</li>
+                                <li>Easy global updates</li>
+                                <li>Automatic document structure</li>
+                                <li>Professional appearance</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>Heading 1</strong> - Main document titles (24pt, bold)</div>
+                        <div class="demo-step"><strong>Heading 2</strong> - Major section headings (18pt, bold)</div>
+                        <div class="demo-step"><strong>Heading 3</strong> - Subsection headings (14pt, bold)</div>
+                        <div class="demo-step"><strong>Normal</strong> - Body text (11-12pt, regular)</div>
+                    </div>
+                    
+                    <div class="instructor-note">
+                        <strong>Teaching Tip:</strong> Use the house construction analogy - styles are like using pre-built walls and windows instead of cutting every piece of wood individually.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Teaching Activities & Timeline</div>
+                
+                <div class="activity-box">
+                    <div class="section-title">Interface Immersion (30 mins)</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>"I Do"</strong> - Demonstrate interface:</div>
+                        <div class="demo-step">Open Google Docs/Microsoft Word and project screen</div>
+                        <div class="demo-step">Point out Toolbar/Ribbon with Home, Insert, Layout tabs</div>
+                        <div class="demo-step">Show Ruler and explain margin/indent controls</div>
+                        <div class="demo-step">Identify Document Area as the main workspace</div>
+                        <div class="demo-step"><strong>"We Do"</strong> - Guided practice:</div>
+                        <div class="demo-step">Students open new document</div>
+                        <div class="demo-step">Type their name, press Enter, type favorite hobby</div>
+                    </div>
+                </div>
+                
+                <div class="activity-box">
+                    <div class="section-title">Text & Paragraph Formatting Bootcamp (60 mins)</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>"I Do"</strong> - Demonstrate formatting:</div>
+                        <div class="demo-step">Select name, change to Arial, size 18, bold, blue color</div>
+                        <div class="demo-step">Click in hobby line, apply Center Align, line spacing 2.0</div>
+                        <div class="demo-step">On new line, create bulleted list: Milk, Bread, Eggs</div>
+                        <div class="demo-step">On new line, create numbered list: Boil water, Add tea, Add milk</div>
+                        <div class="demo-step"><strong>"We Do"</strong> - "Formatting Follow-Along":</div>
+                        <div class="demo-step">Students replicate every action on their computers</div>
+                        <div class="demo-step">Circulate to help students who are struggling</div>
+                    </div>
+                </div>
+                
+                <div class="activity-box">
+                    <div class="section-title">"My Bio" Project (30 mins)</div>
+                    
+                    <p><strong>Individual Activity Requirements:</strong></p>
+                    <ul>
+                        <li>Title: "All About [Your Name]" using <strong>Heading 1</strong> style</li>
+                        <li>Paragraph with different font from title</li>
+                        <li>At least one <em>italicized</em> and one <u>underlined</u> word for emphasis</li>
+                        <li>Paragraph with <strong>Justified</strong> alignment</li>
+                        <li>Bulleted list of top 3 favorite foods</li>
+                    </ul>
+                    
+                    <div class="instructor-note">
+                        <strong>Sample Structure:</strong>
+                        <br># All About Maria Gonzalez [Heading 1]
+                        <br>[Paragraph in Calibri, justified, with *emphasized* and <u>underlined</u> words]
+                        <br>• Tacos
+                        <br>• Pizza  
+                        <br>• Ice cream
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Essential Keyboard Shortcuts</div>
+                
+                <div class="content-box">
+                    <div class="formatting-grid">
+                        <div class="format-item">
+                            <div class="key-term">Basic Operations</div>
+                            <p><span class="keyboard-shortcut">Ctrl+S</span> Save</p>
+                            <p><span class="keyboard-shortcut">Ctrl+Z</span> Undo</p>
+                            <p><span class="keyboard-shortcut">Ctrl+Y</span> Redo</p>
+                            <p><span class="keyboard-shortcut">Ctrl+P</span> Print</p>
+                        </div>
+                        
+                        <div class="format-item">
+                            <div class="key-term">Text Formatting</div>
+                            <p><span class="keyboard-shortcut">Ctrl+B</span> Bold</p>
+                            <p><span class="keyboard-shortcut">Ctrl+I</span> Italic</p>
+                            <p><span class="keyboard-shortcut">Ctrl+U</span> Underline</p>
+                            <p><span class="keyboard-shortcut">Ctrl+Shift+></span> Increase font size</p>
+                        </div>
+                        
+                        <div class="format-item">
+                            <div class="key-term">Editing</div>
+                            <p><span class="keyboard-shortcut">Ctrl+C</span> Copy</p>
+                            <p><span class="keyboard-shortcut">Ctrl+X</span> Cut</p>
+                            <p><span class="keyboard-shortcut">Ctrl+V</span> Paste</p>
+                            <p><span class="keyboard-shortcut">Ctrl+A</span> Select All</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SESSION 3.2 -->
+        <div class="session">
+            <div class="session-header">
+                <div class="session-title">Session 3.2: Layout, Tools & Collaboration</div>
+                <div class="session-duration">2 Hours</div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Learning Objectives</div>
+                <ul>
+                    <li>Configure professional page layouts and margins</li>
+                    <li>Insert and format images with text wrapping</li>
+                    <li>Use spelling, grammar, and research tools effectively</li>
+                    <li>Collaborate on documents with comments and suggestions</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Core Concepts</div>
+                
+                <div class="content-box">
+                    <div class="section-title">Professional Page Layout</div>
+                    
+                    <div class="formatting-grid">
+                        <div class="format-item">
+                            <div class="key-term">Margins</div>
+                            <p>White space around document edges</p>
+                            <p><strong>Standard:</strong> 1 inch all sides</p>
+                            <p><strong>Narrow:</strong> 0.5 inch (more text per page)</p>
+                            <p><strong>Wide:</strong> 1.5 inch (more notes space)</p>
+                        </div>
+                        
+                        <div class="format-item">
+                            <div class="key-term">Page Orientation</div>
+                            <div class="format-example">
+                                <strong>Portrait</strong><br>
+                                Taller than wide<br>
+                                Standard for documents
+                            </div>
+                            <div class="format-example">
+                                <strong>Landscape</strong><br>
+                                Wider than tall<br>
+                                For wide tables/charts
+                            </div>
+                        </div>
+                        
+                        <div class="format-item">
+                            <div class="key-term">Page Size</div>
+                            <p><strong>Letter:</strong> 8.5" × 11" (US Standard)</p>
+                            <p><strong>A4:</strong> 8.27" × 11.69" (International)</p>
+                            <p><strong>Legal:</strong> 8.5" × 14" (Long documents)</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Inserting & Formatting Images</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>Inserting Images:</strong> Insert → Image → Upload from computer</div>
+                        <div class="demo-step"><strong>Text Wrapping Options:</strong></div>
+                        <div class="demo-step">In Line - Treats image like a giant character</div>
+                        <div class="demo-step">Square - Text wraps around image in square pattern</div>
+                        <div class="demo-step">Tight - Text follows image contours closely</div>
+                        <div class="demo-step">Behind Text - Image as background</div>
+                        <div class="demo-step">In Front of Text - Image overlays text</div>
+                    </div>
+                    
+                    <div class="instructor-note">
+                        <strong>Best Practices:</strong> Use high-quality images, maintain aspect ratio when resizing, add alt text for accessibility, and ensure images don't disrupt reading flow.
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Document Structure Tools</div>
+                    
+                    <div class="formatting-grid">
+                        <div class="format-item">
+                            <div class="key-term">Page Breaks</div>
+                            <p>Insert → Page Break or <span class="keyboard-shortcut">Ctrl+Enter</span></p>
+                            <p><strong>Use for:</strong> Starting new chapters, before major sections</p>
+                            <p><strong>Avoid:</strong> Pressing Enter multiple times to create space</p>
+                        </div>
+                        
+                        <div class="format-item">
+                            <div class="key-term">Headers & Footers</div>
+                            <p>Insert → Header & Footer</p>
+                            <p><strong>Use for:</strong> Page numbers, document title, author name, date</p>
+                            <p>Appears on every page automatically</p>
+                        </div>
+                        
+                        <div class="format-item">
+                            <div class="key-term">Tables</div>
+                            <p>Insert → Table</p>
+                            <p><strong>Use for:</strong> Organizing data, creating layouts, comparing information</p>
+                            <p>More flexible than using spaces or tabs</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-box toolbox">
+                    <div class="section-title">Essential Writing Tools</div>
+                    
+                    <div class="formatting-grid">
+                        <div class="format-item">
+                            <div class="key-term">Spell Check</div>
+                            <p>Tools → Spelling and Grammar or <span class="keyboard-shortcut">F7</span></p>
+                            <p>Right-click red-underlined words for suggestions</p>
+                            <p>Don't rely entirely on auto-correct!</p>
+                        </div>
+                        
+                        <div class="format-item">
+                            <div class="key-term">Grammar Check</div>
+                            <p>Identifies grammar, punctuation, and style issues</p>
+                            <p>Blue underlines in Word, suggestions in Docs</p>
+                            <p>Understand why changes are suggested</p>
+                        </div>
+                        
+                        <div class="format-item">
+                            <div class="key-term">Thesaurus</div>
+                            <p>Right-click word → Synonyms → Thesaurus</p>
+                            <p>Find better words and avoid repetition</p>
+                            <p>Example: "good" → excellent, superb, outstanding</p>
+                        </div>
+                        
+                        <div class="format-item">
+                            <div class="key-term">Word Count</div>
+                            <p>Tools → Word Count</p>
+                            <p>Essential for assignments with length requirements</p>
+                            <p>Also shows character, paragraph, and page counts</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Document Collaboration</div>
+                    
+                    <div class="collaboration-levels">
+                        <div class="collab-item viewer">
+                            <div class="collab-icon">👀</div>
+                            <div class="key-term">Viewer</div>
+                            <p><strong>Can:</strong> Read document</p>
+                            <p><strong>Cannot:</strong> Edit or comment</p>
+                            <p><strong>Use for:</strong> Final versions, read-only sharing</p>
+                        </div>
+                        
+                        <div class="collab-item commenter">
+                            <div class="collab-icon">💬</div>
+                            <div class="key-term">Commenter</div>
+                            <p><strong>Can:</strong> Read and add comments</p>
+                            <p><strong>Cannot:</strong> Edit directly</p>
+                            <p><strong>Use for:</strong> Feedback and review stages</p>
+                        </div>
+                        
+                        <div class="collab-item editor">
+                            <div class="collab-icon">✏️</div>
+                            <div class="key-term">Editor</div>
+                            <p><strong>Can:</strong> Read, edit, comment, and share</p>
+                            <p><strong>Use for:</strong> Co-authors, group projects</p>
+                        </div>
+                    </div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>Adding Comments:</strong> Select text → Right-click → Comment</div>
+                        <div class="demo-step"><strong>Resolving Comments:</strong> Click checkmark when addressed</div>
+                        <div class="demo-step"><strong>Suggesting Mode:</strong> Shows proposed changes that can be accepted/rejected</div>
+                        <div class="demo-step"><strong>Version History:</strong> File → Version history → See revision history</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Teaching Activities & Timeline</div>
+                
+                <div class="activity-box">
+                    <div class="section-title">Professional Layout & Insertions (60 mins)</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>"I Do"</strong> - Demonstrate layout features:</div>
+                        <div class="demo-step">File → Page Setup → Change all margins to 1 inch</div>
+                        <div class="demo-step">Switch between Portrait and Landscape orientations</div>
+                        <div class="demo-step">Insert → Image → Upload from computer</div>
+                        <div class="demo-step">Show text wrapping options (Wrap Text, Break Text)</div>
+                        <div class="demo-step">Insert → Page Break (explain why it's better than multiple Enters)</div>
+                        <div class="demo-step"><strong>"We Do"</strong> - Guided practice:</div>
+                        <div class="demo-step">Students adjust "My Bio" margins to 0.75 inches</div>
+                        <div class="demo-step">Find and insert relevant image from web</div>
+                        <div class="demo-step">Set image to "Wrap Text"</div>
+                        <div class="demo-step"><strong>"You Do"</strong> - Individual practice:</div>
+                        <div class="demo-step">Add Page Break to "My Bio"</div>
+                        <div class="demo-step">On second page, write "My Future Goals" as Heading 2</div>
+                    </div>
+                </div>
+                
+                <div class="activity-box">
+                    <div class="section-title">Power Tools & Collaboration (60 mins)</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>"I Do"</strong> - Demonstrate writing tools:</div>
+                        <div class="demo-step">Intentionally misspell "teecher" and show right-click corrections</div>
+                        <div class="demo-step">Right-click "good" → Synonyms → Thesaurus → replace with "excellent"</div>
+                        <div class="demo-step">Share demo document with class as "Commenters"</div>
+                        <div class="demo-step">Select text → Right-click → Comment → "Great point!"</div>
+                        <div class="demo-step"><strong>"We Do"</strong> - Guided practice:</div>
+                        <div class="demo-step">Students run Spell Check on "My Bio" documents</div>
+                        <div class="demo-step">Use Thesaurus to improve one word</div>
+                        <div class="demo-step"><strong>"You Do" - Peer Review Activity:</strong></div>
+                        <div class="demo-step">Students partner up</div>
+                        <div class="demo-step">Share "My Bio" with partner as "Commenter"</div>
+                        <div class="demo-step">Partners add at least two positive comments</div>
+                        <div class="demo-step">Students review and discuss comments received</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Practical Project: Computer Scientist Report</div>
+                
+                <div class="content-box">
+                    <p><strong>Assignment:</strong> Create a 1-page report on "The Life of a Computer Scientist" or student-chosen topic</p>
+                    
+                    <p><strong>Requirements:</strong></p>
+                    <ul>
+                        <li>Title with "Title" style</li>
+                        <li>Two headings with "Heading 1" style</li>
+                        <li>One inserted image with text wrapping</li>
+                        <li>Bulleted or numbered list</li>
+                        <li>Correct spelling and grammar</li>
+                        <li>Professional margins and layout</li>
+                        <li>Header with page number</li>
+                    </ul>
+                    
+                    <div class="instructor-note">
+                        <strong>Assessment Rubric:</strong>
+                        <br>• Formatting and Styles (30%)
+                        <br>• Content and Organization (30%) 
+                        <br>• Visual Elements (20%)
+                        <br>• Grammar and Spelling (20%)
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Common Challenges & Solutions</div>
+                
+                <div class="troubleshooting">
+                    <p><strong>Issue:</strong> Text moves unpredictably when inserting images</p>
+                    <p><strong>Solution:</strong> Use proper text wrapping instead of "In Line" positioning</p>
+                    
+                    <p><strong>Issue:</strong> Can't find the Styles menu</p>
+                    <p><strong>Solution:</strong> 
+                    <br>Google Docs: Look between Zoom and Paint Format tools
+                    <br>Microsoft Word: Home tab → Styles gallery</p>
+                    
+                    <p><strong>Issue:</strong> Comments not showing up for collaborators</p>
+                    <p><strong>Solution:</strong> Check sharing permissions - need at least "Commenter" access</p>
+                    
+                    <p><strong>Issue:</strong> Formatting looks different on other computers</p>
+                    <p><strong>Solution:</strong> Use standard fonts (Arial, Times New Roman) and export as PDF for consistent appearance</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Advanced Tips for Quick Learners</div>
+                
+                <div class="tip-box">
+                    <p><strong>Format Painter:</strong> Copy formatting from one selection and apply to another</p>
+                    <p><strong>Keyboard Shortcuts:</strong> <span class="keyboard-shortcut">Ctrl+Shift+C</span> (Copy format), <span class="keyboard-shortcut">Ctrl+Shift+V</span> (Paste format)</p>
+                    <p><strong>Find and Replace:</strong> <span class="keyboard-shortcut">Ctrl+H</span> to quickly change repeated words or phrases</p>
+                    <p><strong>Columns:</strong> Create newspaper-style layouts for newsletters and brochures</p>
+                    <p><strong>Templates:</strong> Start with pre-designed templates for resumes, letters, and reports</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Module 3 Summary & Transition</div>
+            
+            <div class="content-box">
+                <p><strong>Key Takeaways:</strong></p>
+                <ul>
+                    <li>Professional documents use consistent formatting and styles</li>
+                    <li>Proper layout and structure improve readability and credibility</li>
+                    <li>Built-in tools catch errors and improve writing quality</li>
+                    <li>Collaboration features enable efficient group work</li>
+                    <li>Keyboard shortcuts dramatically increase productivity</li>
+                </ul>
+                
+                <p><strong>Looking Ahead to Module 4:</strong> "Now that you can create professional documents, we'll learn how to work with numbers and data using spreadsheets - an essential skill for analysis and organization."</p>
+            </div>
+        </div>
+    </div>
+    <script>
+    // Get current module number from URL or page structure
+    const currentModule = 1; // Change this number for each module
+    
+    // Track session completion
+    let sessionProgress = {
+        '1.1': false,
+        '1.2': false
+    };
+    
+    // Load progress from localStorage
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSessionProgress();
+        updateModuleProgress();
+    });
+    
+    // Load session progress from localStorage
+    function loadSessionProgress() {
+        const savedProgress = localStorage.getItem(`module${currentModule}Progress`);
+        if (savedProgress) {
+            sessionProgress = JSON.parse(savedProgress);
+        }
+        updateSessionUI();
+    }
+    
+    // Save session progress to localStorage
+    function saveSessionProgress() {
+        localStorage.setItem(`module${currentModule}Progress`, JSON.stringify(sessionProgress));
+        updateModuleProgress();
+    }
+    
+    // Mark a session as completed
+    function completeSession(sessionId) {
+        sessionProgress[sessionId] = true;
+        saveSessionProgress();
+        
+        // Check if all sessions are completed
+        const allCompleted = Object.values(sessionProgress).every(val => val === true);
+        if (allCompleted) {
+            // Update dashboard progress
+            updateDashboardProgress(100);
+            
+            // Show completion message
+            setTimeout(() => {
+                alert(`Congratulations! You've completed all sessions in Module ${currentModule}. Return to the dashboard to continue.`);
+            }, 500);
+        }
+    }
+    
+    // Update session UI based on completion status
+    function updateSessionUI() {
+        for (const [sessionId, completed] of Object.entries(sessionProgress)) {
+            const sessionElement = document.querySelector(`[data-session="${sessionId}"]`);
+            if (sessionElement) {
+                if (completed) {
+                    sessionElement.classList.add('completed');
+                    // Add checkmark or other indicator
+                    let statusIndicator = sessionElement.querySelector('.session-status');
+                    if (!statusIndicator) {
+                        statusIndicator = document.createElement('div');
+                        statusIndicator.className = 'session-status';
+                        statusIndicator.innerHTML = '✓';
+                        sessionElement.querySelector('.session-header').appendChild(statusIndicator);
+                    }
+                }
+            }
+        }
+    }
+    
+    // Calculate and update module progress
+    function updateModuleProgress() {
+        const completedSessions = Object.values(sessionProgress).filter(val => val === true).length;
+        const totalSessions = Object.keys(sessionProgress).length;
+        const progressPercentage = (completedSessions / totalSessions) * 100;
+        
+        // Update dashboard
+        updateDashboardProgress(progressPercentage);
+    }
+    
+    // Update dashboard progress via localStorage
+    function updateDashboardProgress(progress) {
+        // Get current dashboard progress
+        const dashboardProgress = JSON.parse(localStorage.getItem('moduleProgress') || '{}');
+        
+        // Update current module progress
+        if (dashboardProgress[currentModule]) {
+            dashboardProgress[currentModule].progress = progress;
+            
+            // If progress is 100%, mark as completed
+            if (progress >= 100) {
+                dashboardProgress[currentModule].status = 'completed';
+                
+                // Unlock next module if exists
+                const nextModule = currentModule + 1;
+                if (dashboardProgress[nextModule]) {
+                    dashboardProgress[nextModule].status = 'current';
+                }
+            }
+            
+            // Save back to localStorage
+            localStorage.setItem('moduleProgress', JSON.stringify(dashboardProgress));
+        }
+    }
+    
+    // Add session completion buttons to each session
+    document.querySelectorAll('.session').forEach(session => {
+        const sessionId = session.querySelector('.session-title').textContent.match(/\d+\.\d+/);
+        if (sessionId) {
+            session.setAttribute('data-session', sessionId[0]);
+            
+            // Add completion button if not already present
+            if (!session.querySelector('.complete-session-btn')) {
+                const completeBtn = document.createElement('button');
+                completeBtn.className = 'btn btn-complete complete-session-btn';
+                completeBtn.textContent = 'Mark Session Complete';
+                completeBtn.onclick = function() {
+                    completeSession(sessionId[0]);
+                    this.disabled = true;
+                    this.textContent = 'Completed';
+                };
+                
+                // Check if session is already completed
+                if (sessionProgress[sessionId[0]]) {
+                    completeBtn.disabled = true;
+                    completeBtn.textContent = 'Completed';
+                }
+                
+                session.querySelector('.session-header').appendChild(completeBtn);
+            }
+        }
+    });
+</script>
+</body>
+</html>

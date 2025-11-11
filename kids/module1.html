@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JOSHCAB Training Institute -Digital Foundation </title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <!-- Add this after your existing Firebase scripts -->
+<script src="../auth-manager.js"></script>
+<!-- Add to head section -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1a2b4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="JOSHCAB INSTITUTE">
+<link rel="apple-touch-icon" href="../icons/icon-192x192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f0f4f8;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 100%;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .module-header {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .module-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .session {
+            padding: 25px 20px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .session:last-child {
+            border-bottom: none;
+        }
+        
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        .session-title {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .session-duration {
+            background: #3498db;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            color: #3498db;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eaeaea;
+            font-weight: 600;
+        }
+        
+        .content-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #3498db;
+        }
+        
+        .analogy-box {
+            background: #e8f4fc;
+            border-left: 4px solid #2980b9;
+        }
+        
+        .activity-box {
+            background: #e8f6f3;
+            border-left: 4px solid #16a085;
+        }
+        
+        .tip-box {
+            background: #fef9e7;
+            border-left: 4px solid #f39c12;
+        }
+        
+        ul, ol {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .key-term {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .instructor-note {
+            background: #fff8e1;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-style: italic;
+            border-left: 3px solid #ffc107;
+        }
+        
+        .hardware-comparison {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .hardware-item {
+            flex: 1;
+            min-width: 150px;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .hardware-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .demo-steps {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .demo-step {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .demo-step:before {
+            content: "➜";
+            position: absolute;
+            left: 0;
+            color: #3498db;
+        }
+        
+        .troubleshooting {
+            background: #ffebee;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .assessment {
+            background: #e8f5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #4caf50;
+        }
+        
+        @media (max-width: 768px) {
+            .hardware-comparison {
+                flex-direction: column;
+            }
+            
+            .hardware-item {
+                min-width: 100%;
+            }
+        }
+        .session {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.session.completed {
+    background: #f8fff8;
+    border-left: 4px solid #2ecc71;
+}
+
+.session-status {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: #2ecc71;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.complete-session-btn {
+    margin-left: 10px;
+    font-size: 0.9rem;
+    padding: 8px 15px;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="module-header">
+            <h1>Module 1: Welcome to the Digital World & Computer Essentials</h1>
+            <div class="module-subtitle">Instructor's Detailed Teaching Notes</div>
+        </div>
+        
+        <!-- SESSION 1.1 -->
+        <div class="session">
+            <div class="session-header">
+                <div class="session-title">Session 1.1: Hardware & The Operating System</div>
+                <div class="session-duration">2 Hours</div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Learning Objectives</div>
+                <ul>
+                    <li>Identify major hardware components and their functions</li>
+                    <li>Understand the role of the operating system</li>
+                    <li>Navigate basic OS interfaces (Windows/macOS)</li>
+                    <li>Adjust fundamental system settings</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Core Concepts</div>
+                
+                <div class="content-box">
+                    <div class="key-term">What is a Computer?</div>
+                    <p>A computer is an electronic machine that:</p>
+                    <ul>
+                        <li><strong>Accepts data</strong> (input) from users or other sources</li>
+                        <li><strong>Processes</strong> that data according to instructions</li>
+                        <li><strong>Produces new information</strong> (output) as a result</li>
+                    </ul>
+                    <div class="instructor-note">
+                        <strong>Teaching Tip:</strong> Use the human body analogy - brain (processing), senses (input), voice/actions (output).
+                    </div>
+                </div>
+                
+                <div class="content-box analogy-box">
+                    <div class="section-title">Hardware Components with Analogies</div>
+                    
+                    <div class="hardware-comparison">
+                        <div class="hardware-item">
+                            <div class="hardware-icon">🧠</div>
+                            <div class="key-term">CPU</div>
+                            <div>(Central Processing Unit)</div>
+                            <p><strong>Analogy:</strong> The Brain</p>
+                            <p>Does all thinking and calculations. Speed measured in GHz (gigahertz).</p>
+                        </div>
+                        
+                        <div class="hardware-item">
+                            <div class="hardware-icon">📝</div>
+                            <div class="key-term">RAM</div>
+                            <div>(Random Access Memory)</div>
+                            <p><strong>Analogy:</strong> Desk Space</p>
+                            <p>Temporary workspace for active programs. Wipes clean when powered off.</p>
+                        </div>
+                        
+                        <div class="hardware-item">
+                            <div class="hardware-icon">🗄️</div>
+                            <div class="key-term">Storage</div>
+                            <div>(HDD/SSD)</div>
+                            <p><strong>Analogy:</strong> Filing Cabinet</p>
+                            <p>Permanent storage for files. SSD is faster, HDD has more capacity for price.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="hardware-comparison">
+                        <div class="hardware-item">
+                            <div class="hardware-icon">⌨️</div>
+                            <div class="key-term">Input Devices</div>
+                            <p>How we communicate TO the computer</p>
+                            <ul>
+                                <li>Keyboard</li>
+                                <li>Mouse</li>
+                                <li>Microphone</li>
+                                <li>Camera</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="hardware-item">
+                            <div class="hardware-icon">🖥️</div>
+                            <div class="key-term">Output Devices</div>
+                            <p>How the computer communicates TO US</p>
+                            <ul>
+                                <li>Monitor</li>
+                                <li>Speakers</li>
+                                <li>Printer</li>
+                                <li>Headphones</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">The Operating System (OS)</div>
+                    <p><strong>Analogy:</strong> The Manager or Conductor</p>
+                    <p>The OS is software that manages all hardware resources and provides a platform for applications to run.</p>
+                    
+                    <div class="instructor-note">
+                        <strong>Key Point:</strong> Emphasize that without an OS, the computer is just expensive hardware that can't do anything useful.
+                    </div>
+                    
+                    <p><strong>Common Operating Systems:</strong></p>
+                    <ul>
+                        <li><strong>Windows</strong> (Microsoft) - Most common on PCs</li>
+                        <li><strong>macOS</strong> (Apple) - On Mac computers</li>
+                        <li><strong>Chrome OS</strong> (Google) - On Chromebooks</li>
+                        <li><strong>Linux</strong> - Various distributions</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Teaching Activities & Timeline</div>
+                
+                <div class="activity-box">
+                    <div class="section-title">Icebreaker: "Tech in Your Pocket" (15 mins)</div>
+                    <p><strong>Objective:</strong> Help students recognize computers in everyday life.</p>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step">Ask students to list all computers they've used today</div>
+                        <div class="demo-step">Examples: Phone, smartwatch, laptop, game console, smart TV, car system</div>
+                        <div class="demo-step">Discuss how computers are everywhere and serve different purposes</div>
+                    </div>
+                    
+                    <div class="instructor-note">
+                        <strong>Discussion Prompt:</strong> "What would your day be like without any computers?"
+                    </div>
+                </div>
+                
+                <div class="activity-box">
+                    <div class="section-title">Hardware Deep Dive (30 mins)</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>"I Do"</strong> - Show physical components or high-quality images</div>
+                        <div class="demo-step">Point out CPU (with heatsink/fan), RAM sticks, storage drives</div>
+                        <div class="demo-step">Use the analogies to explain each component's function</div>
+                        <div class="demo-step"><strong>"We Do"</strong> - Hand out worksheet with hardware images to label</div>
+                        <div class="demo-step">Go through worksheet together as a class</div>
+                    </div>
+                </div>
+                
+                <div class="activity-box">
+                    <div class="section-title">OS Navigation (45 mins)</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>"I Do"</strong> - Project your screen and demonstrate:</div>
+                        <div class="demo-step">Logging in to the system</div>
+                        <div class="demo-step">Locating Taskbar/Dock and Start Menu/Apple Menu</div>
+                        <div class="demo-step">Opening File Explorer (Windows) or Finder (macOS)</div>
+                        <div class="demo-step">Showing navigation pane and different drives</div>
+                        <div class="demo-step"><strong>"We Do"</strong> - Guide class to follow along:</div>
+                        <div class="demo-step">"Everyone open File Explorer/Finder"</div>
+                        <div class="demo-step">"Click on 'This PC' or 'Macintosh HD'"</div>
+                        <div class="demo-step">"Let's all open the 'Documents' folder"</div>
+                    </div>
+                </div>
+                
+                <div class="activity-box">
+                    <div class="section-title">Scavenger Hunt (15 mins)</div>
+                    
+                    <p><strong>Individual Activity:</strong> Students find and document:</p>
+                    <ul>
+                        <li>Free space on their C: drive (Windows) or Macintosh HD (macOS)</li>
+                        <li>Version of their operating system</li>
+                    </ul>
+                    
+                    <div class="instructor-note">
+                        <strong>Guided Instructions:</strong> 
+                        <br>Windows: Right-click C: drive → Properties
+                        <br>macOS: Click Macintosh HD → File → Get Info
+                        <br>OS Version: Settings → System → About (Windows) or Apple Menu → About This Mac
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Common Questions & Troubleshooting</div>
+                
+                <div class="troubleshooting">
+                    <p><strong>Student Question:</strong> "Why does my computer get slow when I have many programs open?"</p>
+                    <p><strong>Answer:</strong> Explain RAM limitations - when RAM fills up, the computer uses slower storage as "virtual memory."</p>
+                    
+                    <p><strong>Student Question:</strong> "What's the difference between shutting down and restarting?"</p>
+                    <p><strong>Answer:</strong> Shutting down turns the computer completely off. Restarting shuts down and turns back on, which can fix many software issues.</p>
+                    
+                    <p><strong>Issue:</strong> Student can't find File Explorer/Finder</p>
+                    <p><strong>Solution:</strong> 
+                    <br>Windows: Press Windows key + E
+                    <br>macOS: Press Command + Space, type "Finder"</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SESSION 1.2 -->
+        <div class="session">
+            <div class="session-header">
+                <div class="session-title">Session 1.2: File Management Mastery</div>
+                <div class="session-duration">2 Hours</div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Learning Objectives</div>
+                <ul>
+                    <li>Differentiate between files and folders</li>
+                    <li>Perform essential file operations (create, rename, copy, move, delete)</li>
+                    <li>Organize files using logical folder structures</li>
+                    <li>Understand safe software installation practices</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Core Concepts</div>
+                
+                <div class="content-box">
+                    <div class="section-title">Files vs. Folders</div>
+                    
+                    <div class="hardware-comparison">
+                        <div class="hardware-item">
+                            <div class="hardware-icon">📄</div>
+                            <div class="key-term">File</div>
+                            <p>A single item containing data</p>
+                            <ul>
+                                <li>Document (.docx, .pdf)</li>
+                                <li>Image (.jpg, .png)</li>
+                                <li>Audio (.mp3, .wav)</li>
+                                <li>Video (.mp4, .mov)</li>
+                            </ul>
+                            <p><strong>Has a name and extension</strong> that tells the computer what type of file it is</p>
+                        </div>
+                        
+                        <div class="hardware-item">
+                            <div class="hardware-icon">📁</div>
+                            <div class="key-term">Folder</div>
+                            <p>A container for organizing files</p>
+                            <ul>
+                                <li>Can contain files</li>
+                                <li>Can contain other folders (subfolders)</li>
+                                <li>Helps keep things organized</li>
+                                <li>Has a name but no extension</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="instructor-note">
+                        <strong>Analogy:</strong> Files are like individual papers, folders are like filing cabinet drawers or folders that hold those papers.
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Essential File Operations</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>Create:</strong> Right-click → New → Folder/Text Document</div>
+                        <div class="demo-step"><strong>Rename:</strong> Select file → F2 or Right-click → Rename</div>
+                        <div class="demo-step"><strong>Copy:</strong> Ctrl+C (makes duplicate) → Navigate to destination → Ctrl+V</div>
+                        <div class="demo-step"><strong>Move:</strong> Ctrl+X (cuts original) → Navigate to destination → Ctrl+V</div>
+                        <div class="demo-step"><strong>Delete:</strong> Select file → Delete key (goes to Recycle Bin/Trash)</div>
+                        <div class="demo-step"><strong>Permanent Delete:</strong> Shift+Delete (bypasses Bin/Trash - use with caution!)</div>
+                    </div>
+                    
+                    <div class="instructor-note">
+                        <strong>Keyboard Shortcuts to Teach:</strong> 
+                        <br>Ctrl+C (Copy), Ctrl+X (Cut), Ctrl+V (Paste), Ctrl+Z (Undo)
+                        <br>F2 (Rename), Delete (Move to Recycle Bin)
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Safe Software Installation</div>
+                    
+                    <p><strong>Official Sources Only:</strong></p>
+                    <ul>
+                        <li>Microsoft Store (Windows)</li>
+                        <li>Apple App Store (macOS)</li>
+                        <li>Official developer websites</li>
+                    </ul>
+                    
+                    <p><strong>Risks of Unofficial Sources:</strong></p>
+                    <ul>
+                        <li>Viruses and malware</li>
+                        <li>Spyware that steals information</li>
+                        <li>Ransomware that locks your files</li>
+                        <li>Poorly working or fake software</li>
+                    </ul>
+                    
+                    <div class="tip-box">
+                        <strong>Teaching Tip:</strong> Use the analogy of buying food - you wouldn't buy from a random street vendor with no credentials, you'd go to a reputable store.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Teaching Activities & Timeline</div>
+                
+                <div class="activity-box">
+                    <div class="section-title">File Explorer/Finder Mastery (60 mins)</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>"I Do"</strong> - Demonstrate on projector:</div>
+                        <div class="demo-step">Create new folder on Desktop named "Test Folder"</div>
+                        <div class="demo-step">Rename it to "My Projects"</div>
+                        <div class="demo-step">Create new text document inside named "Notes.txt"</div>
+                        <div class="demo-step">Type "Hello [Student Name]!" and save</div>
+                        <div class="demo-step">Demonstrate Copy: Right-click → Copy, navigate to Desktop → Paste</div>
+                        <div class="demo-step">Demonstrate Move: Drag file to Recycle Bin/Trash, then restore it</div>
+                        <div class="demo-step">Demonstrate Cut & Paste: Right-click → Cut, navigate to Desktop → Paste</div>
+                        <div class="demo-step"><strong>"We Do"</strong> - "Follow the Leader" - Students mimic each action</div>
+                    </div>
+                </div>
+                
+                <div class="activity-box">
+                    <div class="section-title">The Great File Hunt (60 mins)</div>
+                    
+                    <p><strong>Preparation:</strong> Create "STUDENT_DOWNLOADS" folder on each computer with 15-20 mixed files:</p>
+                    <ul>
+                        <li>Image files: cat.jpg, dog.png, screenshot.png</li>
+                        <li>Audio files: song1.mp3, podcast_intro.wav</li>
+                        <li>Document files: essay_v1.docx, essay_FINAL.docx, homework.txt</li>
+                        <li>Spreadsheet files: data.csv, budget.xlsx</li>
+                        <li>Instruction file: readme.txt with organization instructions</li>
+                    </ul>
+                    
+                    <p><strong>Student Task:</strong> Create logical folder structure to organize the chaos</p>
+                    
+                    <div class="instructor-note">
+                        <strong>Suggested Structure:</strong>
+                        <br>📁 Organized Files
+                        <br>├── 📁 Schoolwork
+                        <br>├── 📁 Pictures  
+                        <br>├── 📁 Music
+                        <br>├── 📁 Spreadsheets
+                        <br>└── 📁 Miscellaneous
+                    </div>
+                    
+                    <p><strong>Instructor Role:</strong> Circulate, check progress, help struggling students, praise creative solutions</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Common Challenges & Solutions</div>
+                
+                <div class="troubleshooting">
+                    <p><strong>Issue:</strong> Student can't see file extensions</p>
+                    <p><strong>Solution:</strong> 
+                    <br>Windows: File Explorer → View → Check "File name extensions"
+                    <br>macOS: Finder → Preferences → Advanced → Check "Show all filename extensions"</p>
+                    
+                    <p><strong>Issue:</strong> Student accidentally deleted important file</p>
+                    <p><strong>Solution:</strong> Check Recycle Bin (Windows) or Trash (macOS) and restore</p>
+                    
+                    <p><strong>Issue:</strong> Student can't find a file they saved</p>
+                    <p><strong>Solution:</strong> 
+                    <br>Use search function in File Explorer/Finder
+                    <br>Check default save locations (Documents, Downloads, Desktop)</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Assessment & Reinforcement</div>
+                
+                <div class="assessment">
+                    <p><strong>Formative Assessment Questions:</strong></p>
+                    <ul>
+                        <li>"What's the difference between copying and moving a file?"</li>
+                        <li>"Why should we use folders to organize our files?"</li>
+                        <li>"Where should you download software from and why?"</li>
+                        <li>"What happens when you press Delete vs. Shift+Delete?"</li>
+                    </ul>
+                    
+                    <p><strong>Reinforcement Activity:</strong> "File Organization Challenge" - Time students to organize a new set of chaotic files using the skills they learned.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Module 1 Summary & Transition</div>
+            
+            <div class="content-box">
+                <p><strong>Key Takeaways:</strong></p>
+                <ul>
+                    <li>Computers process input to create output using hardware components</li>
+                    <li>The OS manages all hardware and software interactions</li>
+                    <li>Proper file organization saves time and reduces frustration</li>
+                    <li>Safe computing practices protect your system and data</li>
+                </ul>
+                
+                <p><strong>Looking Ahead to Module 2:</strong> "Now that you're comfortable with your computer, we'll learn how to connect to the vast world of information online through web browsing and research techniques."</p>
+            </div>
+        </div>
+    </div>
+    <script>
+    // Get current module number from URL or page structure
+    const currentModule = 1; // Change this number for each module
+    
+    // Track session completion
+    let sessionProgress = {
+        '1.1': false,
+        '1.2': false
+    };
+    
+    // Load progress from localStorage
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSessionProgress();
+        updateModuleProgress();
+    });
+    
+    // Load session progress from localStorage
+    function loadSessionProgress() {
+        const savedProgress = localStorage.getItem(`module${currentModule}Progress`);
+        if (savedProgress) {
+            sessionProgress = JSON.parse(savedProgress);
+        }
+        updateSessionUI();
+    }
+    
+    // Save session progress to localStorage
+    function saveSessionProgress() {
+        localStorage.setItem(`module${currentModule}Progress`, JSON.stringify(sessionProgress));
+        updateModuleProgress();
+    }
+    
+    // Mark a session as completed
+    function completeSession(sessionId) {
+        sessionProgress[sessionId] = true;
+        saveSessionProgress();
+        
+        // Check if all sessions are completed
+        const allCompleted = Object.values(sessionProgress).every(val => val === true);
+        if (allCompleted) {
+            // Update dashboard progress
+            updateDashboardProgress(100);
+            
+            // Show completion message
+            setTimeout(() => {
+                alert(`Congratulations! You've completed all sessions in Module ${currentModule}. Return to the dashboard to continue.`);
+            }, 500);
+        }
+    }
+    
+    // Update session UI based on completion status
+    function updateSessionUI() {
+        for (const [sessionId, completed] of Object.entries(sessionProgress)) {
+            const sessionElement = document.querySelector(`[data-session="${sessionId}"]`);
+            if (sessionElement) {
+                if (completed) {
+                    sessionElement.classList.add('completed');
+                    // Add checkmark or other indicator
+                    let statusIndicator = sessionElement.querySelector('.session-status');
+                    if (!statusIndicator) {
+                        statusIndicator = document.createElement('div');
+                        statusIndicator.className = 'session-status';
+                        statusIndicator.innerHTML = '✓';
+                        sessionElement.querySelector('.session-header').appendChild(statusIndicator);
+                    }
+                }
+            }
+        }
+    }
+    
+    // Calculate and update module progress
+    function updateModuleProgress() {
+        const completedSessions = Object.values(sessionProgress).filter(val => val === true).length;
+        const totalSessions = Object.keys(sessionProgress).length;
+        const progressPercentage = (completedSessions / totalSessions) * 100;
+        
+        // Update dashboard
+        updateDashboardProgress(progressPercentage);
+    }
+    
+    // Update dashboard progress via localStorage
+    function updateDashboardProgress(progress) {
+        // Get current dashboard progress
+        const dashboardProgress = JSON.parse(localStorage.getItem('moduleProgress') || '{}');
+        
+        // Update current module progress
+        if (dashboardProgress[currentModule]) {
+            dashboardProgress[currentModule].progress = progress;
+            
+            // If progress is 100%, mark as completed
+            if (progress >= 100) {
+                dashboardProgress[currentModule].status = 'completed';
+                
+                // Unlock next module if exists
+                const nextModule = currentModule + 1;
+                if (dashboardProgress[nextModule]) {
+                    dashboardProgress[nextModule].status = 'current';
+                }
+            }
+            
+            // Save back to localStorage
+            localStorage.setItem('moduleProgress', JSON.stringify(dashboardProgress));
+        }
+    }
+    
+    // Add session completion buttons to each session
+    document.querySelectorAll('.session').forEach(session => {
+        const sessionId = session.querySelector('.session-title').textContent.match(/\d+\.\d+/);
+        if (sessionId) {
+            session.setAttribute('data-session', sessionId[0]);
+            
+            // Add completion button if not already present
+            if (!session.querySelector('.complete-session-btn')) {
+                const completeBtn = document.createElement('button');
+                completeBtn.className = 'btn btn-complete complete-session-btn';
+                completeBtn.textContent = 'Mark Session Complete';
+                completeBtn.onclick = function() {
+                    completeSession(sessionId[0]);
+                    this.disabled = true;
+                    this.textContent = 'Completed';
+                };
+                
+                // Check if session is already completed
+                if (sessionProgress[sessionId[0]]) {
+                    completeBtn.disabled = true;
+                    completeBtn.textContent = 'Completed';
+                }
+                
+                session.querySelector('.session-header').appendChild(completeBtn);
+            }
+        }
+    });
+</script>
+</body>
+</html>

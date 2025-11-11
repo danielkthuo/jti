@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Foundations - Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Your existing CSS remains the same */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #4a6fa5, #2c3e50);
+            color: white;
+            padding: 25px 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        
+        .logo-icon {
+            font-size: 32px;
+            margin-right: 15px;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .progress-container {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .progress-bar {
+            height: 12px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: #2ecc71;
+            width: 25%;
+            transition: width 0.5s ease;
+        }
+        
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .module-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+        
+        .module-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+        
+        .module-header {
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .module-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        
+        .module-number {
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .module-content {
+            padding: 20px;
+        }
+        
+        .module-description {
+            margin-bottom: 20px;
+            color: #555;
+        }
+        
+        .module-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #777;
+        }
+        
+        .module-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #4a6fa5;
+            color: white;
+        }
+        
+        .btn-complete {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .btn:disabled {
+            background: #bdc3c7;
+            color: #7f8c8d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .completed .module-header {
+            background: #27ae60;
+        }
+        
+        .current .module-header {
+            background: #e74c3c;
+        }
+        
+        .locked {
+            opacity: 0.7;
+            position: relative;
+        }
+        
+        .locked::before {
+            content: "🔒";
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.8rem;
+            z-index: 2;
+        }
+        
+        .locked .btn-primary {
+            background: #bdc3c7;
+            color: #7f8c8d;
+            cursor: not-allowed;
+        }
+        
+        .completion-status {
+            position: absolute;
+            top: 20px;
+            right: 70px;
+            font-size: 1.5rem;
+        }
+        
+        .completed .completion-status {
+            color: #27ae60;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 40px;
+        }
+        
+        /* Module-specific colors */
+        .module-1 .module-header { background: #3498db; }
+        .module-2 .module-header { background: #2ecc71; }
+        .module-3 .module-header { background: #e74c3c; }
+        .module-4 .module-header { background: #f39c12; }
+        .module-5 .module-header { background: #9b59b6; }
+        .module-6 .module-header { background: #1abc9c; }
+        .module-7 .module-header { background: #d35400; }
+        .module-8 .module-header { background: #34495e; }
+
+        /* Completion modal */
+        .completion-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 90%;
+            width: 450px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 12px;
+            height: 12px;
+            background-color: #f39c12;
+            opacity: 0;
+            z-index: 999;
+        }
+        
+        .achievement-badge {
+            display: inline-block;
+            background: #f39c12;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .module-actions {
+                flex-direction: column;
+            }
+        }
+        
+        .module-progress {
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .module-progress-bar {
+            height: 6px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .module-progress-fill {
+            height: 100%;
+            background: #2ecc71;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        /* Session progress styles */
+        .session-progress {
+            margin: 10px 0;
+            font-size: 0.85rem;
+        }
+        
+        .session-list {
+            margin: 10px 0;
+            padding-left: 15px;
+        }
+        
+        .session-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        
+        .session-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .session-checkbox {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .session-completed {
+            text-decoration: line-through;
+            color: #7f8c8d;
+        }
+        
+        .session-name {
+            flex: 1;
+        }
+        
+        .session-duration {
+            font-size: 0.8rem;
+            color: #95a5a6;
+            background: #ecf0f1;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">💻</div>
+                <div>
+                    <h1>Digital Foundations for Teens</h1>
+                    <div class="subtitle">Master digital skills through our comprehensive course</div>
+                </div>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-info">
+                    <span>Your Progress</span>
+                    <span id="progress-percent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress" id="overall-progress"></div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="modules-grid">
+            <!-- MODULE 1 -->
+            <div class="module-card module-1 current" id="module-1">
+                <div class="module-header">
+                    <div class="module-title">Module 1: Digital World & Computer Essentials</div>
+                    <div class="module-number">1</div>
+                </div>
+                <div class="module-content">
+                    <p class="module-description">Learn about computer components, operating systems, and file management fundamentals.</p>
+                    <div class="module-stats">
+                        <span><i class="far fa-clock"></i> 4 hours</span>
+                        <span><i class="far fa-file-alt"></i> 2 sessions</span>
+                    </div>
+                    <div class="module-progress">
+                        <span>Progress: <span id="module-1-progress">0%</span></span>
+                        <div class="module-progress-bar">
+                            <div class="module-progress-fill" id="module-1-progress-bar"></div>
+                        </div>
+                    </div>
+                    <div class="session-progress">
+                        <div class="session-list">
+                            <div class="session-item">
+                                <input type="checkbox" class="session-checkbox" data-module="1" data-session="1.1" id="session-1-1">
+                                <label for="session-1-1" class="session-name">Session 1.1: Hardware & The Operating System</label>
+                                <span class="session-duration">2 hours</span>
+                            </div>
+                            <div class="session-item">
+                                <input type="checkbox" class="session-checkbox" data-module="1" data-session="1.2" id="session-1-2">
+                                <label for="session-1-2" class="session-name">Session 1.2: File Management Mastery</label>
+                                <span class="session-duration">2 hours</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="module-actions">
+                        <a href="module1.html" class="btn btn-primary" id="module-1-start">Start Module</a>
+                        <button class="btn btn-complete" id="module-1-complete">Mark Complete</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MODULE 2 -->
+            <div class="module-card module-2 locked" id="module-2">
+                <div class="module-header">
+                    <div class="module-title">Module 2: Internet & Digital Communication</div>
+                    <div class="module-number">2</div>
+                </div>
+                <div class="module-content">
+                    <p class="module-description">Master web browsing, research techniques, email etiquette, and cloud storage.</p>
+                    <div class="module-stats">
+                        <span><i class="far fa-clock"></i> 4 hours</span>
+                        <span><i class="far fa-file-alt"></i> 2 sessions</span>
+                    </div>
+                    <div class="module-progress">
+                        <span>Progress: <span id="module-2-progress">0%</span></span>
+                        <div class="module-progress-bar">
+                            <div class="module-progress-fill" id="module-2-progress-bar"></div>
+                        </div>
+                    </div>
+                    <div class="session-progress">
+                        <div class="session-list">
+                            <div class="session-item">
+                                <input type="checkbox" class="session-checkbox" data-module="2" data-session="2.1" id="session-2-1" disabled>
+                                <label for="session-2-1" class="session-name">Session 2.1: Web Browsing & Smart Research</label>
+                                <span class="session-duration">2 hours</span>
+                            </div>
+                            <div class="session-item">
+                                <input type="checkbox" class="session-checkbox" data-module="2" data-session="2.2" id="session-2-2" disabled>
+                                <label for="session-2-2" class="session-name">Session 2.2: Email & Cloud Storage</label>
+                                <span class="session-duration">2 hours</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="module-actions">
+                        <a href="#" class="btn btn-primary" id="module-2-start" disabled>Start Module</a>
+                        <button class="btn btn-complete" id="module-2-complete" disabled>Mark Complete</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MODULE 3 -->
+            <div class="module-card module-3 locked" id="module-3">
+                <div class="module-header">
+                    <div class="module-title">Module 3: Word Processing Powerhouse</div>
+                    <div class="module-number">3</div>
+                </div>
+                <div class="module-content">
+                    <p class="module-description">Create professional documents with formatting, styles, and collaboration tools.</p>
+                    <div class="module-stats">
+                        <span><i class="far fa-clock"></i> 4 hours</span>
+                        <span><i class="far fa-file-alt"></i> 2 sessions</span>
+                    </div>
+                    <div class="module-progress">
+                        <span>Progress: <span id="module-3-progress">0%</span></span>
+                        <div class="module-progress-bar">
+                            <div class="module-progress-fill" id="module-3-progress-bar"></div>
+                        </div>
+                    </div>
+                    <div class="session-progress">
+                        <div class="session-list">
+                            <div class="session-item">
+                                <input type="checkbox" class="session-checkbox" data-module="3" data-session="3.1" id="session-3-1" disabled>
+                                <label for="session-3-1" class="session-name">Session 3.1: Document Basics & Formatting</label>
+                                <span class="session-duration">2 hours</span>
+                            </div>
+                            <div class="session-item">
+                                <input type="checkbox" class="session-checkbox" data-module="3" data-session="3.2" id="session-3-2" disabled>
+                                <label for="session-3-2" class="session-name">Session 3.2: Layout, Tools & Collaboration</label>
+                                <span class="session-duration">2 hours</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="module-actions">
+                        <a href="#" class="btn btn-primary" id="module-3-start" disabled>Start Module</a>
+                        <button class="btn btn-complete" id="module-3-complete" disabled>Mark Complete</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MODULE 4 -->
+            <div class="module-card module-4 locked" id="module-4">
+                <div class="module-header">
+                    <div class="module-title">Module 4: Spreadsheets Made Simple</div>
+                    <div class="module-number">4</div>
+                </div>
+                <div class="module-content">
+                    <p class="module-description">Learn data entry, formulas, analysis, and visualization with spreadsheets.</p>
+                    <div class="module-stats">
+                        <span><i class="far fa-clock"></i> 4 hours</span>
+                        <span><i class="far fa-file-alt"></i> 2 sessions</span>
+                    </div>
+                    <div class="module-progress">
+                        <span>Progress: <span id="module-4-progress">0%</span></span>
+                        <div class="module-progress-bar">
+                            <div class="module-progress-fill" id="module-4-progress-bar"></div>
+                        </div>
+                    </div>
+                    <div class="session-progress">
+                        <div class="session-list">
+                            <div class="session-item">
+                                <input type="checkbox" class="session-checkbox" data-module="4" data-session="4.1" id="session-4-1" disabled>
+                                <label for="session-4-1" class="session-name">Session 4.1: Spreadsheet Basics & Data Entry</label>
+                                <span class="session-duration">2 hours</span>
+                            </div>
+                            <div class="session-item">
+                                <input type="checkbox" class="session-checkbox" data-module="4" data-session="4.2" id="session-4-2" disabled>
+                                <label for="session-4-2" class="session-name">Session 4.2: Data Analysis & Visualization</label>
+                                <span class="session-duration">2 hours</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="module-actions">
+                        <a href="#" class="btn btn-primary" id="module-4-start" disabled>Start Module</a>
+                        <button class="btn btn-complete" id="module-4-complete" disabled>Mark Complete</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MODULE 5 -->
+            <div class="module-card module-5 locked" id="module-5">
+                <div class="module-header">
+                    <div class="module-title">Module 5: Creative Presentations</div>
+                    <div class="module-number">5</div>
+                </div>
+                <div class="module-content">
+                    <p class="module-description">Design effective slides with media, transitions, and delivery skills.</p>
+                    <div class="module-stats">
+                        <span><i class="far fa-clock"></i> 4 hours</span>
+                        <span><i class="far fa-file-alt"></i> 2 sessions</span>
+                    </div>
+                    <div class="module-progress">
+                        <span>Progress: <span id="module-5-progress">0%</span></span>
+                        <div class="module-progress-bar">
+                            <div class="module-progress-fill" id="module-5-progress-bar"></div>
+                        </div>
+                    </div>
+                    <div class="session-progress">
+                        <div class="session-list">
+                            <div class="session-item">
+                                <input type="checkbox" class="session-checkbox" data-module="5" data-session="5.1" id="session-5-1" disabled>
+                                <label for="session-5-1" class="session-name">Session 5.1: Slide Design & Structure</label>
+                                <span class="session-duration">2 hours</span>
+                            </div>
+                            <div class="session-item">
+                                <input type="checkbox" class="session-checkbox" data-module="5" data-session="5.2" id="session-5-2" disabled>
+                                <label for="session-5-2" class="session-name">Session 5.2: Media & Delivery</label>
+                                <span class="session-duration">2 hours</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="module-actions">
+                        <a href="#" class="btn btn-primary" id="module-5-start" disabled>Start Module</a>
+                        <button class="btn btn-complete" id="module-5-complete" disabled>Mark Complete</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MODULE 6 -->
+            <div class="module-card module-6 locked" id="module-6">
+                <div class="module-header">
+                    <div class="module-title">Module 6: Digital Citizenship & Safety</div>
+                    <div class="module-number">6</div>
+                </div>
+                <div class="module-content">
+                    <p class="module-description">Protect yourself online with security practices and digital wellness.</p>
+                    <div class="module-stats">
+                        <span><i class="far fa-clock"></i> 4 hours</span>
+                        <span><i class="far fa-file-alt"></i> 2 sessions</span>
+                    </div>
+                    <div class="module-progress">
+                        <span>Progress: <span id="module-6-progress">0%</span></span>
+                        <div class="module-progress-bar">
+                            <div class="module-progress-fill" id="module-6-progress-bar"></div>
+                        </div>
+                    </div>
+                    <div class="session-progress">
+                        <div class="session-list">
+                            <div class="session-item">
+                                <input type="checkbox" class="session-checkbox" data-module="6" data-session="6.1" id="session-6-1" disabled>
+                                <label for="session-6-1" class="session-name">Session 6.1: Online Safety & Privacy</label>
+                                <span class="session-duration">2 hours</span>
+                            </div>
+                            <div class="session-item">
+                                <input type="checkbox" class="session-checkbox" data-module="6" data-session="6.2" id="session-6-2" disabled>
+                                <label for="session-6-2" class="session-name">Session 6.2: Digital Footprint & Ethics</label>
+                                <span class="session-duration">2 hours</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="module-actions">
+                        <a href="#" class="btn btn-primary" id="module-6-start" disabled>Start Module</a>
+                        <button class="btn btn-complete" id="module-6-complete" disabled>Mark Complete</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MODULE 7 -->
+            <div class="module-card module-7 locked" id="module-7">
+                <div class="module-header">
+                    <div class="module-title">Module 7: Computational Thinking</div>
+                    <div class="module-number">7</div>
+                </div>
+                <div class="module-content">
+                    <p class="module-description">Develop problem-solving skills and learn block coding with Scratch.</p>
+                    <div class="module-stats">
+                        <span><i class="far fa-clock"></i> 4 hours</span>
+                        <span><i class="far fa-file-alt"></i> 2 sessions</span>
+                    </div>
+                    <div class="module-progress">
+                        <span>Progress: <span id="module-7-progress">0%</span></span>
+                        <div class="module-progress-bar">
+                            <div class="module-progress-fill" id="module-7-progress-bar"></div>
+                        </div>
+                    </div>
+                    <div class="session-progress">
+                        <div class="session-list">
+                            <div class="session-item">
+                                <input type="checkbox" class="session-checkbox" data-module="7" data-session="7.1" id="session-7-1" disabled>
+                                <label for="session-7-1" class="session-name">Session 7.1: Problem Solving & Algorithms</label>
+                                <span class="session-duration">2 hours</span>
+                            </div>
+                            <div class="session-item">
+                                <input type="checkbox" class="session-checkbox" data-module="7" data-session="7.2" id="session-7-2" disabled>
+                                <label for="session-7-2" class="session-name">Session 7.2: Introduction to Scratch</label>
+                                <span class="session-duration">2 hours</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="module-actions">
+                        <a href="#" class="btn btn-primary" id="module-7-start" disabled>Start Module</a>
+                        <button class="btn btn-complete" id="module-7-complete" disabled>Mark Complete</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MODULE 8 -->
+            <div class="module-card module-8 locked" id="module-8">
+                <div class="module-header">
+                    <div class="module-title">Module 8: Capstone Project</div>
+                    <div class="module-number">8</div>
+                </div>
+                <div class="module-content">
+                    <p class="module-description">Apply all your skills in a final project and earn your certificate.</p>
+                    <div class="module-stats">
+                        <span><i class="far fa-clock"></i> 4 hours</span>
+                        <span><i class="far fa-file-alt"></i> 2 sessions</span>
+                    </div>
+                    <div class="module-progress">
+                        <span>Progress: <span id="module-8-progress">0%</span></span>
+                        <div class="module-progress-bar">
+                            <div class="module-progress-fill" id="module-8-progress-bar"></div>
+                        </div>
+                    </div>
+                    <div class="session-progress">
+                        <div class="session-list">
+                            <div class="session-item">
+                                <input type="checkbox" class="session-checkbox" data-module="8" data-session="8.1" id="session-8-1" disabled>
+                                <label for="session-8-1" class="session-name">Session 8.1: Project Planning & Design</label>
+                                <span class="session-duration">2 hours</span>
+                            </div>
+                            <div class="session-item">
+                                <input type="checkbox" class="session-checkbox" data-module="8" data-session="8.2" id="session-8-2" disabled>
+                                <label for="session-8-2" class="session-name">Session 8.2: Project Implementation & Presentation</label>
+                                <span class="session-duration">2 hours</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="module-actions">
+                        <a href="#" class="btn btn-primary" id="module-8-start" disabled>Start Module</a>
+                        <button class="btn btn-complete" id="module-8-complete" disabled>Mark Complete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Digital Foundations for Teens &copy; 2023 | JOSHCAB Training Institute</p>
+        </footer>
+    </div>
+
+    <!-- Completion Confirmation Modal -->
+    <div class="completion-modal" id="completion-modal">
+        <div class="modal-content">
+            <h2>Mark Module Complete?</h2>
+            <p>Are you sure you want to mark this module as complete? This will unlock the next module in your learning path.</p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" id="cancel-complete">Cancel</button>
+                <button class="btn btn-complete" id="confirm-complete">Yes, Mark Complete</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Track module completion status and progress
+        const moduleStatus = {
+            1: { status: 'current', progress: 0, sessions: { '1.1': false, '1.2': false } },
+            2: { status: 'locked', progress: 0, sessions: { '2.1': false, '2.2': false } },
+            3: { status: 'locked', progress: 0, sessions: { '3.1': false, '3.2': false } },
+            4: { status: 'locked', progress: 0, sessions: { '4.1': false, '4.2': false } },
+            5: { status: 'locked', progress: 0, sessions: { '5.1': false, '5.2': false } },
+            6: { status: 'locked', progress: 0, sessions: { '6.1': false, '6.2': false } },
+            7: { status: 'locked', progress: 0, sessions: { '7.1': false, '7.2': false } },
+            8: { status: 'locked', progress: 0, sessions: { '8.1': false, '8.2': false } }
+        };
+
+        let currentModuleToComplete = null;
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProgressFromStorage();
+            updateProgressBar();
+            updateModuleDisplay();
+            setupSessionCheckboxes();
+            setupModalEventListeners();
+            setupNavigationButtons();
+            setupCompleteButtons(); // Add this line
+        });
+
+        // Setup complete buttons
+        function setupCompleteButtons() {
+            // Add click handlers to all "Mark Complete" buttons
+            document.querySelectorAll('.btn-complete').forEach(button => {
+                if (!button.hasAttribute('data-listener-added')) {
+                    button.addEventListener('click', function() {
+                        if (this.disabled) return;
+                        
+                        const moduleCard = this.closest('.module-card');
+                        const moduleId = moduleCard.id.split('-')[1];
+                        console.log('Complete button clicked for module:', moduleId);
+                        showCompletionModal(parseInt(moduleId));
+                    });
+                    button.setAttribute('data-listener-added', 'true');
+                }
+            });
+        }
+
+        // Setup navigation buttons
+        function setupNavigationButtons() {
+            // Add click handlers to all navigation buttons
+            document.querySelectorAll('.btn-primary').forEach(button => {
+                if (!button.hasAttribute('data-listener-added')) {
+                    button.addEventListener('click', function(e) {
+                        if (this.disabled || !this.href || this.href === '#') {
+                            e.preventDefault();
+                            return false;
+                        }
+                        // Allow normal navigation for enabled buttons with valid href
+                        console.log('Navigating to:', this.href);
+                    });
+                    button.setAttribute('data-listener-added', 'true');
+                }
+            });
+        }
+
+        // Setup modal event listeners
+        function setupModalEventListeners() {
+            const confirmButton = document.getElementById('confirm-complete');
+            const cancelButton = document.getElementById('cancel-complete');
+            const modal = document.getElementById('completion-modal');
+
+            if (confirmButton) {
+                confirmButton.addEventListener('click', function() {
+                    if (currentModuleToComplete) {
+                        console.log('Confirming completion for module:', currentModuleToComplete);
+                        completeModule(currentModuleToComplete);
+                    }
+                });
+            }
+
+            if (cancelButton) {
+                cancelButton.addEventListener('click', hideCompletionModal);
+            }
+
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        hideCompletionModal();
+                    }
+                });
+            }
+        }
+
+        // Load progress from localStorage
+        function loadProgressFromStorage() {
+            const savedProgress = localStorage.getItem('moduleProgress');
+            if (savedProgress) {
+                const progressData = JSON.parse(savedProgress);
+                for (const [moduleNum, data] of Object.entries(progressData)) {
+                    if (moduleStatus[moduleNum]) {
+                        moduleStatus[moduleNum] = data;
+                    }
+                }
+            }
+        }
+
+        // Save progress to localStorage
+        function saveProgressToStorage() {
+            localStorage.setItem('moduleProgress', JSON.stringify(moduleStatus));
+        }
+
+        // Setup session checkboxes
+        function setupSessionCheckboxes() {
+            const checkboxes = document.querySelectorAll('.session-checkbox');
+            checkboxes.forEach(checkbox => {
+                const moduleNum = checkbox.getAttribute('data-module');
+                const sessionId = checkbox.getAttribute('data-session');
+                
+                // Set initial state
+                if (moduleStatus[moduleNum] && moduleStatus[moduleNum].sessions[sessionId]) {
+                    checkbox.checked = true;
+                    checkbox.parentElement.querySelector('.session-name').classList.add('session-completed');
+                }
+                
+                // Add event listener
+                checkbox.addEventListener('change', function() {
+                    const moduleNum = this.getAttribute('data-module');
+                    const sessionId = this.getAttribute('data-session');
+                    
+                    if (this.checked) {
+                        moduleStatus[moduleNum].sessions[sessionId] = true;
+                        this.parentElement.querySelector('.session-name').classList.add('session-completed');
+                    } else {
+                        moduleStatus[moduleNum].sessions[sessionId] = false;
+                        this.parentElement.querySelector('.session-name').classList.remove('session-completed');
+                    }
+                    
+                    // Update module progress
+                    updateModuleProgressFromSessions(moduleNum);
+                    saveProgressToStorage();
+                });
+            });
+        }
+
+        // Update module progress based on completed sessions
+        function updateModuleProgressFromSessions(moduleNum) {
+            if (moduleStatus[moduleNum]) {
+                const sessions = moduleStatus[moduleNum].sessions;
+                const totalSessions = Object.keys(sessions).length;
+                const completedSessions = Object.values(sessions).filter(val => val).length;
+                const progress = (completedSessions / totalSessions) * 100;
+                
+                moduleStatus[moduleNum].progress = progress;
+                
+                // If all sessions are completed, mark module as completed
+                if (progress >= 100) {
+                    moduleStatus[moduleNum].status = 'completed';
+                    
+                    // Unlock next module
+                    const nextModule = parseInt(moduleNum) + 1;
+                    if (moduleStatus[nextModule]) {
+                        moduleStatus[nextModule].status = 'current';
+                    }
+                }
+                
+                updateModuleDisplay();
+                updateProgressBar();
+            }
+        }
+
+        // Show completion confirmation modal
+        function showCompletionModal(moduleNumber) {
+            console.log('Show modal called for module:', moduleNumber);
+            currentModuleToComplete = moduleNumber;
+            const modal = document.getElementById('completion-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+
+        // Hide completion modal
+        function hideCompletionModal() {
+            const modal = document.getElementById('completion-modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            currentModuleToComplete = null;
+        }
+
+        // Complete a module
+        function completeModule(moduleNumber) {
+            console.log('Completing module:', moduleNumber);
+            
+            // Mark current module as completed
+            moduleStatus[moduleNumber].status = 'completed';
+            moduleStatus[moduleNumber].progress = 100;
+            
+            // Mark all sessions as completed
+            for (const session in moduleStatus[moduleNumber].sessions) {
+                moduleStatus[moduleNumber].sessions[session] = true;
+            }
+            
+            // If there's a next module, set it as current
+            const nextModule = parseInt(moduleNumber) + 1;
+            if (moduleStatus[nextModule]) {
+                moduleStatus[nextModule].status = 'current';
+            }
+            
+            // Save to localStorage
+            saveProgressToStorage();
+            
+            // Update the display
+            updateModuleDisplay();
+            
+            // Update progress bar
+            updateProgressBar();
+            
+            // Hide modal
+            hideCompletionModal();
+            
+            // Show celebration
+            celebrateCompletion(moduleNumber);
+        }
+
+        // Celebrate module completion
+        function celebrateCompletion(moduleNumber) {
+            // Create confetti effect
+            createConfetti();
+            
+            // Show success message
+            setTimeout(() => {
+                if (moduleNumber < 8) {
+                    alert(`Congratulations! Module ${moduleNumber} completed. Module ${moduleNumber + 1} is now unlocked!`);
+                } else {
+                    alert(`Amazing! You've completed all modules! You're now a Digital Foundations expert!`);
+                }
+            }, 1000);
+        }
+
+        // Create confetti animation
+        function createConfetti() {
+            const colors = ['#f39c12', '#e74c3c', '#3498db', '#2ecc71', '#9b59b6'];
+            const container = document.body;
+            
+            for (let i = 0; i < 80; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.opacity = '1';
+                container.appendChild(confetti);
+                
+                // Animate confetti
+                const animation = confetti.animate([
+                    { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                    { transform: `translateY(${window.innerHeight}px) rotate(${360 + Math.random() * 360}deg)`, opacity: 0 }
+                ], {
+                    duration: 1000 + Math.random() * 2000,
+                    easing: 'cubic-bezier(0.1, 0.8, 0.2, 1)'
+                });
+                
+                // Remove confetti after animation
+                animation.onfinish = () => {
+                    confetti.remove();
+                };
+            }
+        }
+
+        // Update overall progress bar
+        function updateProgressBar() {
+            const progressBar = document.getElementById('overall-progress');
+            const progressPercent = document.getElementById('progress-percent');
+            
+            let totalProgress = 0;
+            let completedCount = 0;
+            
+            for (const [moduleNum, data] of Object.entries(moduleStatus)) {
+                totalProgress += data.progress;
+                if (data.status === 'completed') {
+                    completedCount++;
+                }
+            }
+            
+            const progressPercentage = totalProgress / Object.keys(moduleStatus).length;
+            
+            if (progressBar) {
+                progressBar.style.width = `${progressPercentage}%`;
+            }
+            if (progressPercent) {
+                progressPercent.textContent = `${Math.round(progressPercentage)}%`;
+            }
+        }
+
+        // Update module display based on status
+        function updateModuleDisplay() {
+            // Update each module's visual status
+            for (const [moduleNum, data] of Object.entries(moduleStatus)) {
+                const moduleElement = document.getElementById(`module-${moduleNum}`);
+                if (moduleElement) {
+                    // Remove all status classes
+                    moduleElement.classList.remove('completed', 'current', 'locked');
+                    
+                    // Add the current status class
+                    moduleElement.classList.add(data.status);
+                    
+                    // Update completion status indicator
+                    const statusIndicator = moduleElement.querySelector('.completion-status');
+                    if (statusIndicator) {
+                        if (data.status === 'completed') {
+                            statusIndicator.textContent = '✓';
+                            statusIndicator.style.color = '#27ae60';
+                        } else {
+                            statusIndicator.textContent = '';
+                        }
+                    }
+                    
+                    // Update progress display
+                    const progressText = document.getElementById(`module-${moduleNum}-progress`);
+                    const progressBar = document.getElementById(`module-${moduleNum}-progress-bar`);
+                    
+                    if (progressText && progressBar) {
+                        progressText.textContent = `${Math.round(data.progress)}%`;
+                        progressBar.style.width = `${data.progress}%`;
+                    }
+                    
+                    // Update session checkboxes
+                    for (const [sessionId, completed] of Object.entries(data.sessions)) {
+                        const checkbox = document.querySelector(`[data-module="${moduleNum}"][data-session="${sessionId}"]`);
+                        if (checkbox) {
+                            checkbox.checked = completed;
+                            checkbox.disabled = data.status === 'locked';
+                            
+                            const sessionName = checkbox.parentElement.querySelector('.session-name');
+                            if (completed) {
+                                sessionName.classList.add('session-completed');
+                            } else {
+                                sessionName.classList.remove('session-completed');
+                            }
+                        }
+                    }
+                    
+                    // Update buttons based on status
+                    const startButton = document.getElementById(`module-${moduleNum}-start`);
+                    const completeButton = document.getElementById(`module-${moduleNum}-complete`);
+                    
+                    if (data.status === 'completed') {
+                        if (startButton) {
+                            startButton.textContent = 'Review Module';
+                            startButton.disabled = false;
+                            startButton.href = `module${moduleNum}.html`;
+                            startButton.classList.remove('btn-primary');
+                            startButton.classList.add('btn-secondary');
+                        }
+                        if (completeButton) {
+                            completeButton.style.display = 'none';
+                        }
+                    } else if (data.status === 'current') {
+                        if (startButton) {
+                            startButton.textContent = data.progress > 0 ? 'Continue Module' : 'Start Module';
+                            startButton.disabled = false;
+                            startButton.href = `module${moduleNum}.html`;
+                            startButton.classList.remove('btn-secondary');
+                            startButton.classList.add('btn-primary');
+                        }
+                        if (completeButton) {
+                            completeButton.style.display = 'inline-block';
+                            completeButton.disabled = false;
+                        }
+                    } else if (data.status === 'locked') {
+                        if (startButton) {
+                            startButton.disabled = true;
+                            startButton.href = '#';
+                        }
+                        if (completeButton) {
+                            completeButton.disabled = true;
+                        }
+                    }
+                }
+            }
+            
+            // Re-setup buttons after updating display
+            setupNavigationButtons();
+            setupCompleteButtons();
+        }
+    </script>
+</body>
+</html>

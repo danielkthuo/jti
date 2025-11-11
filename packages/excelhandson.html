@@ -10,14 +10,14 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <!-- Auth Manager -->
-    <script src="auth-manager.js"></script>
+    <script src="../auth-manager.js"></script>
     <!-- Add to head section -->
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#1a2b4a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="JOSHCAB INSTITUTE">
-<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+<link rel="apple-touch-icon" href="../icons/icon-192x192.png">
     <style>
         /* Add your module styles here */
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
@@ -1324,19 +1324,19 @@ CUST010,Jack Harris,39,Los Angeles,2023-04-30,Standard,69.99,699.90,No,9,699.90`
         });
     </script>
     <!-- Add to head section -->
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#1a2b4a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="JOSHCAB Training">
-<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+<link rel="apple-touch-icon" href="../icons/icon-192x192.png">
 
 <!-- Add to body section (before closing body tag) -->
 <script>
     // Register service worker
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/service-worker.js')
+            navigator.serviceWorker.register('../service-worker.js')
                 .then(function(registration) {
                     console.log('ServiceWorker registration successful with scope: ', registration.scope);
                     

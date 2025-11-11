@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 7: Computational Thinking - Instructor Notes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f0f4f8;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 100%;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .module-header {
+            background: linear-gradient(135deg, #d35400, #e67e22);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .module-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .session {
+            padding: 25px 20px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .session:last-child {
+            border-bottom: none;
+        }
+        
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #d35400;
+        }
+        
+        .session-title {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .session-duration {
+            background: #d35400;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            color: #e67e22;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eaeaea;
+            font-weight: 600;
+        }
+        
+        .content-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #d35400;
+        }
+        
+        .thinking-box {
+            background: #fef5e7;
+            border-left: 4px solid #d35400;
+        }
+        
+        .activity-box {
+            background: #e8f6f3;
+            border-left: 4px solid #16a085;
+        }
+        
+        .tip-box {
+            background: #fef9e7;
+            border-left: 4px solid #f1c40f;
+        }
+        
+        .warning-box {
+            background: #fdedec;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .coding-box {
+            background: #e8f4fd;
+            border-left: 4px solid #3498db;
+        }
+        
+        ul, ol {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .key-term {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .instructor-note {
+            background: #fff8e1;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-style: italic;
+            border-left: 3px solid #ffc107;
+        }
+        
+        .ct-elements {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .ct-item {
+            flex: 1;
+            min-width: 150px;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .ct-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .demo-steps {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .demo-step {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .demo-step:before {
+            content: "➜";
+            position: absolute;
+            left: 0;
+            color: #d35400;
+        }
+        
+        .troubleshooting {
+            background: #ffebee;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .assessment {
+            background: #e8f5e9;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .algorithm-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .algorithm-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .algorithm-title {
+            font-weight: 600;
+            color: #d35400;
+            margin-bottom: 10px;
+        }
+        
+        .algorithm-steps {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .pattern-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .pattern-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .pattern-sequence {
+            font-family: monospace;
+            font-size: 1.2rem;
+            margin: 10px 0;
+            padding: 10px;
+            background: #2c3e50;
+            color: white;
+            border-radius: 5px;
+        }
+        
+        .scratch-interface {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .scratch-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .scratch-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .block-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .block-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .block-color {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        .motion { background: #4a6cd4; }
+        .looks { background: #8a4cd4; }
+        .sound { background: #bb42c3; }
+        .events { background: #c4a41d; }
+        .control { background: #e1a91a; }
+        .sensing { background: #2ca5e2; }
+        
+        @media (max-width: 768px) {
+            .ct-elements {
+                flex-direction: column;
+            }
+            
+            .ct-item {
+                min-width: 100%;
+            }
+            
+            .algorithm-examples, .pattern-examples, .scratch-interface, .block-categories {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .robot-game {
+            background: #e8f6f3;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 2px solid #16a085;
+            text-align: center;
+        }
+        
+        .robot-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .code-example {
+            font-family: monospace;
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .abstraction-example {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .detailed, .abstract {
+            flex: 1;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .detailed {
+            background: #ffebee;
+            border: 2px solid #e74c3c;
+        }
+        
+        .abstract {
+            background: #e8f6f3;
+            border: 2px solid #2ecc71;
+        }
+          /* progress tracking styles */
+        .session {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.session.completed {
+    background: #f8fff8;
+    border-left: 4px solid #2ecc71;
+}
+
+.session-status {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: #2ecc71;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.complete-session-btn {
+    margin-left: 10px;
+    font-size: 0.9rem;
+    padding: 8px 15px;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="module-header">
+            <h1>Module 7: Introduction to Computational Thinking</h1>
+            <div class="module-subtitle">Instructor's Detailed Teaching Notes</div>
+        </div>
+        
+        <!-- SESSION 7.1 -->
+        <div class="session">
+            <div class="session-header">
+                <div class="session-title">Session 7.1: Unplugged Thinking & Logic</div>
+                <div class="session-duration">2 Hours</div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Learning Objectives</div>
+                <ul>
+                    <li>Apply the four pillars of computational thinking to solve problems</li>
+                    <li>Break down complex problems into manageable parts (decomposition)</li>
+                    <li>Identify patterns and create generalizations</li>
+                    <li>Design precise, step-by-step algorithms</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Core Concepts</div>
+                
+                <div class="content-box thinking-box">
+                    <div class="section-title">What is Computational Thinking?</div>
+                    
+                    <div class="ct-elements">
+                        <div class="ct-item">
+                            <div class="ct-icon">🔍</div>
+                            <div class="key-term">Problem-Solving</div>
+                            <p>Approaching complex problems systematically</p>
+                            <p>Thinking like a computer scientist</p>
+                            <p>Not just about coding!</p>
+                        </div>
+                        
+                        <div class="ct-item">
+                            <div class="ct-icon">💡</div>
+                            <div class="key-term">Mindset</div>
+                            <p>Breaking down challenges</p>
+                            <p>Finding efficient solutions</p>
+                            <p>Applicable to all subjects</p>
+                        </div>
+                        
+                        <div class="ct-item">
+                            <div class="ct-icon">🌐</div>
+                            <div class="key-term">Real-World</div>
+                            <p>Planning events</p>
+                            <p>Organizing information</p>
+                            <p>Solving daily problems</p>
+                        </div>
+                    </div>
+                    
+                    <div class="instructor-note">
+                        <strong>Teaching Philosophy:</strong> Computational thinking is a fundamental skill for the 21st century, not just for future programmers but for anyone who needs to solve complex problems.
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">The Four Pillars of Computational Thinking</div>
+                    
+                    <div class="ct-elements">
+                        <div class="ct-item">
+                            <div class="ct-icon">🧩</div>
+                            <div class="key-term">Decomposition</div>
+                            <p>Breaking big problems into smaller, manageable parts</p>
+                            <p><strong>Example:</strong> "Make a sandwich" becomes:</p>
+                            <ul>
+                                <li>Get bread</li>
+                                <li>Get peanut butter</li>
+                                <li>Spread peanut butter</li>
+                                <li>Put pieces together</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="ct-item">
+                            <div class="ct-icon">🔍</div>
+                            <div class="key-term">Pattern Recognition</div>
+                            <p>Looking for similarities and trends</p>
+                            <p><strong>Example:</strong> In sequence 2, 4, 6, 8...</p>
+                            <ul>
+                                <li>Pattern: Add 2 each time</li>
+                                <li>Next number: 10</li>
+                                <li>All even numbers</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="ct-item">
+                            <div class="ct-icon">🎯</div>
+                            <div class="key-term">Abstraction</div>
+                            <p>Focusing on important information, ignoring irrelevant details</p>
+                            <p><strong>Example:</strong> For a map:</p>
+                            <ul>
+                                <li>Include: Roads, names</li>
+                                <li>Ignore: Tree colors, house details</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="ct-item">
+                            <div class="ct-icon">📝</div>
+                            <div class="key-term">Algorithm Design</div>
+                            <p>Creating step-by-step solutions</p>
+                            <p><strong>Example:</strong> A recipe</p>
+                            <ul>
+                                <li>Clear instructions</li>
+                                <li>Specific order</li>
+                                <li>Precise measurements</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Decomposition in Action</div>
+                    
+                    <div class="algorithm-examples">
+                        <div class="algorithm-item">
+                            <div class="algorithm-title">Planning a Birthday Party</div>
+                            <div class="algorithm-steps">
+                                <div class="demo-step">Send invitations</div>
+                                <div class="demo-step">Buy food and drinks</div>
+                                <div class="demo-step">Decorate the space</div>
+                                <div class="demo-step">Plan games and activities</div>
+                                <div class="demo-step">Set up music</div>
+                                <div class="demo-step">Clean up afterwards</div>
+                            </div>
+                            <p><strong>Key Insight:</strong> Each sub-task can be broken down further</p>
+                        </div>
+                        
+                        <div class="algorithm-item">
+                            <div class="algorithm-title">Writing a School Report</div>
+                            <div class="algorithm-steps">
+                                <div class="demo-step">Choose topic</div>
+                                <div class="demo-step">Research information</div>
+                                <div class="demo-step">Create outline</div>
+                                <div class="demo-step">Write first draft</div>
+                                <div class="demo-step">Revise and edit</div>
+                                <div class="demo-step">Add citations</div>
+                            </div>
+                            <p><strong>Key Insight:</strong> Large projects feel manageable when decomposed</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Pattern Recognition Practice</div>
+                    
+                    <div class="pattern-examples">
+                        <div class="pattern-item">
+                            <div class="key-term">Number Sequence</div>
+                            <div class="pattern-sequence">2, 4, 6, 8, ?</div>
+                            <p><strong>Pattern:</strong> Add 2</p>
+                            <p><strong>Next:</strong> 10</p>
+                        </div>
+                        
+                        <div class="pattern-item">
+                            <div class="key-term">Shape Pattern</div>
+                            <div class="pattern-sequence">▲, ▼, ▲, ▼, ?</div>
+                            <p><strong>Pattern:</strong> Alternating</p>
+                            <p><strong>Next:</strong> ▲</p>
+                        </div>
+                        
+                        <div class="pattern-item">
+                            <div class="key-term">Color Pattern</div>
+                            <div class="pattern-sequence">🔴, 🟢, 🔵, 🔴, 🟢, ?</div>
+                            <p><strong>Pattern:</strong> Repeating sequence</p>
+                            <p><strong>Next:</strong> 🔵</p>
+                        </div>
+                        
+                        <div class="pattern-item">
+                            <div class="key-term">Word Pattern</div>
+                            <div class="pattern-sequence">cat, bat, rat, ?</div>
+                            <p><strong>Pattern:</strong> Rhyming words</p>
+                            <p><strong>Next:</strong> mat, hat, sat...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Abstraction: What Matters vs What Doesn't</div>
+                    
+                    <div class="abstraction-example">
+                        <div class="detailed">
+                            <div class="key-term">Too Much Detail</div>
+                            <ul>
+                                <li>Every single tree</li>
+                                <li>Color of every house</li>
+                                <li>Individual parked cars</li>
+                                <li>Exact shapes of clouds</li>
+                                <li>Every streetlight</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="abstract">
+                            <div class="key-term">Essential Information</div>
+                            <ul>
+                                <li>Main roads and highways</li>
+                                <li>Important landmarks</li>
+                                <li>Street names</li>
+                                <li>Direction (North/South)</li>
+                                <li>Scale and distance</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="instructor-note">
+                        <strong>Teaching Analogy:</strong> A restaurant menu abstracts away all the kitchen details - you just see the final dishes and prices, not every cooking step.
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Algorithm Design: Precision Matters!</div>
+                    
+                    <div class="algorithm-examples">
+                        <div class="algorithm-item">
+                            <div class="algorithm-title">Vague Instructions</div>
+                            <div class="algorithm-steps">
+                                <div class="demo-step">Make a peanut butter sandwich</div>
+                            </div>
+                            <p><strong>Problems:</strong> No specifics, assumes knowledge</p>
+                            <p><strong>Result:</strong> Confusion, wrong outcome</p>
+                        </div>
+                        
+                        <div class="algorithm-item">
+                            <div class="algorithm-title">Precise Algorithm</div>
+                            <div class="algorithm-steps">
+                                <div class="demo-step">Take two slices of bread</div>
+                                <div class="demo-step">Open peanut butter jar</div>
+                                <div class="demo-step">Pick up knife by handle</div>
+                                <div class="demo-step">Scoop 2 tablespoons peanut butter</div>
+                                <div class="demo-step">Spread evenly on one bread slice</div>
+                                <div class="demo-step">Place second slice on top</div>
+                            </div>
+                            <p><strong>Benefits:</strong> Clear, repeatable, successful</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Teaching Activities & Timeline</div>
+                
+                <div class="activity-box">
+                    <div class="section-title">Computational Thinking in Action (60 mins)</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>Decomposition Activity:</strong> "Let's plan a birthday party!"</div>
+                        <div class="demo-step">As a class, break into smaller tasks: Send invites, buy food, decorate, plan games</div>
+                        <div class="demo-step"><strong>Pattern Recognition Activity:</strong> Show sequence: 2, 4, 6, 8, ?</div>
+                        <div class="demo-step">Class identifies pattern (add 2) and predicts next number (10)</div>
+                        <div class="demo-step"><strong>Abstraction Activity:</strong> "Draw a map from school to mall"</div>
+                        <div class="demo-step">Discuss what details to include (main roads, landmarks) vs. exclude (every tree, house color)</div>
+                        <div class="demo-step"><strong>Algorithm Design Activity:</strong> "Perfect peanut butter sandwich algorithm"</div>
+                        <div class="demo-step">Students write step-by-step instructions</div>
+                    </div>
+                </div>
+                
+                <div class="activity-box">
+                    <div class="section-title">Robot Teacher Game (60 mins)</div>
+                    
+                    <div class="robot-game">
+                        <div class="robot-icon">🤖</div>
+                        <div class="key-term">The instructor becomes a robot that only understands precise commands!</div>
+                        <p><strong>Robot Vocabulary:</strong> "Move arm forward 10cm", "Turn hand 90 degrees", "Lower chalk", "Raise chalk"</p>
+                    </div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>"We Do" - Class vs Robot:</strong></div>
+                        <div class="demo-step">Class gives instructions to make robot draw a square on board</div>
+                        <div class="demo-step">Robot follows instructions LITERALLY (creates comedy from imprecision)</div>
+                        <div class="demo-step">Students learn need for specificity through failure</div>
+                        <div class="demo-step"><strong>"You Do" - Pair Programming:</strong></div>
+                        <div class="demo-step">Students pair up: one programmer, one robot</div>
+                        <div class="demo-step">Programmer writes algorithm for robot to stack 3 cups</div>
+                        <div class="demo-step">Swap roles and try different task</div>
+                    </div>
+                    
+                    <div class="instructor-note">
+                        <strong>Teaching Strategy:</strong> The robot game is intentionally frustrating and funny. Students remember the importance of precision because they experience the consequences of vague instructions.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SESSION 7.2 -->
+        <div class="session">
+            <div class="session-header">
+                <div class="session-title">Session 7.2: Introduction to Block Coding (Scratch)</div>
+                <div class="session-duration">2 Hours</div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Learning Objectives</div>
+                <ul>
+                    <li>Navigate the Scratch interface and understand its components</li>
+                    <li>Create simple animations using motion, looks, and control blocks</li>
+                    <li>Understand event-driven programming concepts</li>
+                    <li>Customize and experiment with basic coding projects</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Core Concepts</div>
+                
+                <div class="content-box coding-box">
+                    <div class="section-title">Why Scratch?</div>
+                    
+                    <div class="ct-elements">
+                        <div class="ct-item">
+                            <div class="ct-icon">🧩</div>
+                            <div class="key-term">Visual Programming</div>
+                            <p>Drag and drop blocks</p>
+                            <p>No syntax errors</p>
+                            <p>Instant visual feedback</p>
+                            <p>Perfect for beginners</p>
+                        </div>
+                        
+                        <div class="ct-item">
+                            <div class="ct-icon">🎮</div>
+                            <div class="key-term">Creative Expression</div>
+                            <p>Create games and animations</p>
+                            <p>Share with global community</p>
+                            <p>Learn through play</p>
+                            <p>Build confidence</p>
+                        </div>
+                        
+                        <div class="ct-item">
+                            <div class="ct-icon">🔗</div>
+                            <div class="key-term">Foundation Skills</div>
+                            <p>Logical thinking</p>
+                            <p>Problem-solving</p>
+                            <p>Sequential reasoning</p>
+                            <p>Prepares for text coding</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Scratch Interface Tour</div>
+                    
+                    <div class="scratch-interface">
+                        <div class="scratch-item">
+                            <div class="scratch-icon">🎭</div>
+                            <div class="key-term">Stage</div>
+                            <p>Where your project runs</p>
+                            <p>Shows animation/game</p>
+                            <p>480x360 pixels</p>
+                            <p>Green flag to start</p>
+                        </div>
+                        
+                        <div class="scratch-item">
+                            <div class="scratch-icon">🐱</div>
+                            <div class="key-term">Sprites</div>
+                            <p>Characters/objects</p>
+                            <p>Can have multiple</p>
+                            <p>Each has its own code</p>
+                            <p>Can be edited/costumed</p>
+                        </div>
+                        
+                        <div class="scratch-item">
+                            <div class="scratch-icon">🎨</div>
+                            <div class="key-term">Blocks Palette</div>
+                            <p>Color-coded categories</p>
+                            <p>Drag blocks from here</p>
+                            <p>Motion, looks, sound, etc.</p>
+                            <p>Organized by function</p>
+                        </div>
+                        
+                        <div class="scratch-item">
+                            <div class="scratch-icon">📝</div>
+                            <div class="key-term">Scripts Area</div>
+                            <p>Where you build code</p>
+                            <p>Snap blocks together</p>
+                            <p>Each sprite has its own</p>
+                            <p>White workspace</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Block Categories & Functions</div>
+                    
+                    <div class="block-categories">
+                        <div class="block-item">
+                            <div class="block-color motion"></div>
+                            <div class="key-term">Motion</div>
+                            <p>Move sprite around stage</p>
+                            <p><strong>Key Blocks:</strong></p>
+                            <ul>
+                                <li>move 10 steps</li>
+                                <li>turn 15 degrees</li>
+                                <li>go to x: y:</li>
+                                <li>if on edge, bounce</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="block-item">
+                            <div class="block-color looks"></div>
+                            <div class="key-term">Looks</div>
+                            <p>Change appearance</p>
+                            <p><strong>Key Blocks:</strong></p>
+                            <ul>
+                                <li>say Hello! for 2 secs</li>
+                                <li>switch costume to</li>
+                                <li>change color effect by</li>
+                                <li>show/hide</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="block-item">
+                            <div class="block-color sound"></div>
+                            <div class="key-term">Sound</div>
+                            <p>Add audio effects</p>
+                            <p><strong>Key Blocks:</strong></p>
+                            <ul>
+                                <li>play sound meow</li>
+                                <li>start sound</li>
+                                <li>change volume by</li>
+                                <li>play drum for beats</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="block-item">
+                            <div class="block-color events"></div>
+                            <div class="key-term">Events</div>
+                            <p>Start scripts running</p>
+                            <p><strong>Key Blocks:</strong></p>
+                            <ul>
+                                <li>when green flag clicked</li>
+                                <li>when key pressed</li>
+                                <li>when this sprite clicked</li>
+                                <li>broadcast message</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="block-item">
+                            <div class="block-color control"></div>
+                            <div class="key-term">Control</div>
+                            <p>Manage script flow</p>
+                            <p><strong>Key Blocks:</strong></p>
+                            <ul>
+                                <li>wait 1 seconds</li>
+                                <li>repeat 10</li>
+                                <li>forever</li>
+                                <li>if then</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="block-item">
+                            <div class="block-color sensing"></div>
+                            <div class="key-term">Sensing</div>
+                            <p>Detect interactions</p>
+                            <p><strong>Key Blocks:</strong></p>
+                            <ul>
+                                <li>touching color ?</li>
+                                <li>key space pressed?</li>
+                                <li>ask and wait</li>
+                                <li>distance to</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-box">
+                    <div class="section-title">Core Programming Concepts in Scratch</div>
+                    
+                    <div class="ct-elements">
+                        <div class="ct-item">
+                            <div class="ct-icon">🚦</div>
+                            <div class="key-term">Events</div>
+                            <p>What starts the code</p>
+                            <p>Green flag click</p>
+                            <p>Key press</p>
+                            <p>Sprite click</p>
+                        </div>
+                        
+                        <div class="ct-item">
+                            <div class="ct-icon">🔄</div>
+                            <div class="key-term">Loops</div>
+                            <p>Repeat actions</p>
+                            <p>Forever blocks</p>
+                            <p>Repeat blocks</p>
+                            <p>Continuous motion</p>
+                        </div>
+                        
+                        <div class="ct-item">
+                            <div class="ct-icon">🎭</div>
+                            <div class="key-term">Sequencing</div>
+                            <p>Order matters!</p>
+                            <p>Blocks run top to bottom</p>
+                            <p>Timing and flow</p>
+                            <p>Cause and effect</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Teaching Activities & Timeline</div>
+                
+                <div class="activity-box">
+                    <div class="section-title">Scratch Interface Tour (30 mins)</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>"I Do"</strong> - Demonstrate Scratch interface:</div>
+                        <div class="demo-step">Go to scratch.mit.edu and create new project</div>
+                        <div class="demo-step">Point out Stage, Sprite (the cat), Blocks Palette, Scripts Area</div>
+                        <div class="demo-step">Explain color-coding of block categories</div>
+                        <div class="demo-step"><strong>"We Do"</strong> - Guided setup:</div>
+                        <div class="demo-step">Everyone creates Scratch account (if possible)</div>
+                        <div class="demo-step">Start new project</div>
+                        <div class="demo-step">Delete cat sprite, choose new sprite from library</div>
+                    </div>
+                </div>
+                
+                <div class="activity-box">
+                    <div class="section-title">Your First Animation (90 mins)</div>
+                    
+                    <div class="demo-steps">
+                        <div class="demo-step"><strong>"I Do" - "The Dancing Sprite":</strong></div>
+                        <div class="demo-step">From Events: drag when green flag clicked block</div>
+                        <div class="demo-step">From Motion: attach move 10 steps</div>
+                        <div class="demo-step">From Control: attach forever loop, put move inside</div>
+                        <div class="demo-step">Click green flag - sprite moves off screen!</div>
+                        <div class="demo-step">Add if on edge, bounce inside loop</div>
+                        <div class="demo-step">From Looks: add next costume inside loop for animation</div>
+                        <div class="demo-step">From Looks: add say Hello! for 2 seconds</div>
+                        <div class="demo-step"><strong>"We Do" - Follow along:</strong></div>
+                        <div class="demo-step">Students create exact same animation</div>
+                        <div class="demo-step">Circulate to help with technical issues</div>
+                        <div class="demo-step"><strong>"You Do" - Personalize Your Animation:</strong></div>
+                        <div class="demo-step"><strong>Challenge 1:</strong> Change sprite's movement speed</div>
+                        <div class="demo-step"><strong>Challenge 2:</strong> Make sprite say your name</div>
+                        <div class="demo-step"><strong>Challenge 3:</strong> Change color when touching edge</div>
+                        <div class="demo-step"><strong>Bonus Challenge:</strong> Add sound effect</div>
+                    </div>
+                    
+                    <div class="code-example">
+                        Complete "Dancing Sprite" Code:
+                        
+                        when green flag clicked
+                        forever
+                          move 10 steps
+                          if on edge, bounce
+                          next costume
+                          say Hello! for 2 seconds
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Extension Projects for Quick Learners</div>
+                
+                <div class="content-box">
+                    <div class="algorithm-examples">
+                        <div class="algorithm-item">
+                            <div class="algorithm-title">Conversation Animation</div>
+                            <div class="algorithm-steps">
+                                <div class="demo-step">Add second sprite</div>
+                                <div class="demo-step">Make sprites have conversation</div>
+                                <div class="demo-step">Use say blocks with timing</div>
+                                <div class="demo-step">Add back-and-forth movement</div>
+                            </div>
+                            <p><strong>Skills:</strong> Multiple sprites, timing, coordination</p>
+                        </div>
+                        
+                        <div class="algorithm-item">
+                            <div class="algorithm-title">Simple Game</div>
+                            <div class="algorithm-steps">
+                                <div class="demo-step">Sprite follows mouse pointer</div>
+                                <div class="demo-step">Collect falling objects</div>
+                                <div class="demo-step">Keep score with variables</div>
+                                <div class="demo-step">Add win/lose conditions</div>
+                            </div>
+                            <p><strong>Skills:</strong> Variables, conditions, user input</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Common Challenges & Solutions</div>
+                
+                <div class="troubleshooting">
+                    <p><strong>Issue:</strong> Blocks won't snap together</p>
+                    <p><strong>Solution:</strong> Make sure you're dragging from the bump on top/bottom of blocks</p>
+                    
+                    <p><strong>Issue:</strong> Sprite disappears off screen</p>
+                    <p><strong>Solution:</strong> Use "if on edge, bounce" or set x/y positions</p>
+                    
+                    <p><strong>Issue:</strong> Animation too fast/slow</p>
+                    <p><strong>Solution:</strong> Adjust number of steps in "move" block or use "wait" blocks</p>
+                    
+                    <p><strong>Issue:</strong> Can't find specific block</p>
+                    <p><strong>Solution:</strong> Check correct color category, use search feature in blocks palette</p>
+                    
+                    <p><strong>Issue:</strong> Multiple things happening at wrong times</p>
+                    <p><strong>Solution:</strong> Use "wait" blocks to control timing and sequence</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Scratch Best Practices</div>
+                
+                <div class="tip-box">
+                    <p><strong>Start Simple:</strong> Get basic animation working before adding complexity</p>
+                    <p><strong>Test Often:</strong> Click green flag frequently to see changes</p>
+                    <p><strong>Use Comments:</strong> Add notes to explain what your code does</p>
+                    <p><strong>Experiment Freely:</strong> You can't break anything - undo is always available</p>
+                    <p><strong>Share and Remix:</strong> Learn from others' projects in the Scratch community</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Module 7 Summary & Transition</div>
+            
+            <div class="content-box">
+                <p><strong>Key Takeaways:</strong></p>
+                <ul>
+                    <li>Computational thinking breaks complex problems into manageable parts using decomposition, pattern recognition, abstraction, and algorithms</li>
+                    <li>Precise instructions are essential for computers (and robots!) to understand what to do</li>
+                    <li>Scratch provides a visual, beginner-friendly introduction to programming concepts</li>
+                    <li>Blocks represent code concepts like events, loops, and sequences</li>
+                    <li>Programming involves both logical thinking and creative expression</li>
+                    <li>Debugging and experimentation are natural parts of the coding process</li>
+                </ul>
+                
+                <p><strong>Looking Ahead to Module 8:</strong> "Now that you understand computational thinking and basic coding, we'll bring all your digital skills together in a capstone project that showcases everything you've learned!"</p>
+            </div>
+        </div>
+    </div>
+    <script>
+    // Get current module number from URL or page structure
+    const currentModule = 1; // Change this number for each module
+    
+    // Track session completion
+    let sessionProgress = {
+        '1.1': false,
+        '1.2': false
+    };
+    
+    // Load progress from localStorage
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSessionProgress();
+        updateModuleProgress();
+    });
+    
+    // Load session progress from localStorage
+    function loadSessionProgress() {
+        const savedProgress = localStorage.getItem(`module${currentModule}Progress`);
+        if (savedProgress) {
+            sessionProgress = JSON.parse(savedProgress);
+        }
+        updateSessionUI();
+    }
+    
+    // Save session progress to localStorage
+    function saveSessionProgress() {
+        localStorage.setItem(`module${currentModule}Progress`, JSON.stringify(sessionProgress));
+        updateModuleProgress();
+    }
+    
+    // Mark a session as completed
+    function completeSession(sessionId) {
+        sessionProgress[sessionId] = true;
+        saveSessionProgress();
+        
+        // Check if all sessions are completed
+        const allCompleted = Object.values(sessionProgress).every(val => val === true);
+        if (allCompleted) {
+            // Update dashboard progress
+            updateDashboardProgress(100);
+            
+            // Show completion message
+            setTimeout(() => {
+                alert(`Congratulations! You've completed all sessions in Module ${currentModule}. Return to the dashboard to continue.`);
+            }, 500);
+        }
+    }
+    
+    // Update session UI based on completion status
+    function updateSessionUI() {
+        for (const [sessionId, completed] of Object.entries(sessionProgress)) {
+            const sessionElement = document.querySelector(`[data-session="${sessionId}"]`);
+            if (sessionElement) {
+                if (completed) {
+                    sessionElement.classList.add('completed');
+                    // Add checkmark or other indicator
+                    let statusIndicator = sessionElement.querySelector('.session-status');
+                    if (!statusIndicator) {
+                        statusIndicator = document.createElement('div');
+                        statusIndicator.className = 'session-status';
+                        statusIndicator.innerHTML = '✓';
+                        sessionElement.querySelector('.session-header').appendChild(statusIndicator);
+                    }
+                }
+            }
+        }
+    }
+    
+    // Calculate and update module progress
+    function updateModuleProgress() {
+        const completedSessions = Object.values(sessionProgress).filter(val => val === true).length;
+        const totalSessions = Object.keys(sessionProgress).length;
+        const progressPercentage = (completedSessions / totalSessions) * 100;
+        
+        // Update dashboard
+        updateDashboardProgress(progressPercentage);
+    }
+    
+    // Update dashboard progress via localStorage
+    function updateDashboardProgress(progress) {
+        // Get current dashboard progress
+        const dashboardProgress = JSON.parse(localStorage.getItem('moduleProgress') || '{}');
+        
+        // Update current module progress
+        if (dashboardProgress[currentModule]) {
+            dashboardProgress[currentModule].progress = progress;
+            
+            // If progress is 100%, mark as completed
+            if (progress >= 100) {
+                dashboardProgress[currentModule].status = 'completed';
+                
+                // Unlock next module if exists
+                const nextModule = currentModule + 1;
+                if (dashboardProgress[nextModule]) {
+                    dashboardProgress[nextModule].status = 'current';
+                }
+            }
+            
+            // Save back to localStorage
+            localStorage.setItem('moduleProgress', JSON.stringify(dashboardProgress));
+        }
+    }
+    
+    // Add session completion buttons to each session
+    document.querySelectorAll('.session').forEach(session => {
+        const sessionId = session.querySelector('.session-title').textContent.match(/\d+\.\d+/);
+        if (sessionId) {
+            session.setAttribute('data-session', sessionId[0]);
+            
+            // Add completion button if not already present
+            if (!session.querySelector('.complete-session-btn')) {
+                const completeBtn = document.createElement('button');
+                completeBtn.className = 'btn btn-complete complete-session-btn';
+                completeBtn.textContent = 'Mark Session Complete';
+                completeBtn.onclick = function() {
+                    completeSession(sessionId[0]);
+                    this.disabled = true;
+                    this.textContent = 'Completed';
+                };
+                
+                // Check if session is already completed
+                if (sessionProgress[sessionId[0]]) {
+                    completeBtn.disabled = true;
+                    completeBtn.textContent = 'Completed';
+                }
+                
+                session.querySelector('.session-header').appendChild(completeBtn);
+            }
+        }
+    });
+</script>
+</body>
+</html>
