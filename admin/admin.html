@@ -198,119 +198,129 @@
         <div class="spinner"></div>
     </div>
 
-    <script>
-        // Firebase configuration (MUST match your index.html)
-        const firebaseConfig = {
-            apiKey: "AIzaSyD44h0Uak9EeQs2A_aAfSvyRKT4jgdSuHg",
-            authDomain: "jtimwiki.firebaseapp.com",
-            projectId: "jtimwiki",
-            storageBucket: "jtimwiki.firebasestorage.app",
-            messagingSenderId: "125581944053",
-            appId: "1:125581944053:web:e314fcdd288daf97c1d1bc",
-            measurementId: "G-WNVG1L3CZK"
-        };
+   <script>
+    // Firebase configuration (MUST match your index.html)
+    const firebaseConfig = {
+        apiKey: "AIzaSyD44h0Uak9EeQs2A_aAfSvyRKT4jgdSuHg",
+        authDomain: "jtimwiki.firebaseapp.com",
+        projectId: "jtimwiki",
+        storageBucket: "jtimwiki.firebasestorage.app",
+        messagingSenderId: "125581944053",
+        appId: "1:125581944053:web:e314fcdd288daf97c1d1bc",
+        measurementId: "G-WNVG1L3CZK"
+    };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-        // DOM Elements
-        const adminName = document.getElementById('adminName');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const addUserBtn = document.getElementById('addUserBtn');
-        const usersTableBody = document.getElementById('usersTableBody');
-        const userModal = document.getElementById('userModal');
-        const deleteModal = document.getElementById('deleteModal');
-        const userForm = document.getElementById('userForm');
-        const closeModal = document.getElementById('closeModal');
-        const cancelBtn = document.getElementById('cancelBtn');
-        const closeDeleteModal = document.getElementById('closeDeleteModal');
-        const cancelDelete = document.getElementById('cancelDelete');
-        const confirmDelete = document.getElementById('confirmDelete');
-        const saveUserBtn = document.getElementById('saveUserBtn');
-        const loadingSpinner = document.getElementById('loadingSpinner');
+    // Set persistence to maintain admin session
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-        // Statistics elements
-        const totalUsers = document.getElementById('totalUsers');
-        const totalCoding = document.getElementById('totalCoding');
-        const totalPackages = document.getElementById('totalPackages');
-        const totalKids = document.getElementById('totalKids');
-        const totalBookkeeping = document.getElementById('totalBookkeeping');
-        const totalAdmins = document.getElementById('totalAdmins');
+    // DOM Elements
+    const adminName = document.getElementById('adminName');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const addUserBtn = document.getElementById('addUserBtn');
+    const usersTableBody = document.getElementById('usersTableBody');
+    const userModal = document.getElementById('userModal');
+    const deleteModal = document.getElementById('deleteModal');
+    const userForm = document.getElementById('userForm');
+    const closeModal = document.getElementById('closeModal');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const closeDeleteModal = document.getElementById('closeDeleteModal');
+    const cancelDelete = document.getElementById('cancelDelete');
+    const confirmDelete = document.getElementById('confirmDelete');
+    const saveUserBtn = document.getElementById('saveUserBtn');
+    const loadingSpinner = document.getElementById('loadingSpinner');
 
-        // Current user and editing state
-        let currentUser = null;
-        let editingUserId = null;
+    // Statistics elements
+    const totalUsers = document.getElementById('totalUsers');
+    const totalCoding = document.getElementById('totalCoding');
+    const totalPackages = document.getElementById('totalPackages');
+    const totalKids = document.getElementById('totalKids');
+    const totalBookkeeping = document.getElementById('totalBookkeeping');
+    const totalAdmins = document.getElementById('totalAdmins');
 
-        // Check authentication and load data
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAuthState();
-            loadDashboardStats();
-            loadUsers();
-        });
+    // Current user and editing state
+    let currentUser = null;
+    let editingUserId = null;
+    let adminSessionData = null;
 
-        // Check if user is authenticated and is admin
-        function checkAuthState() {
-            auth.onAuthStateChanged(async (user) => {
-                if (user) {
-                    currentUser = user;
-                    try {
-                        const userDoc = await db.collection('students').doc(user.uid).get();
-                        if (userDoc.exists) {
-                            const userData = userDoc.data();
-                            if (userData.role === 'admin') {
-                                adminName.textContent = userData.name || 'Administrator';
-                                // User is admin, allow access
-                            } else {
-                                // User is not admin, redirect to their role page
-                                redirectToRolePage(userData.role);
-                            }
+    // Check authentication and load data
+    document.addEventListener('DOMContentLoaded', function() {
+        checkAuthState();
+        loadDashboardStats();
+        loadUsers();
+    });
+
+    // Check if user is authenticated and is admin
+    function checkAuthState() {
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                try {
+                    const userDoc = await db.collection('students').doc(user.uid).get();
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        if (userData.role === 'admin') {
+                            adminName.textContent = userData.name || 'Administrator';
+                            // Store admin session data
+                            adminSessionData = {
+                                uid: user.uid,
+                                email: user.email
+                            };
                         } else {
-                            // User document doesn't exist, redirect to login
-                            window.location.href = '../index.html';
+                            // User is not admin, redirect to their role page
+                            redirectToRolePage(userData.role);
                         }
-                    } catch (error) {
-                        console.error('Error checking user role:', error);
-                        showNotification('Error verifying admin access', 'error');
+                    } else {
+                        // User document doesn't exist, redirect to login
                         window.location.href = '../index.html';
                     }
-                } else {
-                    // No user logged in, redirect to login
+                } catch (error) {
+                    console.error('Error checking user role:', error);
+                    showNotification('Error verifying admin access', 'error');
                     window.location.href = '../index.html';
                 }
-            });
-        }
+            } else {
+                // No user logged in, redirect to login
+                window.location.href = '../index.html';
+            }
+        });
+    }
 
-        // Redirect to role-specific page
-        function redirectToRolePage(role) {
-            const rolePages = {
-                'coding': '../coding/index.html',
-                'packages': '../packages/home.html',
-                'kid': '../kids/dashboard.html',
-                'bookkeeping': '../bookkeeping/index.html',
-                'admin': 'admin.html'
+    // Redirect to role-specific page
+    function redirectToRolePage(role) {
+        const rolePages = {
+            'coding': '../coding/index.html',
+            'packages': '../packages/home.html',
+            'kid': '../kids/dashboard.html',
+            'bookkeeping': '../bookkeeping/index.html',
+            'admin': 'admin.html'
+        };
+        window.location.href = rolePages[role] || '../index.html';
+    }
+
+    // Load dashboard statistics (count only active users)
+    async function loadDashboardStats() {
+        try {
+            showLoading();
+            const snapshot = await db.collection('students').get();
+            
+            let stats = {
+                total: 0,
+                coding: 0,
+                packages: 0,
+                kids: 0,
+                bookkeeping: 0,
+                admins: 0
             };
-            window.location.href = rolePages[role] || '../index.html';
-        }
 
-        // Load dashboard statistics
-        async function loadDashboardStats() {
-            try {
-                showLoading();
-                const snapshot = await db.collection('students').get();
-                
-                let stats = {
-                    total: 0,
-                    coding: 0,
-                    packages: 0,
-                    kids: 0,
-                    bookkeeping: 0,
-                    admins: 0
-                };
-
-                snapshot.forEach(doc => {
-                    const user = doc.data();
+            snapshot.forEach(doc => {
+                const user = doc.data();
+                // Count only active users for statistics
+                if (user.status !== 'inactive') {
                     stats.total++;
                     
                     switch(user.role) {
@@ -330,390 +340,615 @@
                             stats.admins++;
                             break;
                     }
-                });
-
-                // Update UI with statistics
-                totalUsers.textContent = stats.total;
-                totalCoding.textContent = stats.coding;
-                totalPackages.textContent = stats.packages;
-                totalKids.textContent = stats.kids;
-                totalBookkeeping.textContent = stats.bookkeeping;
-                totalAdmins.textContent = stats.admins;
-
-                hideLoading();
-            } catch (error) {
-                console.error('Error loading dashboard stats:', error);
-                showNotification('Error loading dashboard statistics', 'error');
-                hideLoading();
-            }
-        }
-
-        // Load users for management
-        async function loadUsers() {
-            try {
-                showLoading();
-                const snapshot = await db.collection('students').get();
-                usersTableBody.innerHTML = '';
-
-                if (snapshot.empty) {
-                    usersTableBody.innerHTML = `
-                        <tr>
-                            <td colspan="6" class="no-data">No users found</td>
-                        </tr>
-                    `;
-                    hideLoading();
-                    return;
                 }
+            });
 
-                snapshot.forEach(doc => {
-                    const user = doc.data();
-                    const row = document.createElement('tr');
-                    
-                    const regDate = user.createdAt ? 
-                        new Date(user.createdAt.toDate()).toLocaleDateString() : 
-                        'N/A';
+            // Update UI with statistics
+            totalUsers.textContent = stats.total;
+            totalCoding.textContent = stats.coding;
+            totalPackages.textContent = stats.packages;
+            totalKids.textContent = stats.kids;
+            totalBookkeeping.textContent = stats.bookkeeping;
+            totalAdmins.textContent = stats.admins;
 
-                    row.innerHTML = `
-                        <td>${user.name || 'N/A'}</td>
-                        <td>${user.email || 'N/A'}</td>
-                        <td><span class="role-badge ${user.role}">${user.role}</span></td>
-                        <td>${regDate}</td>
-                        <td><span class="status-badge active">Active</span></td>
-                        <td>
-                            <button class="btn-edit" data-id="${doc.id}">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-                            <button class="btn-delete" data-id="${doc.id}" data-name="${user.name}" data-email="${user.email}">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                        </td>
-                    `;
-                    
-                    usersTableBody.appendChild(row);
-                });
-
-                // Add event listeners to action buttons
-                document.querySelectorAll('.btn-edit').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const userId = e.target.closest('button').getAttribute('data-id');
-                        editUser(userId);
-                    });
-                });
-
-                document.querySelectorAll('.btn-delete').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const button = e.target.closest('button');
-                        const userId = button.getAttribute('data-id');
-                        const userName = button.getAttribute('data-name');
-                        const userEmail = button.getAttribute('data-email');
-                        confirmDeleteUser(userId, userName, userEmail);
-                    });
-                });
-
-                hideLoading();
-            } catch (error) {
-                console.error('Error loading users:', error);
-                showNotification('Error loading users', 'error');
-                hideLoading();
-            }
+            hideLoading();
+        } catch (error) {
+            console.error('Error loading dashboard stats:', error);
+            showNotification('Error loading dashboard statistics', 'error');
+            hideLoading();
         }
+    }
 
-        // Add new user
-        addUserBtn.addEventListener('click', () => {
-            editingUserId = null;
-            document.getElementById('modalTitle').textContent = 'Add New User';
-            userForm.reset();
-            userModal.style.display = 'block';
-        });
+    // Load users for management
+    async function loadUsers() {
+        try {
+            showLoading();
+            const snapshot = await db.collection('students').get();
+            usersTableBody.innerHTML = '';
 
-        // Edit user
-        async function editUser(userId) {
-            try {
-                showLoading();
-                const userDoc = await db.collection('students').doc(userId).get();
+            if (snapshot.empty) {
+                usersTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="no-data">No users found</td>
+                    </tr>
+                `;
+                hideLoading();
+                return;
+            }
+
+            snapshot.forEach(doc => {
+                const user = doc.data();
+                const row = document.createElement('tr');
                 
-                if (userDoc.exists) {
-                    const userData = userDoc.data();
-                    editingUserId = userId;
-                    
-                    document.getElementById('modalTitle').textContent = 'Edit User';
-                    document.getElementById('userName').value = userData.name || '';
-                    document.getElementById('userEmail').value = userData.email || '';
-                    document.getElementById('userPassword').value = ''; // Don't show current password
-                    document.getElementById('userPassword').required = false; // Make optional for edit
-                    document.getElementById('userRole').value = userData.role || '';
-                    
-                    userModal.style.display = 'block';
-                } else {
-                    showNotification('User not found', 'error');
-                }
-                hideLoading();
-            } catch (error) {
-                console.error('Error loading user for edit:', error);
-                showNotification('Error loading user data', 'error');
-                hideLoading();
+                const regDate = user.createdAt ? 
+                    new Date(user.createdAt.toDate()).toLocaleDateString() : 
+                    'N/A';
+
+                const status = user.status || 'active';
+                const statusBadge = status === 'active' ? 
+                    '<span class="status-badge active">Active</span>' : 
+                    '<span class="status-badge inactive">Inactive</span>';
+
+                row.innerHTML = `
+                    <td>${user.name || 'N/A'}</td>
+                    <td>${user.email || 'N/A'}</td>
+                    <td><span class="role-badge ${user.role}">${user.role}</span></td>
+                    <td>${regDate}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <button class="btn-edit" data-id="${doc.id}">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        ${status === 'active' ? 
+                            `<button class="btn-deactivate" data-id="${doc.id}" data-name="${user.name}" data-email="${user.email}">
+                                <i class="fas fa-pause"></i> Deactivate
+                            </button>` :
+                            `<button class="btn-activate" data-id="${doc.id}" data-name="${user.name}" data-email="${user.email}">
+                                <i class="fas fa-play"></i> Activate
+                            </button>`
+                        }
+                        <button class="btn-delete" data-id="${doc.id}" data-name="${user.name}" data-email="${user.email}">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </td>
+                `;
+                
+                usersTableBody.appendChild(row);
+            });
+
+            // Add event listeners to action buttons
+            document.querySelectorAll('.btn-edit').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const userId = e.target.closest('button').getAttribute('data-id');
+                    editUser(userId);
+                });
+            });
+
+            document.querySelectorAll('.btn-deactivate').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const button = e.target.closest('button');
+                    const userId = button.getAttribute('data-id');
+                    const userName = button.getAttribute('data-name');
+                    const userEmail = button.getAttribute('data-email');
+                    confirmDeactivateUser(userId, userName, userEmail);
+                });
+            });
+
+            document.querySelectorAll('.btn-activate').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const button = e.target.closest('button');
+                    const userId = button.getAttribute('data-id');
+                    const userName = button.getAttribute('data-name');
+                    const userEmail = button.getAttribute('data-email');
+                    activateUser(userId, userName, userEmail);
+                });
+            });
+
+            document.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const button = e.target.closest('button');
+                    const userId = button.getAttribute('data-id');
+                    const userName = button.getAttribute('data-name');
+                    const userEmail = button.getAttribute('data-email');
+                    confirmDeleteUser(userId, userName, userEmail);
+                });
+            });
+
+            hideLoading();
+        } catch (error) {
+            console.error('Error loading users:', error);
+            showNotification('Error loading users', 'error');
+            hideLoading();
+        }
+    }
+
+    // Add new user
+    addUserBtn.addEventListener('click', () => {
+        editingUserId = null;
+        document.getElementById('modalTitle').textContent = 'Add New User';
+        userForm.reset();
+        document.getElementById('userPassword').required = true;
+        userModal.style.display = 'block';
+    });
+
+    // Edit user
+    async function editUser(userId) {
+        try {
+            showLoading();
+            const userDoc = await db.collection('students').doc(userId).get();
+            
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                editingUserId = userId;
+                
+                document.getElementById('modalTitle').textContent = 'Edit User';
+                document.getElementById('userName').value = userData.name || '';
+                document.getElementById('userEmail').value = userData.email || '';
+                document.getElementById('userPassword').value = ''; // Don't show current password
+                document.getElementById('userPassword').required = false; // Make optional for edit
+                document.getElementById('userRole').value = userData.role || '';
+                
+                userModal.style.display = 'block';
+            } else {
+                showNotification('User not found', 'error');
             }
+            hideLoading();
+        } catch (error) {
+            console.error('Error loading user for edit:', error);
+            showNotification('Error loading user data', 'error');
+            hideLoading();
+        }
+    }
+
+    // Save user (create or update)
+    userForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const name = document.getElementById('userName').value;
+        const email = document.getElementById('userEmail').value;
+        const password = document.getElementById('userPassword').value;
+        const role = document.getElementById('userRole').value;
+
+        if (!name || !email || !role) {
+            showNotification('Please fill in all required fields', 'error');
+            return;
         }
 
-        // Save user (create or update)
-        userForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const name = document.getElementById('userName').value;
-            const email = document.getElementById('userEmail').value;
-            const password = document.getElementById('userPassword').value;
-            const role = document.getElementById('userRole').value;
+        if (!editingUserId && !password) {
+            showNotification('Password is required for new users', 'error');
+            return;
+        }
 
-            if (!name || !email || !role) {
-                showNotification('Please fill in all required fields', 'error');
-                return;
-            }
+        if (password && password.length < 6) {
+            showNotification('Password must be at least 6 characters', 'error');
+            return;
+        }
 
-            if (!editingUserId && !password) {
-                showNotification('Password is required for new users', 'error');
-                return;
-            }
+        try {
+            showLoading();
+            saveUserBtn.disabled = true;
+            saveUserBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
-            if (password && password.length < 6) {
-                showNotification('Password must be at least 6 characters', 'error');
-                return;
-            }
+            if (editingUserId) {
+                // Update existing user
+                const updateData = {
+                    name: name,
+                    email: email,
+                    role: role,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
 
-            try {
-                showLoading();
-                saveUserBtn.disabled = true;
-                saveUserBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-
-                if (editingUserId) {
-                    // Update existing user
-                    const updateData = {
-                        name: name,
-                        email: email,
-                        role: role,
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    };
-
-                    // Only update password if provided
-                    if (password) {
-                        // Note: Updating password requires Firebase Admin SDK or reauthentication
-                        // For now, we'll just update the Firestore document
-                        // In a production app, you'd use a Cloud Function to update password
-                    }
-
-                    await db.collection('students').doc(editingUserId).update(updateData);
-                    showNotification('User updated successfully', 'success');
-                } else {
-                    // Create new user
-                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                    const user = userCredential.user;
-
-                    await db.collection('students').doc(user.uid).set({
-                        name: name,
-                        email: email,
-                        role: role,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        enrolledCourses: {},
-                        completedCourses: {},
-                        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-
-                    showNotification('User created successfully', 'success');
-                }
-
+                await db.collection('students').doc(editingUserId).update(updateData);
+                showNotification('User updated successfully', 'success');
+                
                 // Refresh data and close modal
                 loadDashboardStats();
                 loadUsers();
                 userModal.style.display = 'none';
                 userForm.reset();
 
-            } catch (error) {
-                console.error('Error saving user:', error);
-                let errorMessage = 'Error saving user';
-                
-                if (error.code === 'auth/email-already-in-use') {
-                    errorMessage = 'Email address is already in use';
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = 'Invalid email address';
-                } else if (error.code === 'auth/weak-password') {
-                    errorMessage = 'Password is too weak';
-                }
-                
-                showNotification(errorMessage, 'error');
-            } finally {
-                saveUserBtn.disabled = false;
-                saveUserBtn.innerHTML = 'Save User';
-                hideLoading();
+            } else {
+                // Create new user with session preservation
+                await createUserWithSessionPreservation(name, email, password, role);
             }
-        });
 
-        // Confirm delete user
-        function confirmDeleteUser(userId, userName, userEmail) {
-            document.getElementById('userToDeleteInfo').innerHTML = `
-                <strong>Name:</strong> ${userName}<br>
-                <strong>Email:</strong> ${userEmail}
-            `;
+        } catch (error) {
+            console.error('Error saving user:', error);
+            let errorMessage = 'Error saving user';
             
-            confirmDelete.onclick = () => deleteUser(userId);
-            deleteModal.style.display = 'block';
+            if (error.code === 'auth/email-already-in-use') {
+                errorMessage = 'Email address is already in use';
+            } else if (error.code === 'auth/invalid-email') {
+                errorMessage = 'Invalid email address';
+            } else if (error.code === 'auth/weak-password') {
+                errorMessage = 'Password is too weak';
+            } else if (error.code === 'auth/requires-recent-login') {
+                errorMessage = 'Please log out and log in again to create new users';
+            }
+            
+            showNotification(errorMessage, 'error');
+        } finally {
+            saveUserBtn.disabled = false;
+            saveUserBtn.innerHTML = 'Save User';
+            hideLoading();
         }
+    });
 
-        // Delete user
-        async function deleteUser(userId) {
-            try {
-                showLoading();
+    // Create user while preserving admin session
+    async function createUserWithSessionPreservation(name, email, password, role) {
+        try {
+            // Store current admin session info
+            const adminBeforeCreation = auth.currentUser;
+            
+            if (!adminBeforeCreation) {
+                throw new Error('Admin session lost');
+            }
+
+            // Create user in Firebase Auth
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            const newUser = userCredential.user;
+            
+            // Immediately create the Firestore document with active status
+            await db.collection('students').doc(newUser.uid).set({
+                name: name,
+                email: email,
+                role: role,
+                status: 'active', // Default status
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                enrolledCourses: {},
+                completedCourses: {},
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                uid: newUser.uid
+            });
+
+            // Sign out the newly created user
+            await auth.signOut();
+            
+            // Wait for persistence to restore admin session
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            // Check if we're back as admin
+            const currentAuth = auth.currentUser;
+            if (currentAuth && currentAuth.uid === adminBeforeCreation.uid) {
+                showNotification('User created successfully', 'success');
                 
-                // Delete from Firestore
-                await db.collection('students').doc(userId).delete();
-                
-                // Note: In production, you'd also delete from Firebase Auth using a Cloud Function
-                // For now, we only delete from Firestore
-                
-                showNotification('User deleted successfully', 'success');
-                deleteModal.style.display = 'none';
-                
-                // Refresh data
+                // Refresh data and close modal
                 loadDashboardStats();
                 loadUsers();
-                
-            } catch (error) {
-                console.error('Error deleting user:', error);
-                showNotification('Error deleting user', 'error');
-                hideLoading();
-            }
-        }
-
-        // Logout
-        logoutBtn.addEventListener('click', () => {
-            auth.signOut().then(() => {
-                window.location.href = '../index.html';
-            }).catch((error) => {
-                console.error('Error signing out:', error);
-            });
-        });
-
-        // Modal controls
-        closeModal.addEventListener('click', () => {
-            userModal.style.display = 'none';
-        });
-
-        cancelBtn.addEventListener('click', () => {
-            userModal.style.display = 'none';
-        });
-
-        closeDeleteModal.addEventListener('click', () => {
-            deleteModal.style.display = 'none';
-        });
-
-        cancelDelete.addEventListener('click', () => {
-            deleteModal.style.display = 'none';
-        });
-
-        // Close modals when clicking outside
-        window.addEventListener('click', (e) => {
-            if (e.target === userModal) {
                 userModal.style.display = 'none';
+                userForm.reset();
+            } else {
+                // If persistence didn't work, use a different approach
+                await handleSessionRestoration(adminBeforeCreation.email);
             }
-            if (e.target === deleteModal) {
-                deleteModal.style.display = 'none';
-            }
+
+        } catch (error) {
+            console.error('Error in user creation process:', error);
+            throw error;
+        }
+    }
+
+    // Handle session restoration if persistence fails
+    async function handleSessionRestoration(adminEmail) {
+        showNotification('User created successfully. Restoring admin session...', 'info');
+        
+        // Try to redirect to login and let admin log in again
+        setTimeout(() => {
+            showNotification('Please log in again to continue as admin', 'warning');
+            setTimeout(() => {
+                window.location.href = '../index.html';
+            }, 2000);
+        }, 1000);
+    }
+
+    // Confirm deactivate user
+    function confirmDeactivateUser(userId, userName, userEmail) {
+        document.getElementById('userToDeleteInfo').innerHTML = `
+            <strong>Name:</strong> ${userName}<br>
+            <strong>Email:</strong> ${userEmail}<br>
+            <strong>Action:</strong> Deactivate User
+        `;
+        
+        document.getElementById('modalTitle').textContent = 'Confirm Deactivation';
+        confirmDelete.onclick = () => deactivateUser(userId);
+        deleteModal.style.display = 'block';
+    }
+
+    // Deactivate user
+    async function deactivateUser(userId) {
+        try {
+            showLoading();
+            
+            // Update user status to inactive
+            await db.collection('students').doc(userId).update({
+                status: 'inactive',
+                deactivatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            showNotification('User deactivated successfully', 'success');
+            deleteModal.style.display = 'none';
+            
+            // Refresh data
+            loadDashboardStats();
+            loadUsers();
+            
+        } catch (error) {
+            console.error('Error deactivating user:', error);
+            showNotification('Error deactivating user', 'error');
+            hideLoading();
+        }
+    }
+
+    // Activate user
+    async function activateUser(userId, userName, userEmail) {
+        try {
+            showLoading();
+            
+            // Update user status to active
+            await db.collection('students').doc(userId).update({
+                status: 'active',
+                activatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            showNotification('User activated successfully', 'success');
+            
+            // Refresh data
+            loadDashboardStats();
+            loadUsers();
+            
+        } catch (error) {
+            console.error('Error activating user:', error);
+            showNotification('Error activating user', 'error');
+            hideLoading();
+        }
+    }
+
+    // Confirm delete user
+    function confirmDeleteUser(userId, userName, userEmail) {
+        document.getElementById('userToDeleteInfo').innerHTML = `
+            <strong>Name:</strong> ${userName}<br>
+            <strong>Email:</strong> ${userEmail}<br>
+            <strong>Warning:</strong> This will permanently delete the user
+        `;
+        
+        document.getElementById('modalTitle').textContent = 'Confirm Permanent Delete';
+        confirmDelete.onclick = () => deleteUser(userId);
+        deleteModal.style.display = 'block';
+    }
+
+    // Delete user (permanent)
+    async function deleteUser(userId) {
+        try {
+            showLoading();
+            
+            // Delete from Firestore
+            await db.collection('students').doc(userId).delete();
+            
+            // Note: In production, you'd also delete from Firebase Auth using a Cloud Function
+            
+            showNotification('User permanently deleted', 'success');
+            deleteModal.style.display = 'none';
+            
+            // Refresh data
+            loadDashboardStats();
+            loadUsers();
+            
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            showNotification('Error deleting user', 'error');
+            hideLoading();
+        }
+    }
+
+    // Logout
+    logoutBtn.addEventListener('click', () => {
+        auth.signOut().then(() => {
+            window.location.href = '../index.html';
+        }).catch((error) => {
+            console.error('Error signing out:', error);
+        });
+    });
+
+    // Modal controls
+    closeModal.addEventListener('click', () => {
+        userModal.style.display = 'none';
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        userModal.style.display = 'none';
+    });
+
+    closeDeleteModal.addEventListener('click', () => {
+        deleteModal.style.display = 'none';
+    });
+
+    cancelDelete.addEventListener('click', () => {
+        deleteModal.style.display = 'none';
+    });
+
+    // Close modals when clicking outside
+    window.addEventListener('click', (e) => {
+        if (e.target === userModal) {
+            userModal.style.display = 'none';
+        }
+        if (e.target === deleteModal) {
+            deleteModal.style.display = 'none';
+        }
+    });
+
+    // Utility functions
+    function showLoading() {
+        loadingSpinner.style.display = 'flex';
+    }
+
+    function hideLoading() {
+        loadingSpinner.style.display = 'none';
+    }
+
+    function showNotification(message, type = 'info') {
+        // Remove existing notifications
+        const existingNotifications = document.querySelectorAll('.notification');
+        existingNotifications.forEach(notification => notification.remove());
+
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <span>${message}</span>
+            <button class="notification-close">&times;</button>
+        `;
+
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${getNotificationColor(type)};
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            z-index: 10000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 300px;
+            animation: slideInRight 0.3s ease;
+        `;
+
+        document.body.appendChild(notification);
+
+        // Add close button functionality
+        notification.querySelector('.notification-close').addEventListener('click', () => {
+            notification.remove();
         });
 
-        // Utility functions
-        function showLoading() {
-            loadingSpinner.style.display = 'flex';
-        }
-
-        function hideLoading() {
-            loadingSpinner.style.display = 'none';
-        }
-
-        function showNotification(message, type = 'info') {
-            // Remove existing notifications
-            const existingNotifications = document.querySelectorAll('.notification');
-            existingNotifications.forEach(notification => notification.remove());
-
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.innerHTML = `
-                <span>${message}</span>
-                <button class="notification-close">&times;</button>
-            `;
-
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${getNotificationColor(type)};
-                color: white;
-                padding: 15px 20px;
-                border-radius: 5px;
-                z-index: 10000;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                max-width: 300px;
-                animation: slideInRight 0.3s ease;
-            `;
-
-            document.body.appendChild(notification);
-
-            // Add close button functionality
-            notification.querySelector('.notification-close').addEventListener('click', () => {
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
                 notification.remove();
-            });
-
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.remove();
-                }
-            }, 5000);
-        }
-
-        function getNotificationColor(type) {
-            const colors = {
-                success: '#2ecc71',
-                error: '#e74c3c',
-                warning: '#f39c12',
-                info: '#3498db'
-            };
-            return colors[type] || colors.info;
-        }
-
-        // Add CSS for animations
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideInRight {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
             }
-            
-            .role-badge {
-                padding: 4px 8px;
-                border-radius: 12px;
-                font-size: 12px;
-                font-weight: 600;
-                text-transform: capitalize;
+        }, 5000);
+    }
+
+    function getNotificationColor(type) {
+        const colors = {
+            success: '#2ecc71',
+            error: '#e74c3c',
+            warning: '#f39c12',
+            info: '#3498db'
+        };
+        return colors[type] || colors.info;
+    }
+
+    // Add CSS for animations and status badges
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
             }
-            
-            .role-badge.coding { background: #3498db; color: white; }
-            .role-badge.packages { background: #9b59b6; color: white; }
-            .role-badge.kid { background: #f39c12; color: white; }
-            .role-badge.bookkeeping { background: #1abc9c; color: white; }
-            .role-badge.admin { background: #e74c3c; color: white; }
-            
-            .status-badge.active { background: #2ecc71; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; }
-            
-            .no-data { text-align: center; padding: 20px; color: #666; }
-        `;
-        document.head.appendChild(style);
-    </script>
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .role-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        
+        .role-badge.coding { background: #3498db; color: white; }
+        .role-badge.packages { background: #9b59b6; color: white; }
+        .role-badge.kid { background: #f39c12; color: white; }
+        .role-badge.bookkeeping { background: #1abc9c; color: white; }
+        .role-badge.admin { background: #e74c3c; color: white; }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-badge.active { 
+            background: #2ecc71; 
+            color: white; 
+        }
+        
+        .status-badge.inactive { 
+            background: #95a5a6; 
+            color: white; 
+        }
+        
+        .btn-deactivate {
+            background: #f39c12;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 2px;
+            font-size: 12px;
+        }
+        
+        .btn-deactivate:hover {
+            background: #e67e22;
+        }
+        
+        .btn-activate {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 2px;
+            font-size: 12px;
+        }
+        
+        .btn-activate:hover {
+            background: #229954;
+        }
+        
+        .btn-edit {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 2px;
+            font-size: 12px;
+        }
+        
+        .btn-edit:hover {
+            background: #2980b9;
+        }
+        
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 2px;
+            font-size: 12px;
+        }
+        
+        .btn-delete:hover {
+            background: #c0392b;
+        }
+        
+        .no-data { text-align: center; padding: 20px; color: #666; }
+    `;
+    document.head.appendChild(style);
+</script>
 </body>
 </html>
