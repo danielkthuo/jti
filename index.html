@@ -23,7 +23,8 @@
     <link rel="apple-touch-icon" href="icons/icon-192x192.png">
     
     <style>
-        * {
+        /* Previous CSS styles remain the same */
+          * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -939,6 +940,122 @@
             color: var(--warning);
             margin-bottom: 10px;
         }
+        /* Adding new styles for course enrollment */
+        
+        .enrollment-status {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        .enrollment-status.enrolled {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+        
+        .enrollment-status.not-enrolled {
+            background-color: rgba(243, 156, 18, 0.2);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+        
+        .course-enrollment {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .enrolled-course-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background-color: var(--success);
+            color: white;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .course-selection {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid var(--info);
+        }
+        
+        .course-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .course-option:hover {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        
+        .course-option.selected {
+            background-color: rgba(52, 152, 219, 0.2);
+            border: 1px solid var(--info);
+        }
+        
+        .course-option input[type="radio"] {
+            margin: 0;
+        }
+        
+        .course-option .course-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .course-option.coding .course-icon {
+            background-color: #3498db;
+        }
+        
+        .course-option.packages .course-icon {
+            background-color: #9b59b6;
+        }
+        
+        .course-option.kid .course-icon {
+            background-color: var(--warning);
+        }
+        
+        .course-option.bookkeeping .course-icon {
+            background-color: #1abc9c;
+        }
+        
+        .course-details {
+            flex: 1;
+        }
+        
+        .course-details h4 {
+            margin: 0 0 5px 0;
+            color: var(--navy);
+        }
+        
+        .course-details p {
+            margin: 0;
+            font-size: 12px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -1007,7 +1124,7 @@
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>
-                                <th>Role</th>
+                                <th>Course</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -1037,11 +1154,11 @@
                                 <input type="password" id="adminUserPassword" placeholder="Enter password">
                             </div>
                             <div class="form-group">
-                                <label for="adminUserRole">Role</label>
-                                <select id="adminUserRole">
+                                <label for="adminUserCourse">Course</label>
+                                <select id="adminUserCourse">
                                     <option value="coding">Coding</option>
-                                    <option value="packages">Packages</option>
-                                    <option value="kid">Kid</option>
+                                    <option value="packages">Computer Packages</option>
+                                    <option value="kid">Digital Skills for Kids</option>
                                     <option value="bookkeeping">Bookkeeping</option>
                                     <option value="admin">Admin</option>
                                 </select>
@@ -1066,11 +1183,11 @@
                         </div>
                         <div class="stat-card" style="background: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: var(--shadow);">
                             <h4 style="color: #9b59b6; font-size: 2rem; margin-bottom: 10px;" id="totalPackages">0</h4>
-                            <p style="color: #666;">Packages</p>
+                            <p style="color: #666;">Computer Packages</p>
                         </div>
                         <div class="stat-card" style="background: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: var(--shadow);">
                             <h4 style="color: var(--warning); font-size: 2rem; margin-bottom: 10px;" id="totalKids">0</h4>
-                            <p style="color: #666;">Kids</p>
+                            <p style="color: #666;">Kids Digital Skills</p>
                         </div>
                         <div class="stat-card" style="background: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: var(--shadow);">
                             <h4 style="color: #1abc9c; font-size: 2rem; margin-bottom: 10px;" id="totalBookkeeping">0</h4>
@@ -1162,6 +1279,8 @@
                     <h3>Certification</h3>
                     <p>Earn recognized certificates upon successful completion of your courses.</p>
                 </div>
+                
+                
             </div>
         </div>
     </section>
@@ -1179,10 +1298,65 @@
                 <i class="fas fa-unlock"></i> <strong>All Courses Accessible!</strong> You now have access to all course materials.
             </div>
             
+            <!-- Enrollment Status -->
+            <div class="enrollment-status not-enrolled" id="enrollmentStatus" style="display: none;">
+                <i class="fas fa-info-circle"></i> You are not currently enrolled in any course. Please contact administration to enroll.
+            </div>
+            
+            <!-- Course Selection for Admin -->
+            <div class="course-selection" id="courseSelection" style="display: none;">
+                <h4><i class="fas fa-book-open"></i> Course Enrollment</h4>
+                <p>Select a course for this student. Each student can only be enrolled in one course at a time.</p>
+                
+                <div class="course-option coding" data-course="coding">
+                    <input type="radio" name="course" id="course-coding" value="coding">
+                    <div class="course-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <div class="course-details">
+                        <h4>Coding & Programming</h4>
+                        <p>Web development, software engineering, and programming fundamentals</p>
+                    </div>
+                </div>
+                
+                <div class="course-option packages" data-course="packages">
+                    <input type="radio" name="course" id="course-packages" value="packages">
+                    <div class="course-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="course-details">
+                        <h4>Computer Packages</h4>
+                        <p>MS Office, document processing, spreadsheets, and presentations</p>
+                    </div>
+                </div>
+                
+                <div class="course-option kid" data-course="kid">
+                    <input type="radio" name="course" id="course-kid" value="kid">
+                    <div class="course-icon">
+                        <i class="fas fa-child"></i>
+                    </div>
+                    <div class="course-details">
+                        <h4>Digital Skills for Kids</h4>
+                        <p>Age-appropriate digital literacy and creative technology skills</p>
+                    </div>
+                </div>
+                
+                <div class="course-option bookkeeping" data-course="bookkeeping">
+                    <input type="radio" name="course" id="course-bookkeeping" value="bookkeeping">
+                    <div class="course-icon">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <div class="course-details">
+                        <h4>Bookkeeping</h4>
+                        <p>Financial record keeping, accounting software, and business finance</p>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Kids Courses -->
             <div class="course-category">
                 <div class="category-header">
-                    <h3><i class="fas fa-child"></i> Kids Courses (Ages 8-12)</h3>
+                    <h3><i class="fas fa-child"></i> Digital Skills for Kids (Ages 8-12)</h3>
                     <p>Fun and engaging digital skills courses designed specifically for children</p>
                 </div>
                 
@@ -1214,12 +1388,17 @@
                                 </div>
                             </div>
                             <div class="course-stats" style="display: flex; justify-content: space-between; font-size: 14px; color: #777; margin-bottom: 15px;">
-                                <span><i class="far fa-clock"></i> 8 weeks</span>
+                                <span><i class="far fa-clock"></i> 3 weeks</span>
                                 <span><i class="far fa-file-alt"></i> 16 lessons</span>
                             </div>
-                            <button class="course-button locked" id="kidsIntroBtn" disabled>
-                                <i class="fas fa-lock lock-icon"></i> Login to Access
-                            </button>
+                            <div class="course-enrollment">
+                                <span class="enrolled-course-badge" id="kidsCourseBadge" style="display: none;">
+                                    <i class="fas fa-check"></i> Your Enrolled Course
+                                </span>
+                                <button class="course-button locked" id="kidsIntroBtn" disabled>
+                                    <i class="fas fa-lock lock-icon"></i> Login to Access
+                                </button>
+                            </div>
                         </div>
                     </div>
                     
@@ -1250,12 +1429,17 @@
                                 </div>
                             </div>
                             <div class="course-stats" style="display: flex; justify-content: space-between; font-size: 14px; color: #777; margin-bottom: 15px;">
-                                <span><i class="far fa-clock"></i> 12 weeks</span>
+                                <span><i class="far fa-clock"></i> 4 weeks</span>
                                 <span><i class="far fa-file-alt"></i> 24 lessons</span>
                             </div>
-                            <button class="course-button locked" id="kidsDigitalBtn" disabled>
-                                <i class="fas fa-lock lock-icon"></i> Login to Access
-                            </button>
+                            <div class="course-enrollment">
+                                <span class="enrolled-course-badge" id="kidsDigitalBadge" style="display: none;">
+                                    <i class="fas fa-check"></i> Your Enrolled Course
+                                </span>
+                                <button class="course-button locked" id="kidsDigitalBtn" disabled>
+                                    <i class="fas fa-lock lock-icon"></i> Login to Access
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1272,72 +1456,123 @@
                     <div class="course-card">
                         <div class="course-header regular">
                             <div class="course-level">Intermediate</div>
-                            <h3>Web Design</h3>
-                            <p>Frontend Development</p>
+                            <h3>Coding & Programming</h3>
+                            <p>Web Development & Software</p>
                         </div>
                         <div class="course-content">
-                            <p>Learn to create beautiful, responsive websites using modern web technologies and design principles.</p>
+                            <p>Learn to create beautiful, responsive websites and applications using modern web technologies.</p>
                             <div class="course-features">
                                 <div class="course-feature">
                                     <i class="fas fa-check-circle"></i>
-                                    <span>HTML5 & CSS3</span>
+                                    <span>HTML5, CSS3 & JavaScript</span>
                                 </div>
                                 <div class="course-feature">
                                     <i class="fas fa-check-circle"></i>
-                                    <span>JavaScript fundamentals</span>
+                                    <span>Frontend frameworks</span>
                                 </div>
                                 <div class="course-feature">
                                     <i class="fas fa-check-circle"></i>
-                                    <span>Responsive design</span>
-                                </div>
-                                <div class="course-feature">
-                                    <i class="fas fa-check-circle"></i>
-                                    <span>UI/UX principles</span>
-                                </div>
-                            </div>
-                            <div class="course-stats" style="display: flex; justify-content: space-between; font-size: 14px; color: #777; margin-bottom: 15px;">
-                                <span><i class="far fa-clock"></i> 10 weeks</span>
-                                <span><i class="far fa-file-alt"></i> 20 lessons</span>
-                            </div>
-                            <button class="course-button locked" id="webDesignBtn" disabled>
-                                <i class="fas fa-lock lock-icon"></i> Login to Access
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="course-card">
-                        <div class="course-header regular">
-                            <div class="course-level">Advanced</div>
-                            <h3>Advanced ICT Course</h3>
-                            <p>Professional Level</p>
-                        </div>
-                        <div class="course-content">
-                            <p>Comprehensive ICT training covering advanced topics for professional development and career advancement.</p>
-                            <div class="course-features">
-                                <div class="course-feature">
-                                    <i class="fas fa-check-circle"></i>
-                                    <span>Advanced networking</span>
+                                    <span>Backend development</span>
                                 </div>
                                 <div class="course-feature">
                                     <i class="fas fa-check-circle"></i>
                                     <span>Database management</span>
                                 </div>
+                            </div>
+                            <div class="course-stats" style="display: flex; justify-content: space-between; font-size: 14px; color: #777; margin-bottom: 15px;">
+                                <span><i class="far fa-clock"></i> 8 weeks</span>
+                                <span><i class="far fa-file-alt"></i> 32 lessons</span>
+                            </div>
+                            <div class="course-enrollment">
+                                <span class="enrolled-course-badge" id="codingCourseBadge" style="display: none;">
+                                    <i class="fas fa-check"></i> Your Enrolled Course
+                                </span>
+                                <button class="course-button locked" id="codingBtn" disabled>
+                                    <i class="fas fa-lock lock-icon"></i> Login to Access
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="course-card">
+                        <div class="course-header regular">
+                            <div class="course-level">Beginner to Advanced</div>
+                            <h3>Computer Packages</h3>
+                            <p>MS Office & Productivity Tools</p>
+                        </div>
+                        <div class="course-content">
+                            <p>Master essential computer applications for office productivity and professional document creation.</p>
+                            <div class="course-features">
                                 <div class="course-feature">
                                     <i class="fas fa-check-circle"></i>
-                                    <span>System administration</span>
+                                    <span>MS Word - Document Processing</span>
                                 </div>
                                 <div class="course-feature">
                                     <i class="fas fa-check-circle"></i>
-                                    <span>ICT project management</span>
+                                    <span>MS Excel - Spreadsheets</span>
+                                </div>
+                                <div class="course-feature">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>MS PowerPoint - Presentations</span>
+                                </div>
+                                <div class="course-feature">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>MS Access - Database Management</span>
                                 </div>
                             </div>
                             <div class="course-stats" style="display: flex; justify-content: space-between; font-size: 14px; color: #777; margin-bottom: 15px;">
-                                <span><i class="far fa-clock"></i> 16 weeks</span>
-                                <span><i class="far fa-file-alt"></i> 32 lessons</span>
+                                <span><i class="far fa-clock"></i> 6 weeks</span>
+                                <span><i class="far fa-file-alt"></i> 24 lessons</span>
                             </div>
-                            <button class="course-button locked" id="advancedIctBtn" disabled>
-                                <i class="fas fa-lock lock-icon"></i> Login to Access
-                            </button>
+                            <div class="course-enrollment">
+                                <span class="enrolled-course-badge" id="packagesCourseBadge" style="display: none;">
+                                    <i class="fas fa-check"></i> Your Enrolled Course
+                                </span>
+                                <button class="course-button locked" id="packagesBtn" disabled>
+                                    <i class="fas fa-lock lock-icon"></i> Login to Access
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="course-card">
+                        <div class="course-header regular">
+                            <div class="course-level">Intermediate</div>
+                            <h3>Bookkeeping</h3>
+                            <p>Financial Records & Accounting</p>
+                        </div>
+                        <div class="course-content">
+                            <p>Learn professional bookkeeping skills for accurate financial record keeping and business management.</p>
+                            <div class="course-features">
+                                <div class="course-feature">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Financial record keeping</span>
+                                </div>
+                                <div class="course-feature">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Accounting principles</span>
+                                </div>
+                                <div class="course-feature">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Accounting software</span>
+                                </div>
+                                <div class="course-feature">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Business finance basics</span>
+                                </div>
+                            </div>
+                            <div class="course-stats" style="display: flex; justify-content: space-between; font-size: 14px; color: #777; margin-bottom: 15px;">
+                                <span><i class="far fa-clock"></i> 8 weeks</span>
+                                <span><i class="far fa-file-alt"></i> 20 lessons</span>
+                            </div>
+                            <div class="course-enrollment">
+                                <span class="enrolled-course-badge" id="bookkeepingCourseBadge" style="display: none;">
+                                    <i class="fas fa-check"></i> Your Enrolled Course
+                                </span>
+                                <button class="course-button locked" id="bookkeepingBtn" disabled>
+                                    <i class="fas fa-lock lock-icon"></i> Login to Access
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1387,10 +1622,6 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
     
-    // ============ ENHANCED INSTALL PROMPT CODE ============
-    /* ... (keep install prompt code the same) ... */
-    // ============ END OF ENHANCED INSTALL PROMPT CODE ============
-    
     // DOM Elements
     const authModal = document.getElementById('authModal');
     const adminPanel = document.getElementById('adminPanel');
@@ -1407,13 +1638,24 @@
     const userRoleBadge = document.getElementById('userRoleBadge');
     const heroCta = document.getElementById('heroCta');
     const accessInfo = document.getElementById('accessInfo');
+    const enrollmentStatus = document.getElementById('enrollmentStatus');
+    const courseSelection = document.getElementById('courseSelection');
 
-    // Course buttons
+    // Course buttons and badges
     const courseButtons = {
         'kidsIntro': document.getElementById('kidsIntroBtn'),
         'kidsDigital': document.getElementById('kidsDigitalBtn'),
-        'webDesign': document.getElementById('webDesignBtn'),
-        'advancedIct': document.getElementById('advancedIctBtn')
+        'coding': document.getElementById('codingBtn'),
+        'packages': document.getElementById('packagesBtn'),
+        'bookkeeping': document.getElementById('bookkeepingBtn')
+    };
+
+    const courseBadges = {
+        'kidsIntro': document.getElementById('kidsCourseBadge'),
+        'kidsDigital': document.getElementById('kidsDigitalBadge'),
+        'coding': document.getElementById('codingCourseBadge'),
+        'packages': document.getElementById('packagesCourseBadge'),
+        'bookkeeping': document.getElementById('bookkeepingCourseBadge')
     };
 
     // Enhanced role-based redirects with folder restrictions
@@ -1473,16 +1715,28 @@
             
             // Update role badge
             const role = studentData?.role || 'coding';
-            userRoleBadge.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+            userRoleBadge.textContent = getCourseDisplayName(role);
             userRoleBadge.className = `user-role-badge ${role}`;
             
             // Show admin panel button if user is admin
             if (role === 'admin') {
                 adminPanelBtn.style.display = 'block';
                 adminButton.style.display = 'inline-block';
+                courseSelection.style.display = 'block';
             } else {
                 adminPanelBtn.style.display = 'none';
                 adminButton.style.display = 'none';
+                courseSelection.style.display = 'none';
+                
+                // Show enrollment status for non-admin users
+                enrollmentStatus.style.display = 'block';
+                if (role && role !== 'admin') {
+                    enrollmentStatus.textContent = `You are enrolled in: ${getCourseDisplayName(role)}`;
+                    enrollmentStatus.className = 'enrollment-status enrolled';
+                } else {
+                    enrollmentStatus.textContent = 'You are not currently enrolled in any course. Please contact administration to enroll.';
+                    enrollmentStatus.className = 'enrollment-status not-enrolled';
+                }
             }
             
             heroCta.textContent = 'Access Courses';
@@ -1498,16 +1752,35 @@
             accessInfo.style.display = 'none';
             adminPanelBtn.style.display = 'none';
             adminButton.style.display = 'none';
+            enrollmentStatus.style.display = 'none';
+            courseSelection.style.display = 'none';
             
             heroCta.textContent = 'Explore Courses';
             lockAllCourses();
         }
     }
 
+    // Get display name for course
+    function getCourseDisplayName(courseId) {
+        const courseNames = {
+            'coding': 'Coding',
+            'packages': 'Computer Packages',
+            'kid': 'Digital Skills for Kids',
+            'bookkeeping': 'Bookkeeping',
+            'admin': 'Administrator'
+        };
+        return courseNames[courseId] || courseId;
+    }
+
     // Unlock courses based on user role
     function unlockCoursesByRole(role) {
         // First lock all courses
         lockAllCourses();
+        
+        // Hide all course badges
+        for (const badge of Object.values(courseBadges)) {
+            if (badge) badge.style.display = 'none';
+        }
         
         // Then unlock based on role permissions
         switch(role) {
@@ -1516,22 +1789,26 @@
                 unlockAllCourses();
                 break;
             case 'coding':
-                // Coding role - unlock coding-related courses
-                if (courseButtons.webDesign) {
-                    courseButtons.webDesign.classList.remove('locked');
-                    courseButtons.webDesign.disabled = false;
-                    courseButtons.webDesign.innerHTML = 'Access Course';
+                // Coding role - unlock coding courses
+                if (courseButtons.coding) {
+                    courseButtons.coding.classList.remove('locked');
+                    courseButtons.coding.disabled = false;
+                    courseButtons.coding.innerHTML = 'Access Course';
                 }
-                if (courseButtons.advancedIct) {
-                    courseButtons.advancedIct.classList.remove('locked');
-                    courseButtons.advancedIct.disabled = false;
-                    courseButtons.advancedIct.innerHTML = 'Access Course';
+                if (courseBadges.coding) {
+                    courseBadges.coding.style.display = 'inline-flex';
                 }
                 break;
             case 'packages':
-                // Packages role - unlock package-related courses
-                // Add specific package courses here when available
-                showNotification('Package courses coming soon!', 'info');
+                // Packages role - unlock packages courses
+                if (courseButtons.packages) {
+                    courseButtons.packages.classList.remove('locked');
+                    courseButtons.packages.disabled = false;
+                    courseButtons.packages.innerHTML = 'Access Course';
+                }
+                if (courseBadges.packages) {
+                    courseBadges.packages.style.display = 'inline-flex';
+                }
                 break;
             case 'kid':
                 // Kid role - unlock kids courses
@@ -1545,11 +1822,20 @@
                     courseButtons.kidsDigital.disabled = false;
                     courseButtons.kidsDigital.innerHTML = 'Access Course';
                 }
+                if (courseBadges.kidsIntro) {
+                    courseBadges.kidsIntro.style.display = 'inline-flex';
+                }
                 break;
             case 'bookkeeping':
                 // Bookkeeping role - unlock bookkeeping courses
-                // Add specific bookkeeping courses here when available
-                showNotification('Bookkeeping courses coming soon!', 'info');
+                if (courseButtons.bookkeeping) {
+                    courseButtons.bookkeeping.classList.remove('locked');
+                    courseButtons.bookkeeping.disabled = false;
+                    courseButtons.bookkeeping.innerHTML = 'Access Course';
+                }
+                if (courseBadges.bookkeeping) {
+                    courseBadges.bookkeeping.style.display = 'inline-flex';
+                }
                 break;
         }
     }
@@ -1573,6 +1859,11 @@
                 courseBtn.disabled = true;
                 courseBtn.innerHTML = '<i class="fas fa-lock lock-icon"></i> Login to Access';
             }
+        }
+        
+        // Hide all course badges
+        for (const badge of Object.values(courseBadges)) {
+            if (badge) badge.style.display = 'none';
         }
         
         // Reset progress indicators
@@ -1684,8 +1975,9 @@
         const courseRoleMapping = {
             'kidsIntro': ['kid', 'admin'],
             'kidsDigital': ['kid', 'admin'],
-            'webDesign': ['coding', 'admin'],
-            'advancedIct': ['coding', 'admin']
+            'coding': ['coding', 'admin'],
+            'packages': ['packages', 'admin'],
+            'bookkeeping': ['bookkeeping', 'admin']
         };
         
         return courseRoleMapping[courseId]?.includes(userRole) || false;
@@ -1796,7 +2088,7 @@
                 row.innerHTML = `
                     <td>${user.name}</td>
                     <td>${user.email}</td>
-                    <td><span class="role-badge ${user.role}">${user.role}</span></td>
+                    <td><span class="role-badge ${user.role}">${getCourseDisplayName(user.role)}</span></td>
                     <td>Active</td>
                     <td>
                         <button class="action-btn edit-btn" data-id="${doc.id}">Edit</button>
@@ -1869,7 +2161,7 @@
         const name = document.getElementById('adminUserName').value;
         const email = document.getElementById('adminUserEmail').value;
         const password = document.getElementById('adminUserPassword').value;
-        const role = document.getElementById('adminUserRole').value;
+        const course = document.getElementById('adminUserCourse').value;
         const errorElement = document.getElementById('addUserError');
         const successElement = document.getElementById('addUserSuccess');
         
@@ -1893,7 +2185,8 @@
             await db.collection('students').doc(user.uid).set({
                 name: name,
                 email: email,
-                role: role,
+                role: course,
+                course: getCourseDisplayName(course),
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 enrolledCourses: {},
                 completedCourses: {},
@@ -1998,6 +2291,19 @@
         }
     });
 
+    // Course selection for admin
+    document.querySelectorAll('.course-option').forEach(option => {
+        option.addEventListener('click', () => {
+            document.querySelectorAll('.course-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            option.classList.add('selected');
+            const radio = option.querySelector('input[type="radio"]');
+            radio.checked = true;
+            document.getElementById('adminUserCourse').value = radio.value;
+        });
+    });
+
     // ============ ENHANCED NOTIFICATION SYSTEM ============
     function showNotification(message, type = 'info') {
         const notification = document.createElement('div');
@@ -2090,7 +2396,5 @@
             });
         }
     </script>
-
-   
 </body>
 </html>
