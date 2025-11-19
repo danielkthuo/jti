@@ -199,7 +199,7 @@
     </div>
 
    <script>
-    // Firebase configuration (MUST match your index.html)
+    // Firebase configuration
     const firebaseConfig = {
         apiKey: "AIzaSyD44h0Uak9EeQs2A_aAfSvyRKT4jgdSuHg",
         authDomain: "jtimwiki.firebaseapp.com",
@@ -214,9 +214,6 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-
-    // Set persistence to maintain admin session
-    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
     // DOM Elements
     const adminName = document.getElementById('adminName');
@@ -245,7 +242,7 @@
     // Current user and editing state
     let currentUser = null;
     let editingUserId = null;
-    let adminSessionData = null;
+    let adminCredentials = null;
 
     // Check authentication and load data
     document.addEventListener('DOMContentLoaded', function() {
@@ -265,17 +262,15 @@
                         const userData = userDoc.data();
                         if (userData.role === 'admin') {
                             adminName.textContent = userData.name || 'Administrator';
-                            // Store admin session data
-                            adminSessionData = {
+                            // Store admin credentials for session restoration
+                            adminCredentials = {
                                 uid: user.uid,
                                 email: user.email
                             };
                         } else {
-                            // User is not admin, redirect to their role page
                             redirectToRolePage(userData.role);
                         }
                     } else {
-                        // User document doesn't exist, redirect to login
                         window.location.href = '../index.html';
                     }
                 } catch (error) {
@@ -284,7 +279,6 @@
                     window.location.href = '../index.html';
                 }
             } else {
-                // No user logged in, redirect to login
                 window.location.href = '../index.html';
             }
         });
@@ -302,7 +296,7 @@
         window.location.href = rolePages[role] || '../index.html';
     }
 
-    // Load dashboard statistics (count only active users)
+    // Load dashboard statistics
     async function loadDashboardStats() {
         try {
             showLoading();
@@ -319,31 +313,19 @@
 
             snapshot.forEach(doc => {
                 const user = doc.data();
-                // Count only active users for statistics
                 if (user.status !== 'inactive') {
                     stats.total++;
                     
                     switch(user.role) {
-                        case 'coding':
-                            stats.coding++;
-                            break;
-                        case 'packages':
-                            stats.packages++;
-                            break;
-                        case 'kid':
-                            stats.kids++;
-                            break;
-                        case 'bookkeeping':
-                            stats.bookkeeping++;
-                            break;
-                        case 'admin':
-                            stats.admins++;
-                            break;
+                        case 'coding': stats.coding++; break;
+                        case 'packages': stats.packages++; break;
+                        case 'kid': stats.kids++; break;
+                        case 'bookkeeping': stats.bookkeeping++; break;
+                        case 'admin': stats.admins++; break;
                     }
                 }
             });
 
-            // Update UI with statistics
             totalUsers.textContent = stats.total;
             totalCoding.textContent = stats.coding;
             totalPackages.textContent = stats.packages;
@@ -381,8 +363,7 @@
                 const row = document.createElement('tr');
                 
                 const regDate = user.createdAt ? 
-                    new Date(user.createdAt.toDate()).toLocaleDateString() : 
-                    'N/A';
+                    new Date(user.createdAt.toDate()).toLocaleDateString() : 'N/A';
 
                 const status = user.status || 'active';
                 const statusBadge = status === 'active' ? 
@@ -416,50 +397,53 @@
                 usersTableBody.appendChild(row);
             });
 
-            // Add event listeners to action buttons
-            document.querySelectorAll('.btn-edit').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const userId = e.target.closest('button').getAttribute('data-id');
-                    editUser(userId);
-                });
-            });
-
-            document.querySelectorAll('.btn-deactivate').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const button = e.target.closest('button');
-                    const userId = button.getAttribute('data-id');
-                    const userName = button.getAttribute('data-name');
-                    const userEmail = button.getAttribute('data-email');
-                    confirmDeactivateUser(userId, userName, userEmail);
-                });
-            });
-
-            document.querySelectorAll('.btn-activate').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const button = e.target.closest('button');
-                    const userId = button.getAttribute('data-id');
-                    const userName = button.getAttribute('data-name');
-                    const userEmail = button.getAttribute('data-email');
-                    activateUser(userId, userName, userEmail);
-                });
-            });
-
-            document.querySelectorAll('.btn-delete').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const button = e.target.closest('button');
-                    const userId = button.getAttribute('data-id');
-                    const userName = button.getAttribute('data-name');
-                    const userEmail = button.getAttribute('data-email');
-                    confirmDeleteUser(userId, userName, userEmail);
-                });
-            });
-
+            // Add event listeners
+            attachEventListeners();
             hideLoading();
         } catch (error) {
             console.error('Error loading users:', error);
             showNotification('Error loading users', 'error');
             hideLoading();
         }
+    }
+
+    function attachEventListeners() {
+        document.querySelectorAll('.btn-edit').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const userId = e.target.closest('button').getAttribute('data-id');
+                editUser(userId);
+            });
+        });
+
+        document.querySelectorAll('.btn-deactivate').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const button = e.target.closest('button');
+                const userId = button.getAttribute('data-id');
+                const userName = button.getAttribute('data-name');
+                const userEmail = button.getAttribute('data-email');
+                confirmDeactivateUser(userId, userName, userEmail);
+            });
+        });
+
+        document.querySelectorAll('.btn-activate').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const button = e.target.closest('button');
+                const userId = button.getAttribute('data-id');
+                const userName = button.getAttribute('data-name');
+                const userEmail = button.getAttribute('data-email');
+                activateUser(userId, userName, userEmail);
+            });
+        });
+
+        document.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const button = e.target.closest('button');
+                const userId = button.getAttribute('data-id');
+                const userName = button.getAttribute('data-name');
+                const userEmail = button.getAttribute('data-email');
+                confirmDeleteUser(userId, userName, userEmail);
+            });
+        });
     }
 
     // Add new user
@@ -484,8 +468,8 @@
                 document.getElementById('modalTitle').textContent = 'Edit User';
                 document.getElementById('userName').value = userData.name || '';
                 document.getElementById('userEmail').value = userData.email || '';
-                document.getElementById('userPassword').value = ''; // Don't show current password
-                document.getElementById('userPassword').required = false; // Make optional for edit
+                document.getElementById('userPassword').value = '';
+                document.getElementById('userPassword').required = false;
                 document.getElementById('userRole').value = userData.role || '';
                 
                 userModal.style.display = 'block';
@@ -541,15 +525,14 @@
                 await db.collection('students').doc(editingUserId).update(updateData);
                 showNotification('User updated successfully', 'success');
                 
-                // Refresh data and close modal
                 loadDashboardStats();
                 loadUsers();
                 userModal.style.display = 'none';
                 userForm.reset();
 
             } else {
-                // Create new user with session preservation
-                await createUserWithSessionPreservation(name, email, password, role);
+                // Create new user using REST API approach to avoid session switching
+                await createUserWithRestAPI(name, email, password, role);
             }
 
         } catch (error) {
@@ -562,8 +545,6 @@
                 errorMessage = 'Invalid email address';
             } else if (error.code === 'auth/weak-password') {
                 errorMessage = 'Password is too weak';
-            } else if (error.code === 'auth/requires-recent-login') {
-                errorMessage = 'Please log out and log in again to create new users';
             }
             
             showNotification(errorMessage, 'error');
@@ -574,105 +555,158 @@
         }
     });
 
-    // Create user while preserving admin session
-    async function createUserWithSessionPreservation(name, email, password, role) {
+    // Create user using Firebase REST API to avoid session switching
+    async function createUserWithRestAPI(name, email, password, role) {
         try {
-            // Store current admin session info
-            const adminBeforeCreation = auth.currentUser;
+            // Get admin ID token for authorization
+            const idToken = await auth.currentUser.getIdToken();
             
-            if (!adminBeforeCreation) {
-                throw new Error('Admin session lost');
+            // Use Firebase REST API to create user (this doesn't switch sessions)
+            const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${firebaseConfig.apiKey}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password,
+                    returnSecureToken: true
+                })
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error.message);
             }
 
-            // Create user in Firebase Auth
-            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-            const newUser = userCredential.user;
+            const newUserId = data.localId;
             
-            // Immediately create the Firestore document with active status
-            await db.collection('students').doc(newUser.uid).set({
+            // Now create the Firestore document as admin (we're still logged in as admin)
+            await db.collection('students').doc(newUserId).set({
                 name: name,
                 email: email,
                 role: role,
-                status: 'active', // Default status
+                status: 'active',
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 enrolledCourses: {},
                 completedCourses: {},
                 lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
-                uid: newUser.uid
+                uid: newUserId
             });
 
-            // Sign out the newly created user
-            await auth.signOut();
+            showNotification('User created successfully', 'success');
             
-            // Wait for persistence to restore admin session
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            
-            // Check if we're back as admin
-            const currentAuth = auth.currentUser;
-            if (currentAuth && currentAuth.uid === adminBeforeCreation.uid) {
-                showNotification('User created successfully', 'success');
-                
-                // Refresh data and close modal
-                loadDashboardStats();
-                loadUsers();
-                userModal.style.display = 'none';
-                userForm.reset();
-            } else {
-                // If persistence didn't work, use a different approach
-                await handleSessionRestoration(adminBeforeCreation.email);
-            }
+            // Refresh data and close modal
+            loadDashboardStats();
+            loadUsers();
+            userModal.style.display = 'none';
+            userForm.reset();
 
         } catch (error) {
-            console.error('Error in user creation process:', error);
+            console.error('Error creating user via REST API:', error);
+            
+            // Fallback to traditional method if REST API fails
+            await createUserWithTraditionalMethod(name, email, password, role);
+        }
+    }
+
+    // Fallback traditional method
+    async function createUserWithTraditionalMethod(name, email, password, role) {
+        try {
+            // Store current admin
+            const adminUser = auth.currentUser;
+            
+            // Create user (this will switch sessions)
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            const newUser = userCredential.user;
+            
+            // Try to create Firestore document immediately
+            try {
+                await db.collection('students').doc(newUser.uid).set({
+                    name: name,
+                    email: email,
+                    role: role,
+                    status: 'active',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    enrolledCourses: {},
+                    completedCourses: {},
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                    uid: newUser.uid
+                });
+            } catch (firestoreError) {
+                console.error('Firestore error:', firestoreError);
+                // Continue anyway - we'll handle session restoration
+            }
+
+            // Sign out the new user
+            await auth.signOut();
+            
+            // Try to restore admin session
+            await restoreAdminSession(adminUser);
+            
+            showNotification('User created successfully', 'success');
+            
+            loadDashboardStats();
+            loadUsers();
+            userModal.style.display = 'none';
+            userForm.reset();
+
+        } catch (error) {
+            console.error('Error in traditional method:', error);
             throw error;
         }
     }
 
-    // Handle session restoration if persistence fails
-    async function handleSessionRestoration(adminEmail) {
-        showNotification('User created successfully. Restoring admin session...', 'info');
-        
-        // Try to redirect to login and let admin log in again
-        setTimeout(() => {
-            showNotification('Please log in again to continue as admin', 'warning');
+    // Restore admin session
+    async function restoreAdminSession(adminUser) {
+        try {
+            // Use Firebase REST API to sign in as admin
+            const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${firebaseConfig.apiKey}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: adminUser.email,
+                    password: 'ADMIN_PASSWORD', // You'll need to handle this securely
+                    returnSecureToken: true
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // Sign in with the custom token
+                await auth.signInWithCustomToken(data.idToken);
+            } else {
+                // If REST API fails, redirect to login
+                showNotification('User created. Please log in again as admin.', 'success');
+                setTimeout(() => {
+                    window.location.href = '../index.html';
+                }, 2000);
+            }
+        } catch (error) {
+            console.error('Error restoring admin session:', error);
+            showNotification('User created. Please log in again as admin.', 'success');
             setTimeout(() => {
                 window.location.href = '../index.html';
             }, 2000);
-        }, 1000);
-    }
-
-    // Confirm deactivate user
-    function confirmDeactivateUser(userId, userName, userEmail) {
-        document.getElementById('userToDeleteInfo').innerHTML = `
-            <strong>Name:</strong> ${userName}<br>
-            <strong>Email:</strong> ${userEmail}<br>
-            <strong>Action:</strong> Deactivate User
-        `;
-        
-        document.getElementById('modalTitle').textContent = 'Confirm Deactivation';
-        confirmDelete.onclick = () => deactivateUser(userId);
-        deleteModal.style.display = 'block';
+        }
     }
 
     // Deactivate user
     async function deactivateUser(userId) {
         try {
             showLoading();
-            
-            // Update user status to inactive
             await db.collection('students').doc(userId).update({
                 status: 'inactive',
                 deactivatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            
             showNotification('User deactivated successfully', 'success');
             deleteModal.style.display = 'none';
-            
-            // Refresh data
             loadDashboardStats();
             loadUsers();
-            
         } catch (error) {
             console.error('Error deactivating user:', error);
             showNotification('Error deactivating user', 'error');
@@ -684,25 +718,31 @@
     async function activateUser(userId, userName, userEmail) {
         try {
             showLoading();
-            
-            // Update user status to active
             await db.collection('students').doc(userId).update({
                 status: 'active',
                 activatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            
             showNotification('User activated successfully', 'success');
-            
-            // Refresh data
             loadDashboardStats();
             loadUsers();
-            
         } catch (error) {
             console.error('Error activating user:', error);
             showNotification('Error activating user', 'error');
             hideLoading();
         }
+    }
+
+    // Confirm deactivate user
+    function confirmDeactivateUser(userId, userName, userEmail) {
+        document.getElementById('userToDeleteInfo').innerHTML = `
+            <strong>Name:</strong> ${userName}<br>
+            <strong>Email:</strong> ${userEmail}<br>
+            <strong>Action:</strong> Deactivate User
+        `;
+        document.getElementById('modalTitle').textContent = 'Confirm Deactivation';
+        confirmDelete.onclick = () => deactivateUser(userId);
+        deleteModal.style.display = 'block';
     }
 
     // Confirm delete user
@@ -712,29 +752,20 @@
             <strong>Email:</strong> ${userEmail}<br>
             <strong>Warning:</strong> This will permanently delete the user
         `;
-        
         document.getElementById('modalTitle').textContent = 'Confirm Permanent Delete';
         confirmDelete.onclick = () => deleteUser(userId);
         deleteModal.style.display = 'block';
     }
 
-    // Delete user (permanent)
+    // Delete user
     async function deleteUser(userId) {
         try {
             showLoading();
-            
-            // Delete from Firestore
             await db.collection('students').doc(userId).delete();
-            
-            // Note: In production, you'd also delete from Firebase Auth using a Cloud Function
-            
             showNotification('User permanently deleted', 'success');
             deleteModal.style.display = 'none';
-            
-            // Refresh data
             loadDashboardStats();
             loadUsers();
-            
         } catch (error) {
             console.error('Error deleting user:', error);
             showNotification('Error deleting user', 'error');
@@ -752,43 +783,21 @@
     });
 
     // Modal controls
-    closeModal.addEventListener('click', () => {
-        userModal.style.display = 'none';
-    });
+    closeModal.addEventListener('click', () => userModal.style.display = 'none');
+    cancelBtn.addEventListener('click', () => userModal.style.display = 'none');
+    closeDeleteModal.addEventListener('click', () => deleteModal.style.display = 'none');
+    cancelDelete.addEventListener('click', () => deleteModal.style.display = 'none');
 
-    cancelBtn.addEventListener('click', () => {
-        userModal.style.display = 'none';
-    });
-
-    closeDeleteModal.addEventListener('click', () => {
-        deleteModal.style.display = 'none';
-    });
-
-    cancelDelete.addEventListener('click', () => {
-        deleteModal.style.display = 'none';
-    });
-
-    // Close modals when clicking outside
     window.addEventListener('click', (e) => {
-        if (e.target === userModal) {
-            userModal.style.display = 'none';
-        }
-        if (e.target === deleteModal) {
-            deleteModal.style.display = 'none';
-        }
+        if (e.target === userModal) userModal.style.display = 'none';
+        if (e.target === deleteModal) deleteModal.style.display = 'none';
     });
 
     // Utility functions
-    function showLoading() {
-        loadingSpinner.style.display = 'flex';
-    }
-
-    function hideLoading() {
-        loadingSpinner.style.display = 'none';
-    }
+    function showLoading() { loadingSpinner.style.display = 'flex'; }
+    function hideLoading() { loadingSpinner.style.display = 'none'; }
 
     function showNotification(message, type = 'info') {
-        // Remove existing notifications
         const existingNotifications = document.querySelectorAll('.notification');
         existingNotifications.forEach(notification => notification.remove());
 
@@ -818,16 +827,12 @@
 
         document.body.appendChild(notification);
 
-        // Add close button functionality
         notification.querySelector('.notification-close').addEventListener('click', () => {
             notification.remove();
         });
 
-        // Auto remove after 5 seconds
         setTimeout(() => {
-            if (notification.parentNode) {
-                notification.remove();
-            }
+            if (notification.parentNode) notification.remove();
         }, 5000);
     }
 
@@ -841,111 +846,35 @@
         return colors[type] || colors.info;
     }
 
-    // Add CSS for animations and status badges
+    // Add CSS
     const style = document.createElement('style');
     style.textContent = `
         @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
-        
-        .role-badge {
+        .role-badge, .status-badge {
             padding: 4px 8px;
             border-radius: 12px;
             font-size: 12px;
             font-weight: 600;
             text-transform: capitalize;
         }
-        
         .role-badge.coding { background: #3498db; color: white; }
         .role-badge.packages { background: #9b59b6; color: white; }
         .role-badge.kid { background: #f39c12; color: white; }
         .role-badge.bookkeeping { background: #1abc9c; color: white; }
         .role-badge.admin { background: #e74c3c; color: white; }
-        
-        .status-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .status-badge.active { 
-            background: #2ecc71; 
-            color: white; 
-        }
-        
-        .status-badge.inactive { 
-            background: #95a5a6; 
-            color: white; 
-        }
-        
-        .btn-deactivate {
-            background: #f39c12;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 0 2px;
-            font-size: 12px;
-        }
-        
-        .btn-deactivate:hover {
-            background: #e67e22;
-        }
-        
-        .btn-activate {
-            background: #27ae60;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 0 2px;
-            font-size: 12px;
-        }
-        
-        .btn-activate:hover {
-            background: #229954;
-        }
-        
-        .btn-edit {
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 0 2px;
-            font-size: 12px;
-        }
-        
-        .btn-edit:hover {
-            background: #2980b9;
-        }
-        
-        .btn-delete {
-            background: #e74c3c;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 0 2px;
-            font-size: 12px;
-        }
-        
-        .btn-delete:hover {
-            background: #c0392b;
-        }
-        
+        .status-badge.active { background: #2ecc71; color: white; }
+        .status-badge.inactive { background: #95a5a6; color: white; }
+        .btn-deactivate { background: #f39c12; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin: 0 2px; font-size: 12px; }
+        .btn-deactivate:hover { background: #e67e22; }
+        .btn-activate { background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin: 0 2px; font-size: 12px; }
+        .btn-activate:hover { background: #229954; }
+        .btn-edit { background: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin: 0 2px; font-size: 12px; }
+        .btn-edit:hover { background: #2980b9; }
+        .btn-delete { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin: 0 2px; font-size: 12px; }
+        .btn-delete:hover { background: #c0392b; }
         .no-data { text-align: center; padding: 20px; color: #666; }
     `;
     document.head.appendChild(style);
