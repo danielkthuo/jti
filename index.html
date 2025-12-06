@@ -73,6 +73,7 @@
             max-width: 300px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             animation: slideInUp 0.3s ease;
+            display: none;
         }
         
         @keyframes slideInUp {
@@ -83,6 +84,17 @@
             to {
                 transform: translateY(0);
                 opacity: 1;
+            }
+        }
+        
+        @keyframes slideOutDown {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(100px);
+                opacity: 0;
             }
         }
         
@@ -1203,6 +1215,13 @@
         </div>
     </div>
     
+    <!-- Install Prompt -->
+    <div id="installPromo">
+        <p><i class="fas fa-download"></i> Install JOSHCAB INSTITUTE App for better experience</p>
+        <button class="install-btn" id="installAppBtn">Install</button>
+        <button class="cancel-btn" id="cancelInstallBtn">Not Now</button>
+    </div>
+    
     <!-- Header Section -->
     <header>
         <div class="container">
@@ -1640,6 +1659,11 @@
     const accessInfo = document.getElementById('accessInfo');
     const enrollmentStatus = document.getElementById('enrollmentStatus');
     const courseSelection = document.getElementById('courseSelection');
+    
+    // PWA Install Elements
+    const installPromo = document.getElementById('installPromo');
+    const installAppBtn = document.getElementById('installAppBtn');
+    const cancelInstallBtn = document.getElementById('cancelInstallBtn');
 
     // Course buttons and badges
     const courseButtons = {
@@ -1678,6 +1702,9 @@
 
     // Current user data
     let currentUserData = null;
+    
+    // PWA Install Prompt
+    let deferredPrompt;
 
     // Wait for auth manager to be ready
     document.addEventListener('DOMContentLoaded', function() {
@@ -1698,6 +1725,9 @@
                 }
             }
         });
+        
+        // Initialize PWA install functionality
+        initPWAInstall();
     });
 
     // Update UI based on auth state
@@ -2303,6 +2333,117 @@
             document.getElementById('adminUserCourse').value = radio.value;
         });
     });
+
+    // ============ PWA INSTALLATION FUNCTIONALITY ============
+    function initPWAInstall() {
+        // Check if the app is already installed
+        function isAppInstalled() {
+            return window.matchMedia('(display-mode: standalone)').matches || 
+                   window.navigator.standalone ||
+                   document.referrer.includes('android-app://');
+        }
+        
+        // Show install prompt
+        function showInstallPromo() {
+            if (!isAppInstalled() && installPromo) {
+                // Check if user has dismissed the prompt in this session
+                if (sessionStorage.getItem('installPromptDismissed') !== 'true') {
+                    setTimeout(() => {
+                        installPromo.style.display = 'block';
+                    }, 3000); // Show after 3 seconds
+                }
+            }
+        }
+        
+        // Hide install prompt with animation
+        function hideInstallPromo() {
+            if (installPromo && installPromo.style.display !== 'none') {
+                installPromo.style.animation = 'slideOutDown 0.3s ease';
+                setTimeout(() => {
+                    installPromo.style.display = 'none';
+                    installPromo.style.animation = 'slideInUp 0.3s ease';
+                }, 300);
+            }
+        }
+        
+        // Listen for beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            
+            // Show install promo after a delay
+            showInstallPromo();
+        });
+        
+        // Install button click handler
+        if (installAppBtn) {
+            installAppBtn.addEventListener('click', async () => {
+                if (!deferredPrompt) {
+                    hideInstallPromo();
+                    return;
+                }
+                
+                // Show the install prompt
+                deferredPrompt.prompt();
+                
+                // Wait for the user to respond to the prompt
+                const { outcome } = await deferredPrompt.userChoice;
+                
+                // We've used the prompt, and can't use it again, so discard it
+                deferredPrompt = null;
+                
+                // Hide the install promo
+                hideInstallPromo();
+                
+                console.log(`User response to the install prompt: ${outcome}`);
+                
+                // Show notification
+                if (outcome === 'accepted') {
+                    showNotification('App installation started!', 'success');
+                } else {
+                    // User declined, don't show again this session
+                    sessionStorage.setItem('installPromptDismissed', 'true');
+                }
+            });
+        }
+        
+        // Cancel button click handler
+        if (cancelInstallBtn) {
+            cancelInstallBtn.addEventListener('click', () => {
+                hideInstallPromo();
+                // Hide for this session
+                sessionStorage.setItem('installPromptDismissed', 'true');
+            });
+        }
+        
+        // Check if app was successfully installed
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('App was successfully installed!');
+            hideInstallPromo();
+            deferredPrompt = null;
+            
+            // Clear session storage so prompt can show again if needed
+            sessionStorage.removeItem('installPromptDismissed');
+            
+            // Show welcome notification
+            showNotification('App installed successfully! Welcome to JOSHCAB INSTITUTE', 'success');
+        });
+        
+        // Check on page load if we should show the install prompt
+        window.addEventListener('load', () => {
+            // Only show if not dismissed in this session and not already installed
+            if (!isAppInstalled()) {
+                // Check if the beforeinstallprompt event already fired
+                if (deferredPrompt) {
+                    showInstallPromo();
+                }
+            } else {
+                console.log('App is already installed');
+            }
+        });
+    }
 
     // ============ ENHANCED NOTIFICATION SYSTEM ============
     function showNotification(message, type = 'info') {
