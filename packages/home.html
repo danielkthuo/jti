@@ -665,6 +665,9 @@
                     <div class="contact-info">
                         <i class="fas fa-phone"></i> 0734080808
                     </div>
+                      <button class="nav-btn" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
                 </div>
             </div>
         </div>
@@ -974,8 +977,10 @@
 
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
     const db = firebase.firestore();
-    
+    // Initialize Firebase
+       
     // ============ INSTALL PROMPT CODE ============
     let deferredPrompt;
 
@@ -1031,7 +1036,17 @@
         document.getElementById('installPromo')?.remove();
     });
     // ============ END OF INSTALL PROMPT CODE ============
-    
+      // Logout
+const logoutBtn = document.getElementById('logoutBtn');
+   // Logout
+    logoutBtn.addEventListener('click', () => {
+        auth.signOut().then(() => {
+            window.location.href = '../index.html';
+        }).catch((error) => {
+            console.error('Error signing out:', error);
+        });
+    });
+
     // Module pages mapping
     const modulePages = {
         1: 'introduction.html',

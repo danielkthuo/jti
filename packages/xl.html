@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Mastery Course</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <!-- Auth Manager -->
+    <script src="../auth-manager.js"></script>
+    <!-- Add to head section -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#1a2b4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="JOSHCAB INSTITUTE">
+<link rel="apple-touch-icon" href="../icons/icon-192x192.png">
+   <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #217346;
+            --primary-dark: #1a5c36;
+            --secondary: #2c7c4c;
+            --accent: #ff6b00;
+            --light: #f8f9fa;
+            --dark: #333;
+            --gray: #6c757d;
+            --border: #e0e0e0;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+            --mobile-padding: 1rem;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f5f5f5;
+            padding-bottom: 80px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 100%;
+            padding: 0;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1rem var(--mobile-padding);
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .header .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #dc3545;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            margin-top: 0.5rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .header .btn:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .module {
+            background: white;
+            margin: 1rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .module-header {
+            background: var(--secondary);
+            color: white;
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .module-header:hover {
+            background: var(--primary-dark);
+        }
+
+        .module-header h2 {
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .module-content {
+            display: none;
+            padding: 0;
+        }
+
+        .module-content.active {
+            display: block;
+        }
+
+        .unit {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .unit:last-child {
+            border-bottom: none;
+        }
+
+        .unit-header {
+            background: var(--light);
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .unit-header:hover {
+            background: #e9ecef;
+        }
+
+        .unit-header h3 {
+            font-size: 1rem;
+            margin: 0;
+            color: var(--secondary);
+        }
+
+        .unit-content {
+            display: none;
+            padding: 0;
+        }
+
+        .unit-content.active {
+            display: block;
+        }
+
+        .lesson-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .lesson-item {
+            padding: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .lesson-item:hover {
+            background: var(--light);
+        }
+
+        .lesson-item:last-child {
+            border-bottom: none;
+        }
+
+        .lesson-item.completed .lesson-title {
+            text-decoration: line-through;
+            color: var(--gray);
+        }
+
+        .lesson-number {
+            background: var(--secondary);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .lesson-item.completed .lesson-number {
+            background: var(--gray);
+        }
+
+        .lesson-title {
+            font-size: 0.95rem;
+            color: var(--dark);
+            flex-grow: 1;
+        }
+
+        .lesson-content {
+            display: none;
+            padding: 1.2rem;
+            background: #f9f9f9;
+            border-top: 1px solid var(--border);
+        }
+
+        .lesson-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .lesson-content h4 {
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+            font-size: 1.05rem;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 0.5rem;
+        }
+
+        .lesson-content p {
+            margin-bottom: 1rem;
+        }
+
+        .lesson-content ul, .lesson-content ol {
+            margin-left: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .lesson-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .keyboard-shortcut {
+            display: inline-block;
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 0.2rem 0.5rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            margin: 0.2rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .code-example {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 1rem 0;
+            overflow-x: auto;
+            border-left: 4px solid var(--accent);
+            font-size: 0.9rem;
+        }
+
+        .illustration {
+            width: 100%;
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 1rem 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+        }
+
+        .tip-box {
+            background: #e7f4ff;
+            border-left: 4px solid #2196F3;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .warning-box {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .icon {
+            transition: transform 0.3s ease;
+        }
+
+        .icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .progress {
+            height: 100%;
+            background: var(--secondary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .nav-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .nav-btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .search-container {
+            padding: 0.8rem;
+            background: white;
+            margin: 0.8rem;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 100px;
+            z-index: 99;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.7rem;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            outline: none;
+            padding-left: 2.5rem;
+        }
+
+        .search-input:focus {
+            border-color: var(--secondary);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        .completion-badge {
+            background: var(--accent);
+            color: white;
+            border-radius: 12px;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.7rem;
+            margin-left: 0.5rem;
+        }
+
+        /* Excel beginner specific styles */
+        .excel-screen-diagram {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: monospace;
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        .formula-example {
+            background: #e7f3ff;
+            border-left: 4px solid #4a90e2;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .formula-example .formula {
+            font-family: monospace;
+            background: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin: 0.5rem 0;
+        }
+
+        .practice-exercise {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .cheat-sheet {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .step-by-step {
+            background: #f3e5f5;
+            border-left: 4px solid #9c27b0;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .step-by-step ol {
+            margin-left: 1.5rem;
+        }
+
+        .step-by-step li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Mobile-first responsive design */
+        @media (max-width: 768px) {
+            .header {
+                padding: 0.8rem var(--mobile-padding);
+            }
+            
+            .header h1 {
+                font-size: 1.2rem;
+            }
+            
+            .header .btn {
+                padding: 0.4rem 1rem;
+                font-size: 0.8rem;
+            }
+            
+            .module {
+                margin: 0.8rem;
+            }
+            
+            .module-header, .unit-header {
+                padding: 0.8rem;
+            }
+            
+            .module-header h2 {
+                font-size: 1rem;
+            }
+            
+            .unit-header h3 {
+                font-size: 0.9rem;
+            }
+            
+            .lesson-item {
+                padding: 0.8rem;
+            }
+            
+            .lesson-title {
+                font-size: 0.9rem;
+            }
+            
+            .lesson-content {
+                padding: 1rem;
+            }
+            
+            .nav-btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.85rem;
+            }
+            
+            .search-container {
+                margin: 0.8rem;
+                padding: 0.7rem;
+            }
+            
+            .keyboard-shortcut {
+                font-size: 0.8rem;
+                padding: 0.15rem 0.4rem;
+            }
+            
+            .code-example {
+                padding: 0.8rem;
+                font-size: 0.85rem;
+            }
+            
+            .tip-box, .warning-box {
+                padding: 0.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.1rem;
+            }
+            
+            .header .btn {
+                padding: 0.3rem 0.8rem;
+                font-size: 0.75rem;
+            }
+            
+            .module-header h2 {
+                font-size: 0.95rem;
+            }
+            
+            .unit-header h3 {
+                font-size: 0.85rem;
+            }
+            
+            .lesson-title {
+                font-size: 0.85rem;
+            }
+            
+            .lesson-number {
+                width: 24px;
+                height: 24px;
+                font-size: 0.75rem;
+                margin-right: 0.8rem;
+            }
+            
+            .nav-btn {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Animation for smooth transitions */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .module-content.active,
+        .unit-content.active {
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Mobile touch improvements */
+        .lesson-item, .module-header, .unit-header {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Better mobile scrolling */
+        .lesson-content.active {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar">
+        <div class="progress" id="progress"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Excel Mastery Course</h1>
+            <p>From Complete Beginner to Advanced Automation</p>
+            <a href="excelhandson.html" class="btn" role="button" aria-label="Open Hands-on exercises">
+                <span>Go to Hands-on Exercises</span>
+                <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="search-input" placeholder="Search Excel functions and features..." id="search-input">
+        </div>
+
+        <!-- Module 0: Excel Beginner's Guide -->
+        <div class="module">
+            <div class="module-header" onclick="toggleModule(0)">
+                <h2>Module 0: Excel Beginner's Guide</h2>
+                <span class="icon">▼</span>
+            </div>
+            <div class="module-content" id="module-0">
+                <!-- Unit 0.1: Getting Started -->
+                <div class="unit">
+                    <div class="unit-header" onclick="toggleUnit(0, 1)">
+                        <h3>Unit 0.1: Your First Steps in Excel</h3>
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="unit-content" id="unit-0-1">
+                        <ul class="lesson-list">
+                            <li class="lesson-item" onclick="toggleLesson(0, 1, 1)">
+                                <span class="lesson-number">1</span>
+                                <span class="lesson-title">Introduction for Complete Beginners</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-0-1-1">
+                                <h4>Hello! Welcome to Excel!</h4>
+                                <p>If you're new to Excel, don't worry! This guide will walk you through EVERYTHING like you've never seen Excel before. We'll use your workbooks to learn together.</p>
+                                
+                                <div class="tip-box">
+                                    <strong>Important:</strong> This guide assumes you have the "Excel 365 Intro Example File Complete.xlsx" file. If you don't have it, you can still follow along with any Excel file.
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(0, 1, 2)">
+                                <span class="lesson-number">2</span>
+                                <span class="lesson-title">Opening Your First Excel File</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-0-1-2">
+                                <h4>Let's Open Excel</h4>
+                                
+                                <div class="step-by-step">
+                                    <p><strong>Step 1: Opening Your First Excel File</strong></p>
+                                    <ol>
+                                        <li>Find the Excel file on your computer (look for "Excel 365 Intro Example File Complete.xlsx")</li>
+                                        <li>Double-click the file to open it</li>
+                                        <li>You'll see something like this:</li>
+                                    </ol>
+                                </div>
+                                
+                                <div class="excel-screen-diagram">
+┌─────────────────────────────────┐
+│ ╭─────────────────────────────╮ │
+│ │ Excel                       │ │
+│ │ [Your file name here]       │ │
+│ ╰─────────────────────────────╯ │
+│                                 │
+│ A bunch of letters across top   │
+│ (A B C D E F G...)              │
+│                                 │
+│ Numbers going down (1 2 3 4...) │
+│                                 │
+│ Little boxes with information   │
+│                                 │
+│ Tabs at bottom (2023, 2024...)  │
+└─────────────────────────────────┘
+                                </div>
+                                
+                                <div class="warning-box">
+                                    <strong>DON'T PANIC!</strong> This is normal. Let's break it down.
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(0, 1, 3)">
+                                <span class="lesson-number">3</span>
+                                <span class="lesson-title">Understanding the Excel Screen</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-0-1-3">
+                                <h4>Look at Your Screen - Find These Parts:</h4>
+                                
+                                <div class="excel-screen-diagram">
+<strong>A. Top Part (Ribbon):</strong>
+[File] [Home] [Insert] [Page Layout] [Formulas] [Data] [Review] [View] [Help]
+
+<strong>B. Big Grid Area (Worksheet):</strong>
+Columns: Letters A, B, C, D... (goes across)
+Rows: Numbers 1, 2, 3, 4... (goes down)
+Cells: Where column and row meet (like A1, B2, C3)
+
+<strong>C. Bottom Part (Sheet Tabs):</strong>
+Sheet1 Sheet2 Sheet3 (click these to change pages)
+In your file: 2023 2024 2025 2026 COMMON FUNCTIONS
+
+<strong>D. Formula Bar (Just Below Ribbon):</strong>
+This shows what's INSIDE a cell
+┌─────────────────────┐
+│ fx │                │ ← This is the formula bar
+└─────────────────────┘
+                                </div>
+                                
+                                <div class="tip-box">
+                                    <strong>Remember:</strong> The Ribbon is like a menu. We'll mostly use "Home" for now.
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Unit 0.2: Basic Operations -->
+                <div class="unit">
+                    <div class="unit-header" onclick="toggleUnit(0, 2)">
+                        <h3>Unit 0.2: Clicking, Typing and Simple Math</h3>
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="unit-content" id="unit-0-2">
+                        <ul class="lesson-list">
+                            <li class="lesson-item" onclick="toggleLesson(0, 2, 1)">
+                                <span class="lesson-number">1</span>
+                                <span class="lesson-title">Clicking and Typing Basics</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-0-2-1">
+                                <h4>Let's Practice on the 2023 Sheet:</h4>
+                                
+                                <div class="step-by-step">
+                                    <p><strong>Step 1: Click on the "2023" tab at the bottom</strong></p>
+                                    <p>You should see coffee shop data:</p>
+                                    <ul>
+                                        <li>"Cup of Joe's Yearly Report" at top</li>
+                                        <li>Dates, Notes, Items, Prices</li>
+                                        <li>Numbers for Qtr. 1, Qtr. 2, etc.</li>
+                                    </ul>
+                                    
+                                    <p><strong>Step 2: Let's Click on Some Cells:</strong></p>
+                                    <ol>
+                                        <li>Move your mouse over the cell that says "Original Coffee" (cell D4)</li>
+                                        <li>Click once with LEFT mouse button</li>
+                                        <li>See the black border around it? That means it's SELECTED</li>
+                                    </ol>
+                                    
+                                    <p><strong>Step 3: Look at the Formula Bar:</strong></p>
+                                    <p>When you click D4, look up at the formula bar. It should show "Original Coffee"</p>
+                                    <p>This tells you what's IN the cell.</p>
+                                    
+                                    <p><strong>Step 4: Try Typing in a Cell:</strong></p>
+                                    <ol>
+                                        <li>Click on an EMPTY cell (like A15)</li>
+                                        <li>Type your name: "Alex" (for example)</li>
+                                        <li>Press ENTER on your keyboard</li>
+                                        <li>Congratulations! You just entered data in Excel!</li>
+                                    </ol>
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(0, 2, 2)">
+                                <span class="lesson-number">2</span>
+                                <span class="lesson-title">Simple Math in Excel</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-0-2-2">
+                                <h4>Excel Can Do Math FOR You! Let's Try:</h4>
+                                
+                                <div class="step-by-step">
+                                    <p><strong>On the 2023 sheet, look at cell K4 (Total Items Sold for Original Coffee)</strong></p>
+                                    
+                                    <p><strong>Step 1: Understanding What's Already There:</strong></p>
+                                    <ol>
+                                        <li>Click on cell K4</li>
+                                        <li>Look up at the formula bar</li>
+                                        <li>It says: =SUM(G4:J4)</li>
+                                    </ol>
+                                    
+                                    <div class="formula-example">
+                                        <p><strong>What does this mean?</strong></p>
+                                        <p><strong>=</strong> means "calculate something"</p>
+                                        <p><strong>SUM</strong> means "add things up"</p>
+                                        <p><strong>(G4:J4)</strong> means "from cell G4 to cell J4"</p>
+                                    </div>
+                                    
+                                    <p><strong>Step 2: Let's Check the Numbers:</strong></p>
+                                    <p>Look at cells G4, H4, I4, J4:</p>
+                                    <ul>
+                                        <li>G4: 453 (Qtr. 1 sales)</li>
+                                        <li>H4: 563 (Qtr. 2 sales)</li>
+                                        <li>I4: 1253 (Qtr. 3 sales)</li>
+                                        <li>J4: 1515 (Qtr. 4 sales)</li>
+                                    </ul>
+                                    <p>Total: 453 + 563 + 1253 + 1515 = 3784</p>
+                                    <p>Look at K4 - it says 3784!</p>
+                                    
+                                    <p><strong>Step 3: Let's Make Our Own Simple Calculation:</strong></p>
+                                    <p>Find an empty spot on your sheet (maybe cell N15)</p>
+                                    <ol>
+                                        <li>Click on N15</li>
+                                        <li>Type: =5+3</li>
+                                        <li>Press ENTER</li>
+                                        <li>Excel shows: 8</li>
+                                    </ol>
+                                    <p>You just did math in Excel!</p>
+                                    
+                                    <p><strong>Another Example:</strong></p>
+                                    <ol>
+                                        <li>Click on N16</li>
+                                        <li>Type: =10*2 (The * means multiply)</li>
+                                        <li>Press ENTER</li>
+                                        <li>Excel shows: 20</li>
+                                    </ol>
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(0, 2, 3)">
+                                <span class="lesson-number">3</span>
+                                <span class="lesson-title">Following the Coffee Shop Report</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-0-2-3">
+                                <h4>Let's Trace Through the Calculations Together:</h4>
+                                
+                                <div class="step-by-step">
+                                    <p><strong>Part 1: Total Items Sold (Column K)</strong></p>
+                                    <p>For Original Coffee (row 4):</p>
+                                    <ol>
+                                        <li>Excel adds: Q1 + Q2 + Q3 + Q4</li>
+                                        <li>Formula: =SUM(G4:J4)</li>
+                                        <li>Result: 3784</li>
+                                    </ol>
+                                    
+                                    <p>For Expresso (row 5):</p>
+                                    <ol>
+                                        <li>Click K5</li>
+                                        <li>Formula bar shows: =SUM(G5:J5)</li>
+                                        <li>It adds: 288 + 432 + 625 + 1127 = 2472</li>
+                                    </ol>
+                                    
+                                    <p><strong>Part 2: Total Sales (Column L)</strong></p>
+                                    <p>For Original Coffee:</p>
+                                    <ol>
+                                        <li>Click L4</li>
+                                        <li>Formula bar: =E4*K4</li>
+                                        <li>This means: Price × Total Items</li>
+                                        <li>Price in E4: 1.75</li>
+                                        <li>Total Items in K4: 3784</li>
+                                        <li>Calculation: 1.75 × 3784 = 6622</li>
+                                        <li>Excel shows: 6622</li>
+                                    </ol>
+                                    
+                                    <p><strong>Part 3: Taxes (Column M)</strong></p>
+                                    <p>For Original Coffee:</p>
+                                    <ol>
+                                        <li>Click M4</li>
+                                        <li>Formula bar: =$M$1*L4</li>
+                                        <li>This means: Tax Rate × Total Sales</li>
+                                        <li>Tax Rate in M1: 0.0725</li>
+                                        <li>Total Sales in L4: 6622</li>
+                                        <li>Calculation: 0.0725 × 6622 = 480.095</li>
+                                        <li>Excel shows: 480.095</li>
+                                    </ol>
+                                </div>
+                                
+                                <div class="warning-box">
+                                    <strong>IMPORTANT NOTICE:</strong> See the <strong>$</strong> signs in <strong>$M$1</strong>? That means "ALWAYS use cell M1, no matter what." It's like saying "Use THIS specific cell."
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Unit 0.3: Working with Data -->
+                <div class="unit">
+                    <div class="unit-header" onclick="toggleUnit(0, 3)">
+                        <h3>Unit 0.3: Working with the Grading Sheet</h3>
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="unit-content" id="unit-0-3">
+                        <ul class="lesson-list">
+                            <li class="lesson-item" onclick="toggleLesson(0, 3, 1)">
+                                <span class="lesson-number">1</span>
+                                <span class="lesson-title">Calculating Student Totals</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-0-3-1">
+                                <h4>Let's Switch to COMMON FUNCTIONS Sheet:</h4>
+                                
+                                <div class="step-by-step">
+                                    <p><strong>Step 1: Click the "COMMON FUNCTIONS" tab at bottom</strong></p>
+                                    
+                                    <p><strong>Step 2: Look at the Student Data:</strong></p>
+                                    <p>You'll see:</p>
+                                    <ul>
+                                        <li>Student names</li>
+                                        <li>Their scores in Science, English, History, Maths</li>
+                                        <li>Empty columns for TOTAL, AVERAGE, GRADE</li>
+                                    </ul>
+                                    
+                                    <p><strong>Step 3: Let's Calculate Bronnie's Total Score:</strong></p>
+                                    <p>Bronnie is in row 3:</p>
+                                    <ul>
+                                        <li>Science: 21 (cell G3)</li>
+                                        <li>English: 81 (cell H3)</li>
+                                        <li>History: 62 (cell I3)</li>
+                                        <li>Maths: 49 (cell J3)</li>
+                                    </ul>
+                                    <p>We need to put the total in column K.</p>
+                                    
+                                    <div class="formula-example">
+                                        <p><strong>Method 1: Typing the Formula</strong></p>
+                                        <ol>
+                                            <li>Click on cell K3 (empty cell next to Maths score)</li>
+                                            <li>Type exactly: =G3+H3+I3+J3</li>
+                                            <li>Press ENTER</li>
+                                            <li>You should see: 213 (because 21+81+62+49=213)</li>
+                                        </ol>
+                                    </div>
+                                    
+                                    <div class="formula-example">
+                                        <p><strong>Method 2: Using SUM Function (Easier!)</strong></p>
+                                        <ol>
+                                            <li>Click on cell K3</li>
+                                            <li>Type: =SUM( (just type this much)</li>
+                                            <li>Now use your mouse: Click on G3</li>
+                                            <li>Hold SHIFT key, click on J3</li>
+                                            <li>(This selects G3, H3, I3, J3 all at once)</li>
+                                            <li>Type: ) (close the parenthesis)</li>
+                                            <li>Press ENTER</li>
+                                            <li>You should see: 213</li>
+                                        </ol>
+                                    </div>
+                                    
+                                    <p><strong>Step 4: Copy the Formula Down:</strong></p>
+                                    <p>Now we need to do this for ALL students.</p>
+                                    <p>Instead of typing each one, we COPY it!</p>
+                                    <ol>
+                                        <li>Make sure K3 is selected (has the formula)</li>
+                                        <li>Look at the bottom-right corner of the cell</li>
+                                        <li>See the tiny square? Hover over it until cursor becomes a +</li>
+                                        <li>Click and HOLD the left mouse button</li>
+                                        <li>DRAG down to about row 10</li>
+                                        <li>Release mouse button</li>
+                                    </ol>
+                                    <p>Magic! All students now have their totals!</p>
+                                    
+                                    <p><strong>Step 5: Check Your Work:</strong></p>
+                                    <ol>
+                                        <li>Click on K4 (Lemmie's total)</li>
+                                        <li>Look at formula bar - it should say: =SUM(G4:J4)</li>
+                                    </ol>
+                                    <p>Excel AUTOMATICALLY changed it from G3:J3 to G4:J4!</p>
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(0, 3, 2)">
+                                <span class="lesson-number">2</span>
+                                <span class="lesson-title">Creating a Grading System</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-0-3-2">
+                                <h4>Now Let's Calculate Grades in Column M:</h4>
+                                
+                                <div class="step-by-step">
+                                    <p><strong>We Need to Create This Rule:</strong></p>
+                                    <ul>
+                                        <li>If score is >70 → "A"</li>
+                                        <li>If score 60-70 → "B"</li>
+                                        <li>If score 50-59 → "C"</li>
+                                        <li>If score 40-49 → "D"</li>
+                                        <li>Below 40 → "Fail"</li>
+                                    </ul>
+                                    
+                                    <p><strong>Step 1: First, We Need Averages</strong></p>
+                                    <p>Before we can grade, we need average scores in column L.</p>
+                                    <ol>
+                                        <li>Click L3 (where Bronnie's average should go)</li>
+                                        <li>Type: =K3/4 (Total ÷ 4 subjects)</li>
+                                        <li>Press ENTER - shows 53.25</li>
+                                        <li>Copy down (drag that little square down)</li>
+                                    </ol>
+                                    
+                                    <p><strong>Step 2: The IF Formula for Grades</strong></p>
+                                    <p>This looks complicated but we'll do it piece by piece.</p>
+                                    <ol>
+                                        <li>Click M3 (where grade will go)</li>
+                                        <li>Type this SLOWLY:</li>
+                                    </ol>
+                                    
+                                    <div class="code-example">
+=IF(L3>70,"A",
+IF(L3>60,"B",
+IF(L3>50,"C",
+IF(L3>40,"D","Fail"))))
+                                    </div>
+                                    
+                                    <p><strong>What this means:</strong></p>
+                                    <ul>
+                                        <li>=IF(L3>70,"A", → If L3 is greater than 70, put "A"</li>
+                                        <li>IF(L3>60,"B", → If not A, but greater than 60, put "B"</li>
+                                        <li>IF(L3>50,"C", → If not B, but greater than 50, put "C"</li>
+                                        <li>IF(L3>40,"D","Fail")))) → If not C, but greater than 40, put "D", otherwise "Fail"</li>
+                                    </ul>
+                                    
+                                    <p><strong>Step 3: Press ENTER and See Result</strong></p>
+                                    <p>Bronnie's average is 53.25</p>
+                                    <p>That's >50 but not >60</p>
+                                    <p>So she gets a "C"</p>
+                                    
+                                    <p><strong>Step 4: Copy Down</strong></p>
+                                    <p>Drag that little square down column M</p>
+                                    <p>See all students get grades automatically!</p>
+                                </div>
+                                
+                                <div class="tip-box">
+                                    <strong>Pro Tip:</strong> The IF function is one of Excel's most powerful tools. It lets Excel make decisions based on your data!
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Unit 0.4: Intermediate Skills -->
+                <div class="unit">
+                    <div class="unit-header" onclick="toggleUnit(0, 4)">
+                        <h3>Unit 0.4: Moving to Intermediate Skills</h3>
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="unit-content" id="unit-0-4">
+                        <ul class="lesson-list">
+                            <li class="lesson-item" onclick="toggleLesson(0, 4, 1)">
+                                <span class="lesson-number">1</span>
+                                <span class="lesson-title">Working with Tables and Filters</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-0-4-1">
+                                <h4>Let's Open the Intermediate File:</h4>
+                                
+                                <div class="step-by-step">
+                                    <p><strong>Step 1: Open the Second File</strong></p>
+                                    <ol>
+                                        <li>Go to File → Open (top left)</li>
+                                        <li>Find "Excel 365 Intermediate Example File.xlsx"</li>
+                                        <li>Double-click to open it</li>
+                                    </ol>
+                                    
+                                    <p><strong>Step 2: Look at the "Creating Tables" Sheet</strong></p>
+                                    <p>You'll see employee information:</p>
+                                    <ul>
+                                        <li>Emp ID, Last Name, First Name, Dept, etc.</li>
+                                        <li>Lots of data (37 employees)</li>
+                                    </ul>
+                                    
+                                    <p><strong>Step 3: Making This Data Easier to Read with a TABLE</strong></p>
+                                    <p>A Table in Excel is like putting your data in a nice, organized box.</p>
+                                    <ol>
+                                        <li>Click ANYWHERE in the data (like cell A5)</li>
+                                        <li>Go to the "Insert" tab at top</li>
+                                        <li>Click "Table" (it looks like a grid)</li>
+                                        <li>A box pops up - click "OK"</li>
+                                    </ol>
+                                    
+                                    <p>Magic happens!</p>
+                                    <ul>
+                                        <li>Your data gets stripes (alternating colors)</li>
+                                        <li>Little arrows appear next to each column name</li>
+                                        <li>A new tab appears: "Table Design"</li>
+                                    </ul>
+                                    
+                                    <p><strong>Step 4: Filtering Data (Finding What You Need)</strong></p>
+                                    <p>Let's Find All Employees in the "AT" Department:</p>
+                                    <ol>
+                                        <li>Look at the "Dept" column (column D)</li>
+                                        <li>See the little arrow ▼ next to "Dept"? Click that arrow</li>
+                                        <li>A dropdown menu appears with: (Select All) and checkboxes for AT, AD, AC, HR, MK, MF</li>
+                                        <li>Click (Select All) to UNCHECK everything</li>
+                                        <li>Now CHECK only "AT"</li>
+                                        <li>Click OK</li>
+                                    </ol>
+                                    
+                                    <p><strong>Result:</strong> Only 7 employees show up (those in AT department)!</p>
+                                    
+                                    <p><strong>Step 5: Let's Filter More - By Building</strong></p>
+                                    <p>Now let's see only AT employees in Building 1:</p>
+                                    <ol>
+                                        <li>Click the arrow next to "Location"</li>
+                                        <li>Uncheck (Select All)</li>
+                                        <li>Check only "Building 1"</li>
+                                        <li>Click OK</li>
+                                    </ol>
+                                    
+                                    <p><strong>Result:</strong> Only 5 employees now (AT department in Building 1)</p>
+                                    
+                                    <p><strong>Step 6: Clearing Filters</strong></p>
+                                    <p>To see ALL employees again:</p>
+                                    <ol>
+                                        <li>Click the Data tab</li>
+                                        <li>Click "Clear" (in Sort & Filter group)</li>
+                                        <li>OR click each filter arrow and choose "Clear Filter"</li>
+                                    </ol>
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(0, 4, 2)">
+                                <span class="lesson-number">2</span>
+                                <span class="lesson-title">Sorting and Making Charts</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-0-4-2">
+                                <h4>Simple Sorting (A to Z) and Charts</h4>
+                                
+                                <div class="step-by-step">
+                                    <p><strong>Sorting Employees by Last Name:</strong></p>
+                                    
+                                    <div class="formula-example">
+                                        <p><strong>Method 1: Using the Table</strong></p>
+                                        <ol>
+                                            <li>Click the arrow next to "Last Name"</li>
+                                            <li>Choose "Sort A to Z"</li>
+                                            <li>All names now in alphabetical order!</li>
+                                        </ol>
+                                    </div>
+                                    
+                                    <div class="formula-example">
+                                        <p><strong>Method 2: Regular Sorting (if not a Table)</strong></p>
+                                        <ol>
+                                            <li>Click ANYWHERE in the Last Name column</li>
+                                            <li>Go to Data tab</li>
+                                            <li>Click "A to Z" button (looks like A↑Z)</li>
+                                        </ol>
+                                    </div>
+                                    
+                                    <p><strong>Let's Try Multi-Level Sorting:</strong></p>
+                                    <p>Sort by Department, THEN by Last Name:</p>
+                                    <ol>
+                                        <li>Click anywhere in the data</li>
+                                        <li>Data tab → "Sort" button</li>
+                                        <li>A dialog box appears</li>
+                                        <li>First level: Column: Choose "Dept", Order: A to Z</li>
+                                        <li>Click "Add Level"</li>
+                                        <li>Second level: Column: Choose "Last Name", Order: A to Z</li>
+                                        <li>Click OK</li>
+                                    </ol>
+                                    
+                                    <p>Now all AT together (A-Z), all AD together, etc. AND within each department, last names are A-Z!</p>
+                                    
+                                    <p><strong>Making Your First Chart</strong></p>
+                                    <p>Let's Use the "Charts" Sheet:</p>
+                                    <ol>
+                                        <li>Go to "Charts" Sheet (click the "Charts" tab at bottom)</li>
+                                        <li>You'll see sales data for 5 people across 4 quarters</li>
+                                    </ol>
+                                    
+                                    <p><strong>Step 1: Select Data for Chart</strong></p>
+                                    <ol>
+                                        <li>Click on cell A4 (where it says "Owen")</li>
+                                        <li>Hold SHIFT key</li>
+                                        <li>Click on cell E9 (bottom-right of data)</li>
+                                        <li>You should have all data selected (with blue highlight)</li>
+                                    </ol>
+                                    
+                                    <p><strong>Step 2: Insert a Chart</strong></p>
+                                    <ol>
+                                        <li>Go to "Insert" tab</li>
+                                        <li>Look for "Charts" group</li>
+                                        <li>Click the column chart icon (first one)</li>
+                                        <li>Choose "Clustered Column" (first option)</li>
+                                    </ol>
+                                    
+                                    <p><strong>POOF!</strong> A chart appears!</p>
+                                    
+                                    <p><strong>Step 3: Make the Chart Pretty</strong></p>
+                                    <ol>
+                                        <li>Click on the chart title that says "Qtr. 1"</li>
+                                        <li>Delete it and type: "2023 Sales Performance"</li>
+                                        <li>See the "+" sign on right of chart? Click it</li>
+                                        <li>Check "Data Labels" - numbers appear on bars!</li>
+                                    </ol>
+                                    
+                                    <div class="tip-box">
+                                        <strong>Explore:</strong> Try clicking different parts of the chart:
+                                        <ul>
+                                            <li>Click a blue bar (Qtr. 1)</li>
+                                            <li>Click an orange bar (Qtr. 2)</li>
+                                            <li>Click the legend at bottom</li>
+                                            <li>Right-click anything to format it</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(0, 4, 3)">
+                                <span class="lesson-number">3</span>
+                                <span class="lesson-title">Formatting and Advanced Features</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-0-4-3">
+                                <h4>Formatting Basics and More</h4>
+                                
+                                <div class="step-by-step">
+                                    <p><strong>Formatting Basics</strong></p>
+                                    <p>Making Things Look Nice on "Conditional Format" Sheet:</p>
+                                    <ol>
+                                        <li>Go to "Conditional Format" Sheet</li>
+                                        <li>You'll see house listings with prices</li>
+                                    </ol>
+                                    
+                                    <p><strong>Highlight Expensive Houses</strong></p>
+                                    <p>Let's make houses over $150,000 stand out:</p>
+                                    <ol>
+                                        <li>Select all prices (click B2, drag down to B133)</li>
+                                        <li>Go to "Home" tab</li>
+                                        <li>Click "Conditional Formatting"</li>
+                                        <li>Hover over "Highlight Cells Rules"</li>
+                                        <li>Choose "Greater Than"</li>
+                                        <li>Type: 150000</li>
+                                        <li>Choose a color (like "Light Red Fill")</li>
+                                        <li>Click OK</li>
+                                    </ol>
+                                    
+                                    <p><strong>Now all houses over $150,000 are red!</strong></p>
+                                    
+                                    <p><strong>Data Bars for Visual Comparison</strong></p>
+                                    <p>Let's see which houses are biggest:</p>
+                                    <ol>
+                                        <li>Select Square Feet column (D2:D133)</li>
+                                        <li>Conditional Formatting → Data Bars</li>
+                                        <li>Choose a color</li>
+                                    </ol>
+                                    
+                                    <p><strong>Now you can SEE which houses are bigger - longer bars = bigger houses!</strong></p>
+                                    
+                                    <p><strong>Linking Between Sheets</strong></p>
+                                    <p>Using the "Linking Data" Sheet:</p>
+                                    <ol>
+                                        <li>Go to "Linking Data" Sheet</li>
+                                        <li>You'll see a simple sheet with some text</li>
+                                    </ol>
+                                    
+                                    <p><strong>Link to Another Cell</strong></p>
+                                    <p>Cell A3 says: "Excel is even better than I expected!"</p>
+                                    <p>Let's make cell A7 show the same thing:</p>
+                                    <ol>
+                                        <li>Click on cell A7</li>
+                                        <li>Type: = (just the equals sign)</li>
+                                        <li>NOW click on cell A3</li>
+                                        <li>Press ENTER</li>
+                                    </ol>
+                                    
+                                    <p>Cell A7 now says the same as A3!</p>
+                                    
+                                    <p><strong>Test the Link</strong></p>
+                                    <ol>
+                                        <li>Click on A3</li>
+                                        <li>Change the text to: "I'm learning Excel!"</li>
+                                        <li>Press ENTER</li>
+                                        <li>Look at A7 - it also changed!</li>
+                                    </ol>
+                                    
+                                    <p>This is linking - they're connected!</p>
+                                    
+                                    <p><strong>Dropdown Lists (Data Validation)</strong></p>
+                                    <p>Using the "Data Validation" Sheet:</p>
+                                    <ol>
+                                        <li>Go to "Data Validation" Sheet</li>
+                                        <li>You'll see a credit report form with empty cells</li>
+                                        <li>On the right, a list of sales people</li>
+                                    </ol>
+                                    
+                                    <p><strong>Create a Dropdown for Sales Rep</strong></p>
+                                    <p>We want people to CHOOSE from a list, not type.</p>
+                                    <ol>
+                                        <li>Click on cell D6 (where Sales Rep goes for Sallie Baxter)</li>
+                                        <li>Go to "Data" tab</li>
+                                        <li>Click "Data Validation"</li>
+                                        <li>In Settings tab: Allow: Choose "List"</li>
+                                        <li>Source: Click the little grid icon</li>
+                                        <li>Select cells G4:G7 (the sales people names)</li>
+                                        <li>Click the grid icon again to return</li>
+                                        <li>Click OK</li>
+                                    </ol>
+                                    
+                                    <p><strong>Use the Dropdown</strong></p>
+                                    <ol>
+                                        <li>Click on cell D6</li>
+                                        <li>See the little arrow ▼ that appears?</li>
+                                        <li>Click it - a dropdown appears!</li>
+                                        <li>Choose "Robin Oconnor"</li>
+                                    </ol>
+                                    
+                                    <p>Try other cells in column D - they all have dropdowns now!</p>
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Unit 0.5: Practice and Next Steps -->
+                <div class="unit">
+                    <div class="unit-header" onclick="toggleUnit(0, 5)">
+                        <h3>Unit 0.5: Practice Exercises and Next Steps</h3>
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="unit-content" id="unit-0-5">
+                        <ul class="lesson-list">
+                            <li class="lesson-item" onclick="toggleLesson(0, 5, 1)">
+                                <span class="lesson-number">1</span>
+                                <span class="lesson-title">Practice Exercises for Beginners</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-0-5-1">
+                                <h4>Try These Exercises to Reinforce Your Learning:</h4>
+                                
+                                <div class="practice-exercise">
+                                    <p><strong>Exercise 1: Coffee Shop Math</strong></p>
+                                    <p>On 2023 sheet:</p>
+                                    <ol>
+                                        <li>Add a new product in row 10</li>
+                                        <li>Give it a price in column E</li>
+                                        <li>Add some quarterly sales in G10:J10</li>
+                                        <li>Copy the formulas from row 9 to row 10</li>
+                                        <li>Watch Excel calculate everything automatically!</li>
+                                    </ol>
+                                </div>
+                                
+                                <div class="practice-exercise">
+                                    <p><strong>Exercise 2: Student Grades</strong></p>
+                                    <p>On COMMON FUNCTIONS sheet:</p>
+                                    <ol>
+                                        <li>Find a student who failed</li>
+                                        <li>Change one of their scores to make them pass</li>
+                                        <li>Watch their grade change from "Fail" to a letter grade</li>
+                                    </ol>
+                                </div>
+                                
+                                <div class="practice-exercise">
+                                    <p><strong>Exercise 3: Employee Search</strong></p>
+                                    <p>On Creating Tables sheet:</p>
+                                    <ol>
+                                        <li>Filter to show only employees hired before 2000</li>
+                                        <li>Count how many there are</li>
+                                        <li>Filter to show highest paid employees (Pay Rate > 13)</li>
+                                    </ol>
+                                </div>
+                                
+                                <div class="practice-exercise">
+                                    <p><strong>Exercise 4: Simple Chart</strong></p>
+                                    <p>Make a pie chart of the coffee sales:</p>
+                                    <ol>
+                                        <li>On 2023 sheet, select products (D4:D9)</li>
+                                        <li>Hold CTRL, select total sales (L4:L9)</li>
+                                        <li>Insert → Pie Chart</li>
+                                        <li>Add data labels</li>
+                                    </ol>
+                                </div>
+                            </div>
+
+                            <li class="lesson-item" onclick="toggleLesson(0, 5, 2)">
+                                <span class="lesson-number">2</span>
+                                <span class="lesson-title">Beginner's Cheat Sheet and Next Steps</span>
+                            </li>
+                            <div class="lesson-content" id="lesson-0-5-2">
+                                <h4>Top 10 Things to Remember:</h4>
+                                
+                                <div class="cheat-sheet">
+                                    <ol>
+                                        <li><strong>Click once</strong> to select a cell</li>
+                                        <li><strong>Double-click</strong> to edit inside a cell</li>
+                                        <li><strong>Formula always starts with</strong> =</li>
+                                        <li><strong>SUM adds things:</strong> =SUM(A1:A10)</li>
+                                        <li><strong>$ means "don't change this":</strong> =$A$1</li>
+                                        <li><strong>Drag the little square</strong> to copy formulas</li>
+                                        <li><strong>Filter arrows</strong> help find data</li>
+                                        <li><strong>Insert tab</strong> has charts and tables</li>
+                                        <li><strong>Home tab</strong> has formatting (colors, fonts)</li>
+                                        <li><strong>Save often!</strong> Ctrl + S</li>
+                                    </ol>
+                                </div>
+                                
+                                <h4>Common Mistakes and Fixes:</h4>
+                                
+                                <div class="warning-box">
+                                    <p><strong>Mistake:</strong> Formula shows instead of result</p>
+                                    <p><strong>Fix:</strong> You forgot the = at beginning</p>
+                                </div>
+                                
+                                <div class="warning-box">
+                                    <p><strong>Mistake:</strong> #DIV/0! error</p>
+                                    <p><strong>Fix:</strong> You're dividing by zero or empty cell</p>
+                                </div>
+                                
+                                <div class="warning-box">
+                                    <p><strong>Mistake:</strong> Everything looks like #####</p>
+                                    <p><strong>Fix:</strong> Column is too narrow - make it wider</p>
+                                </div>
+                                
+                                <div class="warning-box">
+                                    <p><strong>Mistake:</strong> Can't type in cell</p>
+                                    <p><strong>Fix:</strong> You might be in "View" mode - press ESC</p>
+                                </div>
+                                
+                                <h4>Next Steps After These Basics</h4>
+                                
+                                <div class="tip-box">
+                                    <p>Once you're comfortable with these exercises:</p>
+                                    <ol>
+                                        <li><strong>Try the other sheets</strong> in the workbooks</li>
+                                        <li><strong>Practice daily</strong> - even 15 minutes helps!</li>
+                                        <li><strong>Make your own data</strong> - grocery list, budget, etc.</li>
+                                        <li><strong>Watch beginner Excel videos</strong> on YouTube</li>
+                                        <li><strong>Don't be afraid to experiment</strong> - you can always undo (Ctrl+Z)</li>
+                                    </ol>
+                                    
+                                    <p>Remember: Everyone starts as a beginner. The Excel experts you see? They started right where you are now. Keep practicing, and you'll be amazed at what you can do!</p>
+                                    
+                                    <p style="text-align: center; font-weight: bold; margin-top: 1rem; color: var(--primary);">
+                                        You're now officially an Excel beginner! Congratulations! 🎉
+                                    </p>
+                                </div>
+                            </div>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 1: Excel Basics (Original content - renumbered) -->
+        <div class="header">
+            <a href="msexcel.html" class="btn" role="button" aria-label="GO TO NEXT MODULE">
+                <span>GO TO NEXT MODULE</span>
+                <i class="fas fa-arrow-right"></i>
+            </a>
+          
+        </div>
+
+        
+    </div>
+
+    <div class="nav-buttons">
+        <button class="nav-btn" id="prev-btn" onclick="navigateLesson('prev')">
+            <i class="fas fa-arrow-left"></i> Previous
+        </button>
+        <button class="nav-btn" id="next-btn" onclick="navigateLesson('next')">
+            Next <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+
+    <script>
+        // Track current lesson
+        let currentLesson = null;
+
+        // Toggle module visibility
+        function toggleModule(moduleId) {
+            const moduleContent = document.getElementById(`module-${moduleId}`);
+            const icon = moduleContent.previousElementSibling.querySelector('.icon');
+            
+            moduleContent.classList.toggle('active');
+            icon.classList.toggle('rotated');
+        }
+
+        // Toggle unit visibility
+        function toggleUnit(moduleId, unitId) {
+            const unitContent = document.getElementById(`unit-${moduleId}-${unitId}`);
+            const icon = unitContent.previousElementSibling.querySelector('.icon');
+            
+            unitContent.classList.toggle('active');
+            icon.classList.toggle('rotated');
+        }
+
+        // Toggle lesson content
+        function toggleLesson(moduleId, unitId, lessonId) {
+            const lessonContent = document.getElementById(`lesson-${moduleId}-${unitId}-${lessonId}`);
+            
+            // Close other lessons in the same unit
+            const unitContent = document.getElementById(`unit-${moduleId}-${unitId}`);
+            if (unitContent) {
+                unitContent.querySelectorAll('.lesson-content').forEach(content => {
+                    if (content !== lessonContent && content.classList.contains('active')) {
+                        content.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Toggle current lesson
+            lessonContent.classList.toggle('active');
+            
+            // Update current lesson tracking
+            if (lessonContent.classList.contains('active')) {
+                currentLesson = { moduleId, unitId, lessonId };
+                updateProgress();
+            }
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            const totalLessons = document.querySelectorAll('.lesson-item').length;
+            const completedLessons = document.querySelectorAll('.lesson-item.completed').length;
+            const progressPercentage = (completedLessons / totalLessons) * 100;
+            
+            document.getElementById('progress').style.width = `${progressPercentage}%`;
+        }
+
+        // Navigate between lessons
+        function navigateLesson(direction) {
+            if (!currentLesson) {
+                // Start with first lesson if none selected
+                const firstLesson = document.querySelector('.lesson-item');
+                if (firstLesson) {
+                    const onclickAttr = firstLesson.getAttribute('onclick');
+                    const matches = onclickAttr.match(/toggleLesson\((\d+), (\d+), (\d+)\)/);
+                    if (matches) {
+                        const [, moduleId, unitId, lessonId] = matches;
+                        const lessonContent = document.getElementById(`lesson-${moduleId}-${unitId}-${lessonId}`);
+                        if (lessonContent) {
+                            lessonContent.classList.add('active');
+                            currentLesson = { moduleId: parseInt(moduleId), unitId: parseInt(unitId), lessonId: parseInt(lessonId) };
+                            lessonContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }
+                }
+                return;
+            }
+            
+            const { moduleId, unitId, lessonId } = currentLesson;
+            let nextLesson;
+            
+            if (direction === 'next') {
+                // Find next lesson in current unit
+                const currentUnit = document.getElementById(`unit-${moduleId}-${unitId}`);
+                if (!currentUnit) return;
+                
+                const lessons = currentUnit.querySelectorAll('.lesson-item');
+                const currentIndex = Array.from(lessons).findIndex(lesson => 
+                    lesson.getAttribute('onclick').includes(`toggleLesson(${moduleId}, ${unitId}, ${lessonId})`)
+                );
+                
+                if (currentIndex < lessons.length - 1) {
+                    nextLesson = lessons[currentIndex + 1];
+                } else {
+                    // Move to next unit or module
+                    alert('You have reached the end of this unit!');
+                    return;
+                }
+            } else {
+                // Find previous lesson in current unit
+                const currentUnit = document.getElementById(`unit-${moduleId}-${unitId}`);
+                if (!currentUnit) return;
+                
+                const lessons = currentUnit.querySelectorAll('.lesson-item');
+                const currentIndex = Array.from(lessons).findIndex(lesson => 
+                    lesson.getAttribute('onclick').includes(`toggleLesson(${moduleId}, ${unitId}, ${lessonId})`)
+                );
+                
+                if (currentIndex > 0) {
+                    nextLesson = lessons[currentIndex - 1];
+                } else {
+                    // Move to previous unit or module
+                    alert('You are at the beginning of this unit!');
+                    return;
+                }
+            }
+            
+            // Close current lesson and open next one
+            document.querySelectorAll('.lesson-content.active').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Extract lesson IDs from onclick attribute
+            const onclickAttr = nextLesson.getAttribute('onclick');
+            const matches = onclickAttr.match(/toggleLesson\((\d+), (\d+), (\d+)\)/);
+            if (matches) {
+                const [, nextModuleId, nextUnitId, nextLessonId] = matches;
+                const nextLessonContent = document.getElementById(`lesson-${nextModuleId}-${nextUnitId}-${nextLessonId}`);
+                if (nextLessonContent) {
+                    nextLessonContent.classList.add('active');
+                    currentLesson = { moduleId: parseInt(nextModuleId), unitId: parseInt(nextUnitId), lessonId: parseInt(nextLessonId) };
+                    
+                    // Scroll to the lesson
+                    nextLessonContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        }
+
+        // Search functionality
+        document.getElementById('search-input').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            
+            if (searchTerm.length < 2) {
+                // Reset display if search term is too short
+                document.querySelectorAll('.module, .unit, .lesson-item').forEach(element => {
+                    element.style.display = '';
+                });
+                return;
+            }
+            
+            // Search through lesson titles and content
+            document.querySelectorAll('.lesson-item').forEach(lesson => {
+                const lessonTitle = lesson.querySelector('.lesson-title').textContent.toLowerCase();
+                const lessonId = lesson.getAttribute('onclick').match(/toggleLesson\((\d+), (\d+), (\d+)\)/);
+                
+                if (lessonId) {
+                    const [, moduleId, unitId, lessonIdNum] = lessonId;
+                    const lessonContent = document.getElementById(`lesson-${moduleId}-${unitId}-${lessonIdNum}`);
+                    
+                    if (lessonContent) {
+                        const contentText = lessonContent.textContent.toLowerCase();
+                        
+                        if (lessonTitle.includes(searchTerm) || contentText.includes(searchTerm)) {
+                            // Show this lesson and its parents
+                            lesson.style.display = '';
+                            const unit = lesson.closest('.unit');
+                            if (unit) unit.style.display = '';
+                            const module = lesson.closest('.module');
+                            if (module) module.style.display = '';
+                        } else {
+                            lesson.style.display = 'none';
+                        }
+                    }
+                }
+            });
+        });
+
+        // Mark lesson as completed (example functionality)
+        document.querySelectorAll('.lesson-item').forEach(lesson => {
+            lesson.addEventListener('dblclick', function() {
+                this.classList.toggle('completed');
+                updateProgress();
+            });
+        });
+
+        // Initialize first module as open
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleModule(0); // Open the beginner's guide module first
+            updateProgress();
+        });
+
+        // Service worker registration (keep existing code)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('../service-worker.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('ServiceWorker registration failed: ', error);
+                    });
+            });
+        }
+
+        // Online/offline status
+        window.addEventListener('online', function() {
+            console.log('App is online');
+        });
+
+        window.addEventListener('offline', function() {
+            console.log('App is offline');
+        });
+    </script>
+</body>
+</html>

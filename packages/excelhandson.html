@@ -9,6 +9,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <!-- Add jsPDF library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <!-- Auth Manager -->
     <script src="../auth-manager.js"></script>
     <!-- Add to head section -->
@@ -544,7 +547,7 @@
                         <button class="btn btn-primary" onclick="openExercise('budget')">
                             <i class="fas fa-play-circle"></i> Start Exercise
                         </button>
-                        <button class="btn btn-outline" onclick="downloadFile('budget-template.xlsx')">
+                        <button class="btn btn-outline" onclick="downloadFile('budget-template.csv')">
                             <i class="fas fa-download"></i> Template
                         </button>
                     </div>
@@ -589,7 +592,7 @@
                         <button class="btn btn-primary" onclick="openExercise('sales')">
                             <i class="fas fa-play-circle"></i> Start Exercise
                         </button>
-                        <button class="btn btn-outline" onclick="downloadFile('sales-data.xlsx')">
+                        <button class="btn btn-outline" onclick="downloadFile('sales-data.csv')">
                             <i class="fas fa-download"></i> Data
                         </button>
                     </div>
@@ -634,7 +637,7 @@
                         <button class="btn btn-primary" onclick="openExercise('inventory')">
                             <i class="fas fa-play-circle"></i> Start Exercise
                         </button>
-                        <button class="btn btn-outline" onclick="downloadFile('inventory-template.xlsx')">
+                        <button class="btn btn-outline" onclick="downloadFile('inventory-template.csv')">
                             <i class="fas fa-download"></i> Template
                         </button>
                     </div>
@@ -753,7 +756,7 @@
             </div>
             
             <div class="module-actions">
-                <button class="btn btn-primary" onclick="downloadFile('budget-solution.xlsx')">
+                <button class="btn btn-primary" onclick="downloadFile('budget-solution.csv')">
                     <i class="fas fa-download"></i> Download Solution
                 </button>
                 <button class="btn btn-outline" onclick="closeExercise('budget')">
@@ -829,7 +832,7 @@
             </div>
             
             <div class="module-actions">
-                <button class="btn btn-primary" onclick="downloadFile('sales-solution.xlsx')">
+                <button class="btn btn-primary" onclick="downloadFile('sales-solution.csv')">
                     <i class="fas fa-download"></i> Download Solution
                 </button>
                 <button class="btn btn-outline" onclick="closeExercise('sales')">
@@ -906,7 +909,7 @@
             </div>
             
             <div class="module-actions">
-                <button class="btn btn-primary" onclick="downloadFile('inventory-solution.xlsx')">
+                <button class="btn btn-primary" onclick="downloadFile('inventory-solution.csv')">
                     <i class="fas fa-download"></i> Download Solution
                 </button>
                 <button class="btn btn-outline" onclick="closeExercise('inventory')">
@@ -983,7 +986,7 @@
             </div>
             
             <div class="module-actions">
-                <button class="btn btn-primary" onclick="downloadFile('analysis-solution.xlsx')">
+                <button class="btn btn-primary" onclick="downloadFile('analysis-solution.csv')">
                     <i class="fas fa-download"></i> Download Solution
                 </button>
                 <button class="btn btn-outline" onclick="closeExercise('analysis')">
@@ -1004,7 +1007,7 @@
                     </div>
                     <h4>Budget Template</h4>
                     <p>Starter template for personal budget tracking</p>
-                    <button class="btn btn-outline" onclick="downloadFile('budget-template.xlsx')">
+                    <button class="btn btn-outline" onclick="downloadFile('budget-template.csv')">
                         <i class="fas fa-download"></i> Download
                     </button>
                 </div>
@@ -1015,7 +1018,7 @@
                     </div>
                     <h4>Sales Dataset</h4>
                     <p>Sample sales data for analysis and dashboard creation</p>
-                    <button class="btn btn-outline" onclick="downloadFile('sales-data.xlsx')">
+                    <button class="btn btn-outline" onclick="downloadFile('sales-data.csv')">
                         <i class="fas fa-download"></i> Download
                     </button>
                 </div>
@@ -1026,7 +1029,7 @@
                     </div>
                     <h4>Inventory Template</h4>
                     <p>Template for inventory management system</p>
-                    <button class="btn btn-outline" onclick="downloadFile('inventory-template.xlsx')">
+                    <button class="btn btn-outline" onclick="downloadFile('inventory-template.csv')">
                         <i class="fas fa-download"></i> Download
                     </button>
                 </div>
@@ -1103,7 +1106,7 @@
         // Enhanced download function with real file data
         function downloadFile(filename) {
             const fileData = {
-                'budget-template.xlsx': {
+                'budget-template.csv': {
                     content: `Date,Type,Category,Description,Amount
 2024-01-01,Income,Salary,Monthly Salary,3500
 2024-01-05,Expense,Housing,Rent,1200
@@ -1119,7 +1122,7 @@
 2024-02-10,Expense,Transportation,Gas,85`,
                     type: 'text/csv'
                 },
-                'sales-data.xlsx': {
+                'sales-data.csv': {
                     content: `Region,Salesperson,Product,Date,Units,Unit_Price,Total_Sales
 North,John Smith,Laptop,2024-01-15,5,899,4495
 South,Maria Garcia,Tablet,2024-01-16,8,349,2792
@@ -1135,7 +1138,7 @@ East,David Chen,Tablet,2024-01-25,11,349,3839
 West,Sarah Johnson,Smartphone,2024-01-26,5,699,3495`,
                     type: 'text/csv'
                 },
-                'inventory-template.xlsx': {
+                'inventory-template.csv': {
                     content: `Product_ID,Product_Name,Category,Current_Stock,Min_Stock,Max_Stock,Unit_Price,Supplier,Last_Order_Date
 PROD001,Wireless Mouse,Electronics,45,20,100,25.99,TechSupplies Inc,2024-01-10
 PROD002,Mechanical Keyboard,Electronics,32,15,80,89.99,TechSupplies Inc,2024-01-12
@@ -1161,7 +1164,7 @@ CUST009,Irene Adams,28,New York,2023-06-08,Premium,89.99,809.91,No
 CUST010,Jack Harris,39,Los Angeles,2023-04-30,Standard,69.99,699.90,No`,
                     type: 'text/csv'
                 },
-                'budget-solution.xlsx': {
+                'budget-solution.csv': {
                     content: `Date,Type,Category,Description,Amount,Budget,Status
 2024-01-01,Income,Salary,Monthly Salary,3500,3500,On Target
 2024-01-05,Expense,Housing,Rent,1200,1200,On Target
@@ -1177,7 +1180,7 @@ CUST010,Jack Harris,39,Los Angeles,2023-04-30,Standard,69.99,699.90,No`,
 2024-02-10,Expense,Transportation,Gas,85,100,Under Budget`,
                     type: 'text/csv'
                 },
-                'sales-solution.xlsx': {
+                'sales-solution.csv': {
                     content: `Region,Salesperson,Product,Date,Units,Unit_Price,Total_Sales,Commission
 North,John Smith,Laptop,2024-01-15,5,899,4495,449.5
 South,Maria Garcia,Tablet,2024-01-16,8,349,2792,279.2
@@ -1191,7 +1194,7 @@ North,John Smith,Smartphone,2024-01-23,9,699,6291,629.1
 South,Maria Garcia,Laptop,2024-01-24,2,899,1798,179.8`,
                     type: 'text/csv'
                 },
-                'inventory-solution.xlsx': {
+                'inventory-solution.csv': {
                     content: `Product_ID,Product_Name,Category,Current_Stock,Min_Stock,Max_Stock,Unit_Price,Supplier,Last_Order_Date,Status,Reorder_Quantity
 PROD001,Wireless Mouse,Electronics,45,20,100,25.99,TechSupplies Inc,2024-01-10,OK,0
 PROD002,Mechanical Keyboard,Electronics,32,15,80,89.99,TechSupplies Inc,2024-01-12,OK,0
@@ -1203,7 +1206,7 @@ PROD007,Pen Set,Office Supplies,89,40,200,12.99,PaperWorks,2024-01-20,OK,0
 PROD008,Stapler,Office Supplies,34,20,100,8.99,OfficeGear,2024-01-14,Reorder,16`,
                     type: 'text/csv'
                 },
-                'analysis-solution.xlsx': {
+                'analysis-solution.csv': {
                     content: `CustomerID,Name,Age,City,SignupDate,Plan,MonthlyCharge,TotalCharges,Churn,Tenure_Months,LTV
 CUST001,Alice Johnson,34,New York,2023-01-15,Premium,89.99,1079.88,No,12,1079.88
 CUST002,Bob Smith,45,Los Angeles,2023-02-20,Basic,49.99,549.89,Yes,11,549.89
@@ -1218,9 +1221,152 @@ CUST010,Jack Harris,39,Los Angeles,2023-04-30,Standard,69.99,699.90,No,9,699.90`
                     type: 'text/csv'
                 },
                 'formula-cheatsheet.pdf': {
-                    content: 'This would be a PDF file with formula examples',
-                    type: 'application/pdf'
-                }
+                generatePDF: true, // Add this flag
+            content: `
+                EXCEL FORMULA CHEAT SHEET
+            
+                Basic Formulas:
+                =SUM(range) - Adds all numbers in a range
+                =AVERAGE(range) - Calculates average
+                =COUNT(range) - Counts numbers in range
+                =MAX(range) - Returns largest value
+                =MIN(range) - Returns smallest value
+                
+                Text Functions:
+                =CONCATENATE(text1, text2) - Joins text
+                =LEFT(text, num_chars) - Extracts from left
+                =RIGHT(text, num_chars) - Extracts from right
+                =MID(text, start, num_chars) - Extracts middle
+                =TRIM(text) - Removes extra spaces
+                
+                Lookup Functions:
+                =VLOOKUP(value, table, col_index, [range_lookup])
+                =HLOOKUP(value, table, row_index, [range_lookup])
+                =XLOOKUP(lookup_value, lookup_array, return_array)
+                =INDEX(array, row_num, [col_num])
+                =MATCH(lookup_value, lookup_array, [match_type])
+                
+                Logical Functions:
+                =IF(logical_test, value_if_true, value_if_false)
+                =AND(logical1, [logical2], ...)
+                =OR(logical1, [logical2], ...)
+                =NOT(logical)
+                =IFERROR(value, value_if_error)
+                
+                Date & Time:
+                =TODAY() - Current date
+                =NOW() - Current date and time
+                =DATE(year, month, day)
+                =DAY(date) - Extracts day
+                =MONTH(date) - Extracts month
+                =YEAR(date) - Extracts year
+                
+                Financial:
+                =PMT(rate, nper, pv, [fv], [type])
+                =FV(rate, nper, pmt, [pv], [type])
+                =PV(rate, nper, pmt, [fv], [type])
+                =NPV(rate, value1, [value2], ...)
+                =IRR(values, [guess])
+            `
+        }
+    };
+function generateFormulaPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Set document properties
+    doc.setProperties({
+        title: 'Excel Formula Cheat Sheet',
+        subject: 'Excel Formulas Reference',
+        author: 'JOSHCAB INSTITUTE',
+        keywords: 'excel, formulas, cheat sheet',
+        creator: 'JOSHCAB Training Platform'
+    });
+    
+    // Title
+    doc.setFontSize(20);
+    doc.setTextColor(33, 115, 70); // Green color
+    doc.text('Excel Formula Cheat Sheet', 105, 20, { align: 'center' });
+    
+    // Subtitle
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Quick Reference Guide for Common Excel Formulas', 105, 30, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    
+    // Basic Formulas
+    doc.setFontSize(14);
+    doc.setTextColor(33, 115, 70);
+    doc.text('Basic Formulas:', 20, 45);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text('=SUM(range) - Adds all numbers in a range', 25, 55);
+    doc.text('=AVERAGE(range) - Calculates average of numbers', 25, 60);
+    doc.text('=COUNT(range) - Counts numbers in a range', 25, 65);
+    doc.text('=MAX(range) - Returns largest value', 25, 70);
+    doc.text('=MIN(range) - Returns smallest value', 25, 75);
+    
+    // Text Functions
+    doc.setFontSize(14);
+    doc.setTextColor(33, 115, 70);
+    doc.text('Text Functions:', 20, 90);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text('=CONCATENATE(text1, text2) - Joins text', 25, 100);
+    doc.text('=LEFT(text, num) - Extracts characters from left', 25, 105);
+    doc.text('=RIGHT(text, num) - Extracts characters from right', 25, 110);
+    doc.text('=MID(text, start, num) - Extracts middle characters', 25, 115);
+    doc.text('=TRIM(text) - Removes extra spaces', 25, 120);
+    
+    // Lookup Functions
+    doc.addPage();
+    doc.setFontSize(14);
+    doc.setTextColor(33, 115, 70);
+    doc.text('Lookup Functions:', 20, 20);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text('=VLOOKUP(value, table, col, [range_lookup])', 25, 30);
+    doc.text('=HLOOKUP(value, table, row, [range_lookup])', 25, 35);
+    doc.text('=XLOOKUP(lookup, lookup_array, return_array)', 25, 40);
+    doc.text('=INDEX(array, row_num, [col_num])', 25, 45);
+    doc.text('=MATCH(lookup_value, lookup_array, [type])', 25, 50);
+    
+    // Logical Functions
+    doc.setFontSize(14);
+    doc.setTextColor(33, 115, 70);
+    doc.text('Logical Functions:', 20, 65);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text('=IF(test, value_if_true, value_if_false)', 25, 75);
+    doc.text('=AND(logical1, [logical2], ...)', 25, 80);
+    doc.text('=OR(logical1, [logical2], ...)', 25, 85);
+    doc.text('=NOT(logical)', 25, 90);
+    doc.text('=IFERROR(value, value_if_error)', 25, 95);
+    
+    // Footer
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text('JOSHCAB INSTITUTE - Excel Training', 105, 140, { align: 'center' });
+    doc.text(`Generated on ${new Date().toLocaleDateString()}`, 105, 145, { align: 'center' });
+    
+    // Save the PDF
+    doc.save('formula-cheatsheet.pdf');
+    
+    // Show success message
+    showDownloadSuccess('formula-cheatsheet.pdf');
+    updateProgress();
+}
+    if (fileData[filename]) {
+        if (filename === 'formula-cheatsheet.pdf') {
+            generateFormulaPDF();
+            return;
+        }
             };
 
             if (fileData[filename]) {
