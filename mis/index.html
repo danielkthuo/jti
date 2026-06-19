@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>JTI College Management System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  LOGIN PAGE                                  -->
+<!-- ════════════════════════════════════════════ -->
+<div id="login-page">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">JTI</div>
+      <div>
+        <div class="login-logo-name">Joshcab Training Institute</div>
+        <div class="login-logo-branch">Mwiki Branch &middot; Management Portal</div>
+      </div>
+    </div>
+    <h2 class="login-title">Sign In</h2>
+    <p class="login-subtitle">Enter your credentials to continue</p>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>Username</label>
+      <input type="text" id="login-username" placeholder="e.g. admin" autocomplete="username"/>
+    </div>
+    <div class="form-group" style="margin-bottom:8px;">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password"/>
+    </div>
+    <div id="login-error" class="login-error"></div>
+    <button class="btn btn-primary" id="login-btn" onclick="submitLogin()" style="width:100%;margin-top:18px;padding:12px;font-size:14px;">Sign In</button>
+    <div class="login-footer">Default admin: <strong>admin</strong> / <strong>admin123</strong><br><span style="font-size:11px;color:var(--muted);">Change password after first login</span></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!--  APP WRAPPER (hidden until logged in)        -->
+<!-- ════════════════════════════════════════════ -->
+<div id="app-wrapper" style="display:none;">
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-badge">
+      <div class="logo-icon">JTI</div>
+      <div class="logo-text">
+        <strong>Joshcab Training</strong>
+        <span>Institute &middot; Mwiki</span>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <div class="nav-item active" onclick="navigate('dashboard')"><span class="nav-icon">&#128202;</span> Dashboard</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Students</div>
+      <div class="nav-item" onclick="navigate('students')"><span class="nav-icon">&#127891;</span> All Students</div>
+      <div class="nav-item" id="nav-register" onclick="navigate('register')"><span class="nav-icon">+</span> Register Student</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Finances</div>
+      <div class="nav-item" onclick="navigate('fees')"><span class="nav-icon">&#128179;</span> Fee Management</div>
+      <div class="nav-item" onclick="navigate('payments')"><span class="nav-icon">&#128176;</span> Payments</div>
+      <div class="nav-item" onclick="navigate('invoices')"><span class="nav-icon">&#129534;</span> Invoices</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Academic</div>
+      <div class="nav-item" onclick="navigate('courses')"><span class="nav-icon">&#128218;</span> Courses &amp; Programs</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Reports</div>
+      <div class="nav-item" onclick="navigate('reports')"><span class="nav-icon">&#128200;</span> Reports</div>
+    </div>
+    <div class="nav-section" id="nav-users">
+      <div class="nav-label">Admin</div>
+      <div class="nav-item" onclick="navigate('users')"><span class="nav-icon">&#128101;</span> User Management</div>
+    </div>
+  </div>
+  <div class="sidebar-footer">Powered by <strong>Google Sheets</strong><br>JTI CMS v2.1</div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="btn btn-outline btn-sm" id="menu-toggle" onclick="toggleSidebar()" style="display:none;">&#9776;</button>
+      <div class="topbar-title" id="page-title">Dashboard</div>
+    </div>
+    <div class="topbar-actions">
+      <span class="topbar-badge" id="sync-status">&#128994; Connected</span>
+      <button class="btn btn-outline btn-sm" onclick="loadAll()">&#128260; Refresh</button>
+      <div class="topbar-user">
+        <div class="topbar-avatar" id="topbar-user-avatar">&#128100;</div>
+        <div class="topbar-user-info">
+          <div class="topbar-user-name" id="topbar-user-name">&mdash;</div>
+          <span class="role-badge" id="topbar-user-role">&mdash;</span>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="logout()" title="Logout">&#128275; Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="welcome-banner">
+        <div>
+          <h2>Welcome to JTI College System</h2>
+          <p>Joshcab Training Institute &middot; Mwiki Branch &middot; Management Portal</p>
+        </div>
+        <button class="btn btn-gold no-print" onclick="navigate('register')">+ Enroll Student</button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Total Students</div><div class="stat-value" id="stat-total">&mdash;</div><div class="stat-sub">enrolled this year</div></div>
+        <div class="stat-card blue"><div class="stat-label">Active Students</div><div class="stat-value" id="stat-active">&mdash;</div><div class="stat-sub">currently studying</div></div>
+        <div class="stat-card green"><div class="stat-label">Fees Collected</div><div class="stat-value" id="stat-collected">&mdash;</div><div class="stat-sub">total payments received</div></div>
+        <div class="stat-card red"><div class="stat-label">Outstanding</div><div class="stat-value" id="stat-outstanding">&mdash;</div><div class="stat-sub">pending fee balance</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <h3 style="font-family:var(--font-h);font-size:15px;font-weight:600;color:var(--navy);">This Month</h3>
+        <span class="badge badge-gold" id="dash-month-label">&mdash;</span>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card blue"><div class="stat-label">New Enrollments</div><div class="stat-value" id="stat-month-enrollments">&mdash;</div><div class="stat-sub">students registered this month</div></div>
+        <div class="stat-card green"><div class="stat-label">Fees Collected</div><div class="stat-value" id="stat-month-collected">&mdash;</div><div class="stat-sub">payments received this month</div></div>
+        <div class="stat-card gold"><div class="stat-label">Payments Made</div><div class="stat-value" id="stat-month-paycount">&mdash;</div><div class="stat-sub">transactions this month</div></div>
+        <div class="stat-card"><div class="stat-label">Avg. Payment</div><div class="stat-value" id="stat-month-avg">&mdash;</div><div class="stat-sub">average transaction this month</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-header"><h3>Recent Enrollments</h3><button class="btn btn-outline btn-sm" onclick="navigate('students')">View All</button></div>
+          <div class="card-body" style="padding:0;"><div id="recent-enrollments"><div class="empty-state"><div class="loader" style="border-color:var(--border);border-top-color:var(--gold);width:24px;height:24px;margin:0 auto;"></div></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Recent Payments</h3><button class="btn btn-outline btn-sm" onclick="navigate('payments')">View All</button></div>
+          <div class="card-body" style="padding:0;"><div id="recent-payments"><div class="empty-state"><div class="loader" style="border-color:var(--border);border-top-color:var(--gold);width:24px;height:24px;margin:0 auto;"></div></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STUDENTS -->
+    <div class="page" id="page-students">
+      <div class="card">
+        <div class="card-header">
+          <h3>All Students</h3>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline btn-sm" onclick="exportStudents()">&#128190; Export Excel</button>
+            <button class="btn btn-primary btn-sm" onclick="navigate('register')">+ Register New</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="filter-bar">
+            <div class="search-input"><span class="search-icon">&#128269;</span><input type="text" id="student-search" placeholder="Search by name, ID, phone&hellip;" oninput="filterStudents()"></div>
+            <select id="filter-program" onchange="filterStudents()"><option value="">All Programs</option></select>
+            <select id="filter-status" onchange="filterStudents()">
+              <option value="">All Status</option><option>Active</option><option>Inactive</option><option>Graduated</option><option>Suspended</option>
+            </select>
+          </div>
+          <div class="table-wrapper">
+            <table><thead><tr><th>Reg No.</th><th>Name</th><th>Program</th><th>Intake</th><th>Phone</th><th>Status</th><th>Balance</th><th>Actions</th></tr></thead>
+            <tbody id="students-tbody"><tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted);">Loading&hellip;</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="page" id="page-register">
+      <div class="card" style="max-width:760px;">
+        <div class="card-header"><h3 id="reg-form-title">Register New Student</h3></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <input type="hidden" id="edit-reg-no">
+            <div class="form-group"><label>Registration Number</label><input type="text" id="reg-no" placeholder="Auto-generated" readonly style="background:var(--cream);"></div>
+            <div class="form-group"><label>Full Name *</label><input type="text" id="full-name" placeholder="e.g. Jane Wanjiku Mwangi"></div>
+            <div class="form-group"><label>National ID / Passport</label><input type="text" id="national-id" placeholder="e.g. 12345678"></div>
+            <div class="form-group"><label>Date of Birth</label><input type="date" id="dob"></div>
+            <div class="form-group"><label>Gender</label><select id="gender"><option value="">Select&hellip;</option><option>Male</option><option>Female</option></select></div>
+            <div class="form-group"><label>Phone Number *</label><input type="tel" id="phone" placeholder="e.g. 0712345678"></div>
+            <div class="form-group"><label>Email Address</label><input type="email" id="email" placeholder="optional"></div>
+            <div class="form-group"><label>County / Location</label><input type="text" id="county" placeholder="e.g. Nairobi, Kiambu"></div>
+            <div class="form-group"><label>Program / Course *</label><select id="program"><option value="">Select program&hellip;</option></select></div>
+            <div class="form-group"><label>Intake / Session</label><input type="text" id="intake" placeholder="e.g. Jan 2025"></div>
+            <div class="form-group"><label>Enrollment Date</label><input type="date" id="enroll-date"></div>
+            <div class="form-group"><label>Status</label><select id="status"><option value="Active">Active</option><option value="Inactive">Inactive</option><option value="Graduated">Graduated</option><option value="Suspended">Suspended</option></select></div>
+            <div class="form-group"><label>Total Fee (KES)</label><input type="number" id="total-fee" placeholder="e.g. 35000" oninput="updateFeeBalance()"></div>
+            <div class="form-group"><label>Amount Paid (KES)</label><input type="number" id="amount-paid" placeholder="0" oninput="updateFeeBalance()"></div>
+            <div class="form-group"><label>Fee Balance</label><input type="number" id="fee-balance" placeholder="Auto-calculated" readonly style="background:var(--cream);"></div>
+            <div class="form-group full"><label>Next of Kin / Guardian</label><input type="text" id="guardian" placeholder="Name and phone number"></div>
+            <div class="form-group full"><label>Notes / Remarks</label><textarea id="notes" placeholder="Any additional notes&hellip;"></textarea></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+            <button class="btn btn-outline" onclick="clearRegForm()">Clear</button>
+            <button class="btn btn-primary" id="reg-submit-btn" onclick="submitStudent()"><span>&#128190;</span> Register Student</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEE MANAGEMENT -->
+    <div class="page" id="page-fees">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('fee-overview','fees')">Overview</button>
+        <button class="tab-btn" onclick="switchTab('fee-record','fees')">Record Payment</button>
+        <button class="tab-btn" onclick="switchTab('fee-structures','fees')">Fee Structures</button>
+      </div>
+      <div id="tab-fee-overview">
+        <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);">
+          <div class="stat-card green"><div class="stat-label">Total Collected</div><div class="stat-value" id="fee-total-collected">&mdash;</div></div>
+          <div class="stat-card red"><div class="stat-label">Total Outstanding</div><div class="stat-value" id="fee-total-outstanding">&mdash;</div></div>
+          <div class="stat-card blue"><div class="stat-label">Fully Paid</div><div class="stat-value" id="fee-fully-paid">&mdash;</div></div>
+          <div class="stat-card"><div class="stat-label">With Balance</div><div class="stat-value" id="fee-with-balance">&mdash;</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>Student Fee Status</h3>
+            <div style="display:flex;gap:8px;">
+              <select id="fee-filter-program" onchange="filterFeeTable()"><option value="">All Programs</option></select>
+              <select id="fee-filter-status" onchange="filterFeeTable()"><option value="">All</option><option value="paid">Fully Paid</option><option value="partial">Partial</option><option value="unpaid">Unpaid</option></select>
+              <button class="btn btn-outline btn-sm" onclick="exportFeeOverview()">&#128190; Export</button>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0;"><div class="table-wrapper">
+            <table><thead><tr><th>Reg No.</th><th>Name</th><th>Program</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Progress</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="fee-overview-tbody"><tr><td colspan="9" style="text-align:center;padding:32px;color:var(--muted);">Loading&hellip;</td></tr></tbody></table>
+          </div></div>
+        </div>
+      </div>
+      <div id="tab-fee-record" style="display:none;">
+        <div class="card" style="max-width:600px;">
+          <div class="card-header"><h3>Record Fee Payment</h3></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group full"><label>Select Student *</label><select id="pay-student" onchange="onStudentSelect()"><option value="">Choose student&hellip;</option></select></div>
+              <div id="student-fee-info" style="display:none;" class="full">
+                <div class="student-fee-header">
+                  <div class="student-avatar" id="pay-avatar">&mdash;</div>
+                  <div><div style="font-weight:600;font-size:14px;" id="pay-student-name">&mdash;</div><div style="font-size:12px;color:var(--muted);" id="pay-program-name">&mdash;</div></div>
+                  <div style="margin-left:auto;text-align:right;"><div style="font-size:12px;color:var(--muted);">Outstanding Balance</div><div style="font-family:var(--font-h);font-size:20px;font-weight:700;color:var(--danger);" id="pay-balance">KES 0</div></div>
+                </div>
+              </div>
+              <div class="form-group"><label>Amount Paying (KES) *</label><input type="number" id="pay-amount" placeholder="e.g. 5000" oninput="calcNewBalance()"></div>
+              <div class="form-group"><label>New Balance After</label><input type="number" id="pay-new-balance" readonly style="background:var(--cream);"></div>
+              <div class="form-group"><label>Payment Date *</label><input type="date" id="pay-date"></div>
+              <div class="form-group"><label>Payment Method</label><select id="pay-method"><option>M-Pesa</option><option>Bank Transfer</option><option>Cash</option><option>Cheque</option></select></div>
+              <div class="form-group"><label>Reference / Transaction No.</label><input type="text" id="pay-ref" placeholder="e.g. QGJ7UXZ9K1"></div>
+              <div class="form-group full"><label>Remarks</label><input type="text" id="pay-remarks" placeholder="e.g. Semester 1 payment"></div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;margin-top:20px;gap:10px;">
+              <button class="btn btn-outline" onclick="clearPayForm()">Clear</button>
+              <button class="btn btn-success" id="submit-payment-btn" onclick="submitPayment()">&#128176; Record Payment &amp; Print Receipt</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="tab-fee-structures" style="display:none;">
+        <div class="card" style="max-width:600px;margin-bottom:20px;">
+          <div class="card-header"><h3>Add Fee Structure</h3></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group"><label>Program Name</label><input type="text" id="fs-program" placeholder="e.g. Certificate in ICT"></div>
+              <div class="form-group"><label>Total Fee (KES)</label><input type="number" id="fs-fee" placeholder="e.g. 35000"></div>
+              <div class="form-group"><label>Duration</label><input type="text" id="fs-duration" placeholder="e.g. 6 Months"></div>
+              <div class="form-group"><label>Description</label><input type="text" id="fs-desc" placeholder="Brief description"></div>
+            </div>
+            <div style="margin-top:16px;display:flex;justify-content:flex-end;"><button class="btn btn-primary" onclick="saveFeeStructure()">Save Structure</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Fee Structures</h3></div>
+          <div class="card-body" style="padding:0;">
+            <table><thead><tr><th>Program</th><th>Total Fee</th><th>Duration</th><th>Description</th><th>Actions</th></tr></thead>
+            <tbody id="fee-structures-tbody"><tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted);">No structures yet</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAYMENTS -->
+    <div class="page" id="page-payments">
+      <div class="card">
+        <div class="card-header">
+          <h3>Payment History</h3>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span id="payments-count" class="badge badge-info">&mdash;</span>
+            <button class="btn btn-outline btn-sm" onclick="exportPayments()">&#128190; Export Excel</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="filter-bar">
+            <div class="search-input"><span class="search-icon">&#128269;</span><input type="text" id="pay-search" placeholder="Search by name, ref, method&hellip;" oninput="filterPayments()"></div>
+            <input type="month" id="pay-month-filter" onchange="filterPayments()" title="Filter by month">
+          </div>
+          <div class="table-wrapper">
+            <table><thead><tr><th>#</th><th>Date</th><th>Student</th><th>Program</th><th>Amount</th><th>Method</th><th>Reference</th><th>Balance After</th><th>Actions</th></tr></thead>
+            <tbody id="payments-tbody"><tr><td colspan="9" style="text-align:center;padding:32px;color:var(--muted);">Loading&hellip;</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVOICES -->
+    <div class="page" id="page-invoices">
+      <div class="card">
+        <div class="card-header">
+          <h3>Invoices</h3>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline btn-sm" onclick="exportInvoices()">&#128190; Export Excel</button>
+            <button class="btn btn-primary btn-sm" onclick="generateInvoices()">&#128260; Refresh</button>
+            <button class="btn btn-gold btn-sm" onclick="openChargeModal()">+ Charge Invoice</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- Tabs -->
+          <div class="tabs" style="margin-bottom:16px;">
+            <button class="tab-btn inv-tab-btn active" id="inv-btn-summary" onclick="switchInvTab('summary')">Fee Summary</button>
+            <button class="tab-btn inv-tab-btn" id="inv-btn-history" onclick="switchInvTab('history')">Charge History</button>
+          </div>
+          <div class="filter-bar">
+            <div class="search-input"><span class="search-icon">&#128269;</span><input type="text" id="inv-search" placeholder="Search student or description&hellip;" oninput="filterInvoices()"></div>
+          </div>
+
+          <!-- Tab: Fee Summary -->
+          <div id="inv-tab-summary">
+            <div class="table-wrapper">
+              <table><thead><tr><th>Reg No.</th><th>Student</th><th>Program</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="invoices-tbody"><tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted);">Loading&hellip;</td></tr></tbody></table>
+            </div>
+          </div>
+
+          <!-- Tab: Charge History -->
+          <div id="inv-tab-history" style="display:none;">
+            <div class="table-wrapper">
+              <table><thead><tr><th>Invoice No.</th><th>Date</th><th>Student</th><th>Program</th><th>Description</th><th>Amount</th><th>Charged By</th><th>Balance After</th></tr></thead>
+              <tbody id="charge-history-tbody"><tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted);">No charges yet</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COURSES -->
+    <div class="page" id="page-courses">
+      <div style="display:grid;grid-template-columns:340px 1fr;gap:22px;align-items:start;">
+        <div class="card">
+          <div class="card-header"><h3>Add Program</h3></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group full"><label>Program Name *</label><input type="text" id="course-name" placeholder="e.g. Certificate in ICT"></div>
+              <div class="form-group full"><label>Program Code</label><input type="text" id="course-code" placeholder="e.g. CICT-001"></div>
+              <div class="form-group full"><label>Duration</label><input type="text" id="course-duration" placeholder="e.g. 6 Months"></div>
+              <div class="form-group full"><label>Total Fee (KES)</label><input type="number" id="course-fee" placeholder="e.g. 35000"></div>
+              <div class="form-group full"><label>Description</label><textarea id="course-desc" placeholder="Brief description&hellip;" style="min-height:60px;"></textarea></div>
+            </div>
+            <button class="btn btn-primary" style="width:100%;margin-top:14px;" onclick="saveCourse()">Save Program</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Programs &amp; Courses</h3></div>
+          <div class="card-body" style="padding:0;">
+            <table><thead><tr><th>Code</th><th>Program</th><th>Duration</th><th>Fee (KES)</th><th>Students</th><th>Actions</th></tr></thead>
+            <tbody id="courses-tbody"><tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted);">No programs added yet</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="page" id="page-reports">
+      <div class="stats-grid">
+        <div class="stat-card green"><div class="stat-label">Collection Rate</div><div class="stat-value" id="report-collection-rate">&mdash;</div><div class="stat-sub">of total fees billed</div></div>
+        <div class="stat-card blue"><div class="stat-label">Total Billed</div><div class="stat-value" id="report-total-billed">&mdash;</div></div>
+        <div class="stat-card green"><div class="stat-label">Total Collected</div><div class="stat-value" id="report-total-paid">&mdash;</div></div>
+        <div class="stat-card red"><div class="stat-label">Total Balance</div><div class="stat-value" id="report-total-balance">&mdash;</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Fee Report by Program</h3><div style="display:flex;gap:8px;"><button class="btn btn-outline btn-sm" onclick="exportProgramReport()">&#128190; Export</button><button class="btn btn-outline btn-sm" onclick="window.print()">&#128424; Print</button></div></div>
+        <div class="card-body" style="padding:0;"><table><thead><tr><th>Program</th><th>Students</th><th>Total Billed</th><th>Total Paid</th><th>Balance</th><th>Collection %</th></tr></thead><tbody id="report-tbody"></tbody></table></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Defaulters List (Balance &gt; 0)</h3>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline btn-sm" onclick="exportDefaulters()">&#128190; Export</button>
+            <button class="btn btn-sms btn-sm" onclick="sendBulkDefaultersSms()">&#128241; Bulk SMS</button>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0;"><table><thead><tr><th>Reg No.</th><th>Name</th><th>Program</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Actions</th></tr></thead><tbody id="defaulters-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- USER MANAGEMENT -->
+    <div class="page" id="page-users">
+      <div style="display:grid;grid-template-columns:360px 1fr;gap:22px;align-items:start;">
+        <div class="card">
+          <div class="card-header"><h3 id="user-form-title">Add User</h3></div>
+          <div class="card-body">
+            <input type="hidden" id="user-edit-mode" value="false">
+            <div class="form-grid">
+              <div class="form-group full"><label>Username *</label><input type="text" id="user-username" placeholder="e.g. jsmith"></div>
+              <div class="form-group full"><label>Full Name</label><input type="text" id="user-fullname" placeholder="e.g. John Smith"></div>
+              <div class="form-group full"><label>Password *</label><input type="password" id="user-password" placeholder="Password"></div>
+              <div class="form-group full">
+                <label>Role *</label>
+                <select id="user-role">
+                  <option value="Admin">Admin — Full access</option>
+                  <option value="Staff" selected>Staff — Register &amp; payments</option>
+                  <option value="Viewer">Viewer — Read only</option>
+                </select>
+              </div>
+              <div class="form-group full">
+                <label>Status</label>
+                <select id="user-status"><option value="Active">Active</option><option value="Inactive">Inactive</option></select>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
+              <button class="btn btn-outline" onclick="clearUserForm()">Clear</button>
+              <button class="btn btn-primary" id="user-save-btn" onclick="saveUser()">Add User</button>
+            </div>
+            <div class="role-legend">
+              <div class="role-legend-title">Role Permissions</div>
+              <div class="role-legend-row"><span class="role-badge role-admin">Admin</span><span>Full access — students, payments, courses, users, SMS</span></div>
+              <div class="role-legend-row"><span class="role-badge role-staff">Staff</span><span>Register students, record payments, send SMS</span></div>
+              <div class="role-legend-row"><span class="role-badge role-viewer">Viewer</span><span>View only — no edits, no payments, no SMS</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>System Users</h3><span class="badge badge-info" id="users-count">&mdash;</span></div>
+          <div class="card-body" style="padding:0;">
+            <table><thead><tr><th>Username</th><th>Full Name</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="users-tbody"><tr><td colspan="5" style="text-align:center;padding:32px;color:var(--muted);">Loading&hellip;</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end page-content -->
+</div><!-- end #main -->
+</div><!-- end #app-wrapper -->
+
+<!-- ════════ MODALS ════════ -->
+<div class="modal-overlay" id="modal-student">
+  <div class="modal" style="max-width:700px;">
+    <div class="modal-header"><h2>Student Profile</h2><button class="btn-close" onclick="closeModal('modal-student')">&times;</button></div>
+    <div class="modal-body" id="modal-student-body">&mdash;</div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-student')">Close</button>
+      <button class="btn btn-sms" id="modal-sms-student-btn">&#128241; Send SMS</button>
+      <button class="btn btn-gold" id="modal-charge-student-btn">+ Charge</button>
+      <button class="btn btn-primary" id="modal-edit-btn">&#9999; Edit</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-receipt">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header"><h2>Payment Receipt</h2><button class="btn-close" onclick="closeModal('modal-receipt')">&times;</button></div>
+    <div class="modal-body" id="modal-receipt-body">&mdash;</div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-receipt')">Close</button>
+      <button class="btn btn-primary" onclick="downloadReceiptPdf()">&#11123; Download PDF</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-invoice">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header"><h2>Fee Invoice</h2><button class="btn-close" onclick="closeModal('modal-invoice')">&times;</button></div>
+    <div class="modal-body" id="modal-invoice-body">&mdash;</div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-invoice')">Close</button>
+      <button class="btn btn-primary" onclick="downloadInvoicePdf()">&#11123; Download PDF</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-sms">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header"><h2>&#128241; Send SMS</h2><button class="btn-close" onclick="closeModal('modal-sms')">&times;</button></div>
+    <div class="modal-body">
+      <div class="sms-recipient-bar">
+        <div class="student-avatar" style="width:38px;height:38px;font-size:13px;flex-shrink:0;">&#128100;</div>
+        <div><div style="font-weight:600;font-size:13.5px;" id="sms-modal-name">&mdash;</div><div style="font-size:12px;color:var(--muted);" id="sms-modal-phone">&mdash;</div></div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;"><label>Phone Number</label><input type="tel" id="sms-to" placeholder="e.g. 0712345678"></div>
+      <div class="sms-templates">
+        <span style="font-size:12px;font-weight:600;color:var(--muted);">Templates:</span>
+        <button class="btn btn-outline btn-sm" onclick="fillSmsTemplate('balance')">Balance Reminder</button>
+        <button class="btn btn-outline btn-sm" onclick="fillSmsTemplate('welcome')">Welcome</button>
+        <button class="btn btn-outline btn-sm" onclick="fillSmsTemplate('custom')">Clear</button>
+      </div>
+      <div class="form-group" style="margin-top:10px;">
+        <label style="display:flex;justify-content:space-between;"><span>Message *</span><span id="sms-char-count" style="font-weight:400;color:var(--muted);">0 / 160</span></label>
+        <textarea id="sms-body" placeholder="Type your message here&hellip;" style="min-height:110px;" oninput="updateSmsCharCount()" maxlength="320"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-sms')">Cancel</button><button class="btn btn-sms" id="sms-send-btn" onclick="sendManualSms()">&#128241; Send SMS</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-charge">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <h2>&#129534; Charge Invoice</h2>
+      <button class="btn-close" onclick="closeModal('modal-charge')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Select Student *</label>
+        <select id="charge-student" onchange="onChargeStudentSelect()"><option value="">Choose student&hellip;</option></select>
+      </div>
+
+      <!-- Student info strip -->
+      <div id="charge-student-info" style="display:none;margin-bottom:16px;">
+        <div class="student-fee-header" style="padding:12px 14px;">
+          <div class="student-avatar" id="charge-avatar" style="width:40px;height:40px;font-size:13px;">&mdash;</div>
+          <div>
+            <div style="font-weight:600;font-size:13.5px;" id="charge-student-name">&mdash;</div>
+            <div style="font-size:12px;color:var(--muted);" id="charge-program">&mdash;</div>
+          </div>
+          <div style="margin-left:auto;display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;text-align:right;">
+            <div><div style="font-size:11px;color:var(--muted);">Current Total Fee</div><div style="font-weight:700;font-size:13px;" id="charge-current-total">&mdash;</div></div>
+            <div><div style="font-size:11px;color:var(--muted);">Current Balance</div><div style="font-weight:700;font-size:13px;color:var(--danger);" id="charge-current-bal">&mdash;</div></div>
+            <div><div style="font-size:11px;color:var(--muted);">New Total Fee</div><div style="font-weight:700;font-size:13px;color:var(--navy);" id="charge-new-total">&mdash;</div></div>
+            <div><div style="font-size:11px;color:var(--muted);">New Balance</div><div style="font-weight:700;font-size:13px;color:var(--danger);" id="charge-new-bal">&mdash;</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Category</label>
+          <select id="charge-category">
+            <option>Tuition Fee</option>
+            <option>Semester Fee</option>
+            <option>Registration Fee</option>
+            <option>Examination Fee</option>
+            <option>Library Fee</option>
+            <option>Caution Money</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Charge Date</label>
+          <input type="date" id="charge-date">
+        </div>
+        <div class="form-group full">
+          <label>Description *</label>
+          <input type="text" id="charge-desc" placeholder="e.g. Semester 2 tuition fee">
+        </div>
+        <div class="form-group full">
+          <label>Amount (KES) *</label>
+          <input type="number" id="charge-amount" placeholder="e.g. 15000" oninput="updateChargePreview()">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-charge')">Cancel</button>
+      <button class="btn btn-gold" id="charge-submit-btn" onclick="submitCharge()">&#129534; Raise Invoice</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-bulk-sms">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header"><h2>&#128241; Bulk SMS — Defaulters</h2><button class="btn-close" onclick="closeModal('modal-bulk-sms')">&times;</button></div>
+    <div class="modal-body">
+      <div class="bulk-sms-info">
+        <div class="bulk-sms-icon">&#128241;</div>
+        <div><div style="font-weight:700;font-size:15px;color:var(--navy);">Send reminders to <span id="bulk-sms-count">0</span> students</div><div style="font-size:12.5px;color:var(--muted);margin-top:4px;">Each student receives a personalised balance reminder via UjumbeSMS.</div></div>
+      </div>
+      <div style="margin-top:16px;"><div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;">PREVIEW (first student)</div><div id="bulk-sms-preview" style="background:var(--cream);border-radius:8px;padding:12px;font-size:13px;border:1px solid var(--border);line-height:1.6;">&mdash;</div></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-bulk-sms')">Cancel</button><button class="btn btn-sms" id="bulk-sms-confirm-btn" onclick="confirmBulkSms()">&#128241; Confirm &amp; Send</button></div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="app.js"></script>
+</body>
+</html>
