@@ -27,7 +27,7 @@
   --font-h:    'Space Grotesk', sans-serif;
   --font-b:    'Inter', sans-serif;
 
-  /* Spacing scale — 4px base unit, used by .gap-*/.mb-*/.mt-* utilities below
+  /* Spacing scale — 4px base unit, used by the .gap-, .mb-, and .mt- utilities below
      so repeated inline spacing values converge on one consistent rhythm. */
   --sp-1: 4px;
   --sp-2: 8px;
@@ -584,7 +584,7 @@ tr:hover td { background: var(--cream); }
 .student-avatar.sm { width: 38px; height: 38px; font-size: 13px; }
 
 /* Print/PDF-style watermark seal — the same quiet institutional motif used
-   on the login page (::before 'JTI' ghost text), reused behind empty states
+   on the login page (the ::before JTI ghost text), reused behind empty states
    and report panels so the brand identity reads as one coherent system
    rather than a one-off login-page flourish. */
 .seal-watermark { position: relative; overflow: hidden; }
@@ -602,10 +602,10 @@ tr:hover td { background: var(--cream); }
   line-height: 1;
 }
 
-/* Respect the person's OS-level motion preference — disables the page
-   fade-in, stat-card hover lift, and skeleton shimmer for anyone who has
-   asked their system to reduce motion, without removing the loading
-   spinner's functional spin (it conveys real state, not decoration). */
+/* Respects the OS-level reduced-motion preference — disables the page
+   fade-in, stat-card hover lift, and skeleton shimmer for users who have
+   asked their system to reduce motion. The loading spinner is kept because
+   it conveys real state, not decoration. */
 @media (prefers-reduced-motion: reduce) {
   .page.active { animation: none; }
   .stat-card { transition: none; }
