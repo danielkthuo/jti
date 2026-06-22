@@ -1,16 +1,15 @@
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxGq2qZoqpDzEvWXydUIx0aoPbTy7gSvOWSmX5AOkVQTGV-HKBG3Lb32WUfN7K8zsk/exec';
 
 // ════════════════════════════════════════════════
-//  JTI CONTACT DETAILS — used across receipts, invoices & PDFs
+//  BRANDING / CONTACT INFO
 // ════════════════════════════════════════════════
-const JTI = {
-  name:   'Joshcab Training Institute',
-  branch: 'Mwiki Branch',
-  phone1: '0734 080 808',
-  phone2: '0722 699 212',
-  phones: '0734 080 808 / 0722 699 212',
-  email:  'jckmwiki@gmail.com',
-  logo:   'images/JTI logo.jpg',
+const BRAND = {
+  name:    'Joshcab Training Institute',
+  branch:  'Mwiki Branch',
+  phone1:  '0734 080 808',
+  phone2:  '0722 699 212',
+  email:   'jckmwiki@gmail.com',
+  logoUrl: 'images/JTI logo.jpg',
 };
 
 // ════════════════════════════════════════════════
@@ -19,6 +18,8 @@ const JTI = {
 let state = {
   students: [], payments: [], courses: [], feeStructures: [],
   invoiceRecords: [],
+  services: [], serviceTypes: [], reconciliations: [],
+  smsLog: [],
   currentPage: 'dashboard', editMode: false, editRegNo: null,
   user: null,
   users: [],
@@ -28,9 +29,9 @@ let state = {
 //  ROLE PERMISSIONS
 // ════════════════════════════════════════════════
 const ROLES = {
-  Admin:  { register: true,  payment: true,  delete: true,  courses: true,  users: true,  sms: true,  charge: true  },
-  Staff:  { register: true,  payment: true,  delete: false, courses: false, users: false, sms: true,  charge: true  },
-  Viewer: { register: false, payment: false, delete: false, courses: false, users: false, sms: false, charge: false },
+  Admin:  { register: true,  payment: true,  delete: true,  courses: true,  users: true,  sms: true,  charge: true,  services: true,  servicesManage: true,  reconcile: true  },
+  Staff:  { register: true,  payment: true,  delete: false, courses: false, users: false, sms: true,  charge: true,  services: true,  servicesManage: false, reconcile: false },
+  Viewer: { register: false, payment: false, delete: false, courses: false, users: false, sms: false, charge: false, services: false, servicesManage: false, reconcile: false },
 };
 
 function can(action) {
@@ -95,20 +96,27 @@ function logout() {
 function applyRoleUI() {
   const r = state.user?.role || 'Viewer';
 
+  // Topbar user info
   document.getElementById('topbar-user-name').textContent = state.user?.fullName || '';
   document.getElementById('topbar-user-role').textContent = r;
   document.getElementById('topbar-user-role').className =
     'role-badge role-' + r.toLowerCase();
 
+  // Sidebar items — hide based on role
   document.getElementById('nav-register').style.display  = can('register') ? '' : 'none';
   document.getElementById('nav-users').style.display     = can('users')    ? '' : 'none';
+  const svcNav = document.getElementById('nav-services-section');
+  if (svcNav) svcNav.style.display = can('services') ? '' : 'none';
 
+  // Hide write buttons across pages (set after render via CSS class on body)
   document.body.setAttribute('data-role', r.toLowerCase());
 }
 
 // ════════════════════════════════════════════════
 //  USER MANAGEMENT (Admin only)
 // ════════════════════════════════════════════════
+
+
 async function saveUser() {
   if (!can('users')) return;
   const username = document.getElementById('user-username').value.trim();
@@ -219,13 +227,47 @@ async function apiPost(action, payload) {
 // ════════════════════════════════════════════════
 //  SMS
 // ════════════════════════════════════════════════
-async function sendSms(phones, message) {
+/**
+ * Sends an SMS and asks the backend to log the attempt for the SMS Log.
+ * `purpose` is a short tag (e.g. 'welcome', 'receipt', 'defaulter', 'manual')
+ * and `context` carries optional regNo/studentName so the log can be
+ * traced back to a specific student even after the fact.
+ */
+async function sendSms(phones, message, purpose, context) {
   const phoneList = Array.isArray(phones) ? phones : [phones];
   const normalised = phoneList
-    .map(p => String(p).replace(/\s+/g, '').replace(/^0/, '254').replace(/^\+/, ''))
+    .map(p => normalizePhone(p))
     .filter(p => p.length >= 9);
   if (!normalised.length) return { success: false, sent: 0, failed: 0 };
-  return apiPost('sendSms', { phones: normalised, message });
+  return apiPost('sendSms', {
+    phones: normalised,
+    message,
+    purpose: purpose || 'manual',
+    regNo: context?.regNo || '',
+    studentName: context?.studentName || '',
+    sentBy: state.user?.fullName || state.user?.username || 'System',
+  });
+}
+
+/**
+ * Normalises any common Kenyan phone format into 254XXXXXXXXX:
+ * - Strips spaces, dashes, dots, parentheses, and any other non-digit
+ *   characters except a leading "+" (handles "0722 123 445", "0722-123-445",
+ *   "0722.123.445", "(0722) 123 445", etc.)
+ * - Converts a leading 0 to 254 (e.g. 0722123445 -> 254722123445)
+ * - Converts a leading 7 or 1 (9-digit, no leading 0) to 254-prefixed
+ *   (e.g. 722123445 -> 254722123445)
+ * - Leaves an already-254-prefixed or +254-prefixed number as-is
+ */
+function normalizePhone(p) {
+  let digits = String(p).trim().replace(/^\+/, '').replace(/[^\d]/g, '');
+  if (digits.startsWith('0')) {
+    digits = '254' + digits.slice(1);
+  } else if (/^(7|1)\d{8}$/.test(digits)) {
+    // 9-digit local number with no leading 0, e.g. "722123445"
+    digits = '254' + digits;
+  }
+  return digits;
 }
 
 function buildPaymentSms(payload, receiptNo) {
@@ -238,7 +280,7 @@ function buildWelcomeSms(student) {
 }
 function buildDefaulterSms(student) {
   return `Dear ${student.fullName.split(' ')[0]}, your JTI fee balance is KES ${fmt(student.feeBalance)}.` +
-    ` Kindly clear at the earliest. Contact us: 0734 080 808. -Joshcab Training Institute`;
+    ` Kindly clear at the earliest. Contact us: ${BRAND.phone1}. -Joshcab Training Institute`;
 }
 
 function openSmsModal(regNo) {
@@ -274,11 +316,13 @@ async function sendManualSms() {
   const btn     = document.getElementById('sms-send-btn');
   const phone   = document.getElementById('sms-to').value.trim();
   const message = document.getElementById('sms-body').value.trim();
+  const regNo   = document.getElementById('sms-send-btn').dataset.regNo || '';
+  const student = state.students.find(x => x.regNo === regNo);
   if (!phone || !message) { toast('Phone and message are required.', 'error'); return; }
   btn.disabled = true;
   btn.innerHTML = '<span class="loader"></span> Sending&hellip;';
   try {
-    const res = await sendSms(phone, message);
+    const res = await sendSms(phone, message, 'manual', { regNo, studentName: student?.fullName || '' });
     if (res.success) { toast('SMS sent!', 'success'); closeModal('modal-sms'); }
     else toast('SMS failed: ' + (res.error || 'Unknown error'), 'error');
   } catch(e) { toast('SMS error: ' + e.message, 'error'); }
@@ -306,7 +350,7 @@ async function confirmBulkSms() {
     const batch = defaulters.slice(i, i + batchSize);
     await Promise.all(batch.map(async s => {
       try {
-        const res = await sendSms(s.phone, buildDefaulterSms(s));
+        const res = await sendSms(s.phone, buildDefaulterSms(s), 'defaulter', { regNo: s.regNo, studentName: s.fullName });
         res.success ? sent++ : failed++;
       } catch { failed++; }
     }));
@@ -323,12 +367,15 @@ async function confirmBulkSms() {
 const pageTitles = {
   dashboard:'Dashboard', students:'Students', register:'Register Student',
   fees:'Fee Management', payments:'Payments', invoices:'Invoices',
-  courses:'Courses & Programs', reports:'Reports', users:'User Management',
+  courses:'Courses & Programs', services:'Office Services & Reconciliation',
+  reports:'Reports', users:'User Management',
 };
 
 function navigate(page) {
+  // Guard role-restricted pages
   if (page === 'register' && !can('register')) { toast('Access denied.', 'error'); return; }
   if (page === 'users'    && !can('users'))    { toast('Access denied.', 'error'); return; }
+  if (page === 'services' && !can('services')) { toast('Access denied.', 'error'); return; }
 
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -344,13 +391,14 @@ function navigate(page) {
   if (page === 'invoices') renderInvoices();
   if (page === 'reports')  renderReports();
   if (page === 'users')    loadUsersTable();
+  if (page === 'services') initServicesPage();
 }
 
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
 function switchTab(tabId, page) {
   document.querySelectorAll('[id^="tab-fee-"]').forEach(t => t.style.display = 'none');
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tabs .tab-btn').forEach(b => { if (b.closest('#page-fees')) b.classList.remove('active'); });
   document.getElementById('tab-' + tabId).style.display = 'block';
   event.target.classList.add('active');
 }
@@ -358,20 +406,28 @@ function switchTab(tabId, page) {
 // ════════════════════════════════════════════════
 //  DATA LOAD  —  fast path + cache
 // ════════════════════════════════════════════════
+
 const CACHE_KEY     = 'jti_cache_v2';
-const CACHE_TTL_MS  = 5 * 60 * 1000;
+const CACHE_TTL_MS  = 5 * 60 * 1000;   // 5 minutes
 let   _refreshTimer = null;
 
+/** Apply a data bundle to state and re-render the active page */
 function applyData(bundle, renderMode) {
-  state.students       = bundle.students || [];
-  state.payments       = bundle.payments || [];
-  state.courses        = bundle.courses  || [];
-  state.invoiceRecords = bundle.invoices || [];
+  state.students        = bundle.students || [];
+  state.payments        = bundle.payments || [];
+  state.courses         = bundle.courses  || [];
+  state.invoiceRecords  = bundle.invoices || [];
+  state.services        = bundle.services || [];
+  state.serviceTypes    = bundle.serviceTypes || [];
+  state.reconciliations = bundle.reconciliations || [];
   populateProgramDropdowns();
+  // renderMode 'current' = only active page (background refresh)
+  // renderMode 'all'     = every page (first load)
   if (renderMode === 'current') renderCurrentPage();
   else renderAll();
 }
 
+/** Render every visible section */
 function renderAll() {
   renderDashboard();
   renderStudentsTable();
@@ -380,8 +436,10 @@ function renderAll() {
   renderInvoices();
   renderReports();
   renderCourses();
+  if (state.currentPage === 'services') initServicesPage();
 }
 
+/** Render only the currently active page (used on background refresh) */
 function renderCurrentPage() {
   const p = state.currentPage;
   if (p === 'dashboard') renderDashboard();
@@ -391,13 +449,19 @@ function renderCurrentPage() {
   else if (p === 'invoices') renderInvoices();
   else if (p === 'reports')  renderReports();
   else if (p === 'courses')  renderCourses();
+  else if (p === 'services') { renderServiceTypeGrid(); renderServiceTypesTable(); filterServiceLog(); renderReconciliation(); }
+  // Always keep dashboard stats fresh too
   if (p !== 'dashboard') renderDashboard();
 }
 
+/** Save bundle to localStorage with timestamp */
 function saveCache(bundle) {
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), bundle })); } catch(_) {}
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), bundle }));
+  } catch(_) {}
 }
 
+/** Load bundle from localStorage; returns null if missing or expired */
 function loadCache() {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
@@ -408,27 +472,34 @@ function loadCache() {
   } catch(_) { return null; }
 }
 
+/** Fetch fresh data from GAS — single round-trip via getAll */
 async function fetchFresh(silent = false) {
   if (!silent) setStatus('&#128260; Syncing&hellip;');
   const res = await api('getAll');
   if (!res.success) throw new Error(res.error || 'getAll failed');
   const bundle = {
-    students: res.students || [],
-    payments: res.payments || [],
-    courses:  res.courses  || [],
-    invoices: res.invoices || [],
+    students:        res.students        || [],
+    payments:        res.payments        || [],
+    courses:         res.courses         || [],
+    invoices:        res.invoices        || [],
+    services:        res.services        || [],
+    serviceTypes:    res.serviceTypes    || [],
+    reconciliations: res.reconciliations || [],
   };
   saveCache(bundle);
   return bundle;
 }
 
+/** Primary load — show cached data instantly, then refresh from network */
 async function loadAll(forceFull = false) {
   const cached = loadCache();
 
   if (cached && !forceFull) {
+    // ① Render cached data immediately — zero wait
     applyData(cached);
     setStatus('&#128993; Cached');
 
+    // ② Fetch fresh in background without blocking UI
     fetchFresh(true)
       .then(bundle => {
         applyData(bundle, 'current');
@@ -440,6 +511,7 @@ async function loadAll(forceFull = false) {
         console.warn('Background refresh failed:', e);
       });
   } else {
+    // No cache — must wait for network
     setStatus('&#128260; Loading&hellip;');
     try {
       const bundle = await fetchFresh(false);
@@ -454,6 +526,7 @@ async function loadAll(forceFull = false) {
   }
 }
 
+/** Silent background refresh — only re-renders active page */
 async function silentRefresh() {
   try {
     const bundle = await fetchFresh(true);
@@ -464,6 +537,7 @@ async function silentRefresh() {
   }
 }
 
+/** Auto-refresh every 5 minutes while app is open */
 function scheduleAutoRefresh() {
   clearTimeout(_refreshTimer);
   _refreshTimer = setTimeout(async () => {
@@ -472,12 +546,13 @@ function scheduleAutoRefresh() {
   }, CACHE_TTL_MS);
 }
 
+/** Call after any write operation — clears cache and reloads */
 let _reloadDebounce = null;
 function reloadAfterWrite() {
   clearTimeout(_reloadDebounce);
   _reloadDebounce = setTimeout(() => {
     try { localStorage.removeItem(CACHE_KEY); } catch(_) {}
-    loadAll(true).then(() => renderAll());
+    loadAll(true).then(() => renderAll());  // full render after write
   }, 300);
 }
 
@@ -498,6 +573,22 @@ function renderDashboard() {
 
   const now = new Date(), curYear = now.getFullYear(), curMonth = now.getMonth();
   const isThisMonth = d => { if (!d) return false; const dt = new Date(d); return !isNaN(dt) && dt.getFullYear() === curYear && dt.getMonth() === curMonth; };
+  const todayKey = dateKey(now);
+
+  // ── Today's combined revenue (fees + office services) ──
+  document.getElementById('dash-today-label').textContent =
+    now.toLocaleDateString('en-KE', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  const todayPayments = state.payments.filter(p => dateKey(p.date) === todayKey);
+  const todayServices = state.services.filter(sv => dateKey(sv.date) === todayKey);
+  const todayFeesTotal     = todayPayments.reduce((a, p) => a + (+p.amount || 0), 0);
+  const todayServicesTotal = todayServices.reduce((a, sv) => a + (+sv.amount || 0), 0);
+  const todayCombinedTotal = todayFeesTotal + todayServicesTotal;
+
+  document.getElementById('stat-today-total').textContent    = 'KES ' + fmt(todayCombinedTotal);
+  document.getElementById('stat-today-fees').textContent     = 'KES ' + fmt(todayFeesTotal);
+  document.getElementById('stat-today-services').textContent = 'KES ' + fmt(todayServicesTotal);
+  document.getElementById('stat-today-txcount').textContent  = todayPayments.length + todayServices.length;
 
   document.getElementById('dash-month-label').textContent =
     now.toLocaleDateString('en-KE', { month: 'long', year: 'numeric' });
@@ -508,9 +599,12 @@ function renderDashboard() {
   const monthPayments  = state.payments.filter(p => isThisMonth(p.date));
   const monthCollected = monthPayments.reduce((a, p) => a + (+p.amount || 0), 0);
   document.getElementById('stat-month-collected').textContent = 'KES ' + fmt(monthCollected);
-  document.getElementById('stat-month-paycount').textContent  = monthPayments.length;
   const avgPayment = monthPayments.length ? monthCollected / monthPayments.length : 0;
   document.getElementById('stat-month-avg').textContent = 'KES ' + fmt(Math.round(avgPayment));
+
+  const monthServices      = state.services.filter(sv => isThisMonth(sv.date));
+  const monthServicesTotal = monthServices.reduce((a, sv) => a + (+sv.amount || 0), 0);
+  document.getElementById('stat-month-services').textContent = 'KES ' + fmt(monthServicesTotal);
 
   const rec = [...monthEnrollments].sort((a,b) => new Date(b.enrollDate) - new Date(a.enrollDate)).slice(0,5);
   document.getElementById('recent-enrollments').innerHTML = rec.length
@@ -535,6 +629,21 @@ function renderDashboard() {
           + KES ${fmt(p.amount)}
         </td></tr>`).join('')}</table>`
     : '<div class="empty-state"><div class="empty-icon">&#128179;</div><p>No payments recorded this month</p></div>';
+
+  const rs = [...monthServices].sort((a,b) => new Date(b.createdAt||b.date) - new Date(a.createdAt||a.date)).slice(0,5);
+  const recentServicesEl = document.getElementById('recent-services');
+  if (recentServicesEl) {
+    recentServicesEl.innerHTML = rs.length
+      ? `<table style="width:100%;font-size:13px;">${rs.map(sv=>`<tr>
+          <td style="padding:10px 14px;border-bottom:1px solid var(--cream-dk);">
+            <div style="font-weight:600;">${sv.serviceType}${sv.customer ? ' &middot; ' + sv.customer : ''}</div>
+            <div style="font-size:11.5px;color:var(--muted);">${fmtDate(sv.date)} &middot; ${sv.method} &middot; ${sv.recordedBy||''}</div>
+          </td>
+          <td style="padding:10px 14px;border-bottom:1px solid var(--cream-dk);text-align:right;font-weight:700;color:var(--info);">
+            + KES ${fmt(sv.amount)}
+          </td></tr>`).join('')}</table>`
+      : '<div class="empty-state"><div class="empty-icon">&#128424;</div><p>No office services recorded this month</p></div>';
+  }
 }
 
 // ════════════════════════════════════════════════
@@ -558,6 +667,7 @@ function renderStudentsTable(filtered) {
         ${can('register') ? `<button class="btn btn-primary btn-sm" onclick="editStudent('${s.regNo}')">&#9999;</button>` : ''}
         ${can('payment')  ? `<button class="btn btn-gold btn-sm" onclick="quickPay('${s.regNo}')">&#128176;</button>` : ''}
         ${can('sms')      ? `<button class="btn btn-sms btn-sm" onclick="openSmsModal('${s.regNo}')" title="SMS">&#128241;</button>` : ''}
+        ${can('delete')   ? `<button class="btn btn-danger btn-sm" onclick="deleteStudentRecord('${s.regNo}')" title="Delete">&#128465;</button>` : ''}
       </div></td>
     </tr>`).join('');
 }
@@ -584,6 +694,7 @@ function prepRegisterForm() {
 
 function generateRegNo() {
   const yr    = new Date().getFullYear().toString().slice(-2);
+  // Use max numeric suffix from existing regNos to avoid collision after deletions
   const nums  = state.students
     .map(s => { const m = s.regNo.match(/\/(\d+)$/); return m ? +m[1] : 0; })
     .filter(n => !isNaN(n));
@@ -635,7 +746,7 @@ async function submitStudent() {
     if (res.success) {
       toast(state.editMode ? 'Student updated!' : 'Student registered!', 'success');
       if (!state.editMode && payload.phone && can('sms')) {
-        sendSms(payload.phone, buildWelcomeSms(payload))
+        sendSms(payload.phone, buildWelcomeSms(payload), 'welcome', { regNo: payload.regNo, studentName: payload.fullName })
           .then(r => r.success ? toast('Welcome SMS sent.', 'success') : null)
           .catch(() => {});
       }
@@ -677,9 +788,11 @@ function viewStudent(regNo) {
   document.getElementById('modal-edit-btn').style.display         = can('register') ? '' : 'none';
   document.getElementById('modal-sms-student-btn').style.display  = can('sms')      ? '' : 'none';
   document.getElementById('modal-charge-student-btn').style.display = can('charge') ? '' : 'none';
+  document.getElementById('modal-delete-student-btn').style.display = can('delete') ? '' : 'none';
   document.getElementById('modal-edit-btn').onclick = () => { closeModal('modal-student'); editStudent(regNo); };
   document.getElementById('modal-sms-student-btn').onclick = () => { closeModal('modal-student'); openSmsModal(regNo); };
   document.getElementById('modal-charge-student-btn').onclick = () => { closeModal('modal-student'); openChargeModal(regNo); };
+  document.getElementById('modal-delete-student-btn').onclick = () => { deleteStudentRecord(regNo); };
   openModal('modal-student');
 }
 
@@ -712,6 +825,55 @@ function editStudent(regNo) {
   document.getElementById('fee-balance').value = s.feeBalance||'';
   document.getElementById('guardian').value    = s.guardian||'';
   document.getElementById('notes').value       = s.notes||'';
+}
+
+// ── Admin: Delete student record (duty segregation) ───────
+// Staff can register and edit students but cannot delete them — only
+// Admin (the existing `delete` permission). Because deleting a student
+// can orphan their payment/invoice/service history, the prompt clearly
+// surfaces how much history exists before asking for a reason. The full
+// record is archived to DeletedStudents before removal, matching the
+// pattern already used for Payments and Services.
+
+function deleteStudentRecord(regNo) {
+  if (!can('delete')) { toast('Only an Admin can delete student records.', 'error'); return; }
+  const s = state.students.find(x => x.regNo === regNo);
+  if (!s) return;
+
+  const paymentCount = state.payments.filter(p => p.regNo === regNo).length;
+  const serviceTxCount = 0; // services are not linked to students by regNo
+  const invoiceCount = state.invoiceRecords.filter(i => i.regNo === regNo).length;
+  const balance = +s.feeBalance || 0;
+
+  let warningLines = [`Delete student ${s.fullName} (${regNo})?`, ''];
+  if (paymentCount > 0) warningLines.push(`\u26A0\uFE0F This student has ${paymentCount} payment record(s) on file.`);
+  if (invoiceCount > 0) warningLines.push(`\u26A0\uFE0F This student has ${invoiceCount} invoice/charge record(s) on file.`);
+  if (balance > 0) warningLines.push(`\u26A0\uFE0F This student has an outstanding balance of KES ${fmt(balance)}.`);
+  warningLines.push('');
+  warningLines.push('The student record will be archived (not permanently erased) and removed from active lists.');
+  warningLines.push('');
+  warningLines.push('Enter a reason for this deletion (required for audit log):');
+
+  const reason = prompt(warningLines.join('\n'));
+  if (reason === null) return; // cancelled
+  if (!reason.trim()) { toast('A reason is required to delete a student record.', 'error'); return; }
+
+  deleteStudentConfirmed(regNo, reason.trim());
+}
+
+async function deleteStudentConfirmed(regNo, reason) {
+  try {
+    const res = await apiPost('deleteStudent', {
+      regNo,
+      deletedBy: state.user?.fullName || state.user?.username || 'Admin',
+      deleteReason: reason,
+    });
+    if (res.success) {
+      toast('Student record deleted and archived.', 'success');
+      closeModal('modal-student');
+      reloadAfterWrite();
+    } else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
 }
 
 // ════════════════════════════════════════════════
@@ -807,7 +969,7 @@ function quickPay(regNo) {
 function switchTabById(tabId) {
   document.querySelectorAll('[id^="tab-fee-"]').forEach(t=>t.style.display='none');
   document.getElementById(tabId).style.display='block';
-  document.querySelectorAll('.tab-btn').forEach((b,i)=>{
+  document.querySelectorAll('#page-fees .tab-btn').forEach((b,i)=>{
     b.classList.toggle('active',(tabId==='tab-fee-overview'&&i===0)||(tabId==='tab-fee-record'&&i===1)||(tabId==='tab-fee-structures'&&i===2));
   });
 }
@@ -835,7 +997,7 @@ async function submitPayment() {
       toast('Payment recorded!','success');
       const receiptNo = res.receiptNo || ('RCP'+Date.now().toString().slice(-6));
       if (s.phone && can('sms')) {
-        sendSms(s.phone, buildPaymentSms(payload, receiptNo))
+        sendSms(s.phone, buildPaymentSms(payload, receiptNo), 'receipt', { regNo: s.regNo, studentName: s.fullName })
           .then(r => r.success ? toast('Receipt SMS sent.', 'success') : null)
           .catch(() => {});
       }
@@ -867,11 +1029,15 @@ function renderPayments(filtered) {
       <td>${fmtDate(p.date)}</td>
       <td><strong>${p.studentName}</strong><br><small style="color:var(--muted);">${p.regNo}</small></td>
       <td>${p.program||'&mdash;'}</td>
-      <td style="font-weight:700;color:var(--success);">KES ${fmt(p.amount)}</td>
+      <td style="font-weight:700;color:var(--success);">KES ${fmt(p.amount)}${p.editedAt ? '<br><span class="badge badge-warning" style="margin-top:3px;" title="Edited by '+(p.editedBy||'Admin')+' on '+fmtDate(p.editedAt)+'">&#9999; Edited</span>' : ''}</td>
       <td><span class="badge badge-info">${p.method}</span></td>
       <td style="font-size:12px;color:var(--muted);">${p.ref||'&mdash;'}</td>
       <td style="color:${+p.newBalance>0?'var(--warning)':'var(--success)'};">KES ${fmt(p.newBalance)}</td>
-      <td><button class="btn btn-outline btn-sm" onclick="showReceiptById('${p.receiptNo||p.regNo+p.date}')">&#129534; Receipt</button></td>
+      <td><div class="actions-cell">
+        <button class="btn btn-outline btn-sm" onclick="showReceiptById('${p.receiptNo||p.regNo+p.date}')">&#129534;</button>
+        ${can('delete') ? `<button class="btn btn-primary btn-sm" onclick="openEditPaymentModal('${p.receiptNo}')">&#9999;</button>` : ''}
+        ${can('delete') ? `<button class="btn btn-danger btn-sm" onclick="deletePaymentTransaction('${p.receiptNo}')">&#128465;</button>` : ''}
+      </div></td>
     </tr>`).join('');
 }
 
@@ -884,36 +1050,98 @@ function filterPayments() {
   }));
 }
 
+
+/** Look up a payment from state by receiptNo and show it */
 function showReceiptById(key) {
   const p = state.payments.find(x => (x.receiptNo || x.regNo + x.date) === key);
   if (!p) { toast('Receipt not found.', 'error'); return; }
   showReceipt(p, p.receiptNo || '');
 }
 
-// ── HTML receipt (modal) — professional letterhead layout ────────────
+// ── Admin: Edit / Delete payments (duty segregation) ──────
+// Staff can record payments but cannot edit or delete them once saved —
+// only Admin (the existing `delete` permission) can correct or remove a
+// payment, and every change is logged with who/when/why. Because a
+// payment's amount feeds the student's running balance, the backend
+// reverses the old amount and re-applies the new one rather than just
+// overwriting the row.
+
+function openEditPaymentModal(receiptNo) {
+  if (!can('delete')) { toast('Only an Admin can edit payments.', 'error'); return; }
+  const p = state.payments.find(x => x.receiptNo === receiptNo);
+  if (!p) { toast('Payment not found.', 'error'); return; }
+
+  document.getElementById('epay-receipt-no').value      = p.receiptNo;
+  document.getElementById('epay-receipt-display').value = p.receiptNo;
+  document.getElementById('epay-student-display').value = p.studentName + ' (' + p.regNo + ')';
+  document.getElementById('epay-amount').value           = p.amount || '';
+  document.getElementById('epay-method').value            = p.method || 'Cash';
+  document.getElementById('epay-date').value               = toDateInputValue(p.date) || p.date;
+  document.getElementById('epay-ref').value                 = p.ref || '';
+  document.getElementById('epay-remarks').value             = p.remarks || '';
+  document.getElementById('epay-reason').value              = '';
+  openModal('modal-edit-payment');
+}
+
+async function saveEditedPayment() {
+  if (!can('delete')) { toast('Only an Admin can edit payments.', 'error'); return; }
+
+  const receiptNo = document.getElementById('epay-receipt-no').value;
+  const amount    = +document.getElementById('epay-amount').value;
+  const reason    = document.getElementById('epay-reason').value.trim();
+
+  if (!amount || amount <= 0) { toast('Enter a valid amount.', 'error'); return; }
+  if (!reason) { toast('A reason for the edit is required (audit log).', 'error'); return; }
+
+  const payload = {
+    receiptNo,
+    amount,
+    method:     document.getElementById('epay-method').value,
+    date:       document.getElementById('epay-date').value,
+    ref:        document.getElementById('epay-ref').value.trim(),
+    remarks:    document.getElementById('epay-remarks').value.trim(),
+    editReason: reason,
+    editedBy:   state.user?.fullName || state.user?.username || 'Admin',
+  };
+
+  const btn = document.getElementById('epay-save-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Saving&hellip;';
+  try {
+    const res = await apiPost('updatePayment', payload);
+    if (res.success) {
+      toast('Payment updated and logged. Student balance adjusted.', 'success');
+      closeModal('modal-edit-payment');
+      reloadAfterWrite();
+    } else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+  btn.disabled = false;
+  btn.innerHTML = '&#128190; Save Changes';
+}
+
+async function deletePaymentTransaction(receiptNo) {
+  if (!can('delete')) { toast('Only an Admin can delete payments.', 'error'); return; }
+  const p = state.payments.find(x => x.receiptNo === receiptNo);
+  if (!p) return;
+  const reason = prompt(`Delete payment ${receiptNo} (KES ${fmt(p.amount)} from ${p.studentName})?\n\nThis will reverse the amount from the student's balance. Enter a reason for this deletion (required for audit log):`);
+  if (reason === null) return; // cancelled
+  if (!reason.trim()) { toast('A reason is required to delete a payment.', 'error'); return; }
+
+  try {
+    const res = await apiPost('deletePayment', {
+      receiptNo,
+      deletedBy: state.user?.fullName || state.user?.username || 'Admin',
+      deleteReason: reason.trim(),
+    });
+    if (res.success) { toast('Payment deleted. Student balance reversed.', 'success'); reloadAfterWrite(); }
+    else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+}
+
 function showReceipt(p, rcpNo) {
   document.getElementById('modal-receipt-body').innerHTML = `
     <div class="receipt-wrap" id="receipt-print-area">
-      <div class="receipt-header">
-        <div class="receipt-header-inner">
-          <div class="receipt-header-logo">
-            <img src="${JTI.logo}" alt="JTI Logo" class="receipt-logo"
-                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-            <span class="receipt-logo-fallback">JTI</span>
-          </div>
-          <div class="receipt-header-info">
-            <div class="receipt-title">${JTI.name}</div>
-            <div class="receipt-subtitle">${JTI.branch}</div>
-            <div class="receipt-contact">
-              <span>&#128222; ${JTI.phones}</span>
-              <span class="receipt-contact-sep">|</span>
-              <span>&#9993; ${JTI.email}</span>
-            </div>
-          </div>
-          <div class="receipt-doc-badge">PAYMENT<br>RECEIPT</div>
-        </div>
-        <div class="receipt-header-rule"></div>
-      </div>
+      ${receiptBrandHeaderHtml('Official Payment Receipt')}
       <hr class="receipt-divider">
       <div class="receipt-row"><span class="rl">Receipt No.</span><span class="rr">${rcpNo||'&mdash;'}</span></div>
       <div class="receipt-row"><span class="rl">Date</span><span class="rr">${fmtDate(p.date)}</span></div>
@@ -927,14 +1155,42 @@ function showReceipt(p, rcpNo) {
       ${p.remarks?`<div class="receipt-row"><span class="rl">Remarks</span><span class="rr">${p.remarks}</span></div>`:''}
       <div class="receipt-total"><span>Amount Received</span><span>KES ${fmt(p.amount)}</span></div>
       <div class="receipt-row" style="margin-top:10px;"><span class="rl">Balance Remaining</span><span class="rr" style="color:${+p.newBalance>0?'var(--danger)':'var(--success)'};">KES ${fmt(p.newBalance)}</span></div>
-      <div class="receipt-stamp">This is an official receipt from ${JTI.name}<br>Tel: ${JTI.phones} &nbsp;|&nbsp; ${JTI.email}<br>Printed: ${new Date().toLocaleDateString('en-KE',{day:'2-digit',month:'long',year:'numeric'})}</div>
+      <div class="receipt-stamp">This is an official receipt from ${BRAND.name}<br>Printed: ${new Date().toLocaleDateString('en-KE',{day:'2-digit',month:'long',year:'numeric'})}</div>
+      ${receiptContactFooterHtml()}
     </div>`;
   openModal('modal-receipt');
 }
 
 // ════════════════════════════════════════════════
-//  PDF ENGINE  —  Professional receipts & invoices
+//  BRANDING HELPERS — logo + contact info for
+//  receipts / invoices (on-screen HTML)
 // ════════════════════════════════════════════════
+
+function receiptBrandHeaderHtml(subtitle) {
+  return `
+    <div class="receipt-header">
+      <img src="${BRAND.logoUrl}" alt="${BRAND.name} Logo" class="receipt-logo-img"
+           onerror="this.style.display='none';">
+      <div style="font-size:24px;font-weight:800;color:var(--navy);font-family:var(--font-h);">JTI</div>
+      <div class="receipt-title">${BRAND.name}</div>
+      <div class="receipt-subtitle">${BRAND.branch} &middot; ${subtitle}</div>
+      <div class="receipt-contact-line">&#128222; ${BRAND.phone1} / ${BRAND.phone2} &nbsp;&middot;&nbsp; &#9993; ${BRAND.email}</div>
+    </div>`;
+}
+
+function receiptContactFooterHtml() {
+  return `
+    <div class="receipt-contact-footer">
+      <strong>${BRAND.name}</strong> &middot; ${BRAND.branch}<br>
+      &#128222; ${BRAND.phone1} &nbsp;|&nbsp; ${BRAND.phone2} &nbsp;|&nbsp; &#9993; ${BRAND.email}
+    </div>`;
+}
+
+// ════════════════════════════════════════════════
+//  PDF ENGINE  —  Professional receipts & invoices
+//  Uses jsPDF (loaded from CDN in index.html)
+// ════════════════════════════════════════════════
+
 const PDF = {
   navy:     [10,  22,  40],
   navySoft: [27,  48,  87],
@@ -948,8 +1204,8 @@ const PDF = {
   cream:    [247, 244, 238],
   white:    [255, 255, 255],
   text:     [26,  26,  46],
-  W:   137.6, // matches the HTML receipt's max-width: 520px (520 / 96in * 25.4mm)
-  PAD:  13,   // kept proportional to the old 105mm page (10mm / 105 ≈ 13mm / 137.6)
+  W:   105,   // page width mm
+  PAD:  10,   // left/right margin
 };
 
 function _newDoc() {
@@ -971,93 +1227,84 @@ function _line(doc, y, dashed) {
   doc.setLineDash([], 0);
 }
 
-function _drawHeader(doc, docType) {
-  const W   = PDF.W;
-  const PAD = PDF.PAD;
-
-  // ── Background: full-width navy bar ──────────────────────────────────
-  doc.setFillColor(...PDF.navy);
-  doc.rect(0, 0, W, 40, 'F');
-
-  // ── Gold rule at bottom of navy bar ──────────────────────────────────
-  doc.setFillColor(...PDF.gold);
-  doc.rect(0, 40, W, 2.5, 'F');
-
-  // ── LEFT COLUMN: logo box ────────────────────────────────────────────
-  const logoBoxX = PAD;
-  const logoBoxY = 9;
-  const logoBoxW = 18;
-  const logoBoxH = 18;
-
-  // White rounded rect as logo background (cleaner contrast)
-  doc.setFillColor(255, 255, 255);
-  doc.roundedRect(logoBoxX, logoBoxY, logoBoxW, logoBoxH, 2, 2, 'F');
-
-  // Try to embed the real logo image
-  let logoEmbedded = false;
+/**
+ * Loads the JTI logo image (cached after first call) so it can be embedded
+ * in generated PDFs. Falls back gracefully (returns null) if unavailable —
+ * the gold "JTI" badge is drawn instead, so PDF generation never breaks.
+ */
+let _logoImgCache = null;
+let _logoImgTried = false;
+function _getLogoImageSync() {
+  // jsPDF addImage needs a loaded <img> or data URL synchronously at draw time.
+  // We pre-warm this on app init via preloadLogoForPdf(); if it's not ready yet,
+  // we simply skip embedding and use the gold monogram badge instead.
+  return _logoImgCache;
+}
+function preloadLogoForPdf() {
+  if (_logoImgTried) return;
+  _logoImgTried = true;
   try {
-    const logoImg = document.querySelector('.receipt-logo');
-    if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
-      const canvas  = document.createElement('canvas');
-      canvas.width  = logoImg.naturalWidth;
-      canvas.height = logoImg.naturalHeight;
-      canvas.getContext('2d').drawImage(logoImg, 0, 0);
-      const imgData = canvas.toDataURL('image/jpeg');
-      // Centre image inside the white box with 2px padding
-      const imgPad = 2;
-      doc.addImage(imgData, 'JPEG',
-        logoBoxX + imgPad, logoBoxY + imgPad,
-        logoBoxW - imgPad * 2, logoBoxH - imgPad * 2);
-      logoEmbedded = true;
-    }
-  } catch(_) {}
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload  = () => { _logoImgCache = img; };
+    img.onerror = () => { _logoImgCache = null; };
+    img.src = BRAND.logoUrl;
+  } catch (_) { _logoImgCache = null; }
+}
 
-  if (!logoEmbedded) {
-    // Fallback: gold "JTI" monogram centred in the white box
-    _font(doc, 'bold', 11, PDF.navy);
-    doc.text('JTI', logoBoxX + logoBoxW / 2, logoBoxY + logoBoxH / 2 + 2, { align: 'center' });
+function _drawHeader(doc, docType) {
+  const W = PDF.W;
+
+  // Full-width navy bar
+  doc.setFillColor(...PDF.navy);
+  doc.rect(0, 0, W, 32, 'F');
+
+  // Gold bottom accent
+  doc.setFillColor(...PDF.gold);
+  doc.rect(0, 32, W, 2, 'F');
+
+  // Logo: try embedded image first, fall back to gold monogram badge
+  const logoImg = _getLogoImageSync();
+  if (logoImg) {
+    try { doc.addImage(logoImg, 'JPEG', PDF.PAD, 8, 15, 15, undefined, 'FAST'); }
+    catch (_) { _drawLogoBadge(doc); }
+  } else {
+    _drawLogoBadge(doc);
   }
 
-  // ── CENTRE COLUMN: institute name, branch, contacts ──────────────────
-  const textX = logoBoxX + logoBoxW + 4;  // 4 mm gap after logo box
+  // Institute name & branch
+  _font(doc, 'bold', 12, PDF.white);
+  doc.text(BRAND.name, 29, 14.5);
+  _font(doc, 'normal', 8.5, [180, 200, 235]);
+  doc.text(BRAND.branch, 29, 20);
+  _font(doc, 'normal', 6.8, [150, 175, 215]);
+  doc.text(BRAND.phone1 + ' / ' + BRAND.phone2, 29, 24.5);
+  doc.text(BRAND.email, 29, 28.5);
 
-  _font(doc, 'bold', 12.5, PDF.white);
-  doc.text(JTI.name, textX, 16);
-
-  _font(doc, 'normal', 8, [180, 200, 235]);
-  doc.text(JTI.branch, textX, 22);
-
-  // Thin rule under branch name
-  doc.setDrawColor(...[80, 110, 160]);
-  doc.setLineWidth(0.25);
-  doc.setLineDash([1, 1.5], 0);
-  doc.line(textX, 24.5, textX + 55, 24.5);
-  doc.setLineDash([], 0);
-
-  // Phone and email on separate short lines
-  _font(doc, 'normal', 7, [160, 185, 215]);
-  doc.text('Tel: ' + JTI.phones, textX, 29);
-  doc.text('Email: ' + JTI.email, textX, 34);
-
-  // ── RIGHT COLUMN: document-type label (flush, no separate box) ───────
-  const labelRightX = W - PAD;
-  const ruleTopY    = 15;
-  const ruleBotY    = 27;
-  const labelW      = 32;
-  const labelLeftX  = labelRightX - labelW;
-
+  // Document type pill (top right)
+  const pill = docType.toUpperCase();
+  const pillW = 38, pillH = 8;
+  const pillX = W - PDF.PAD - pillW;
+  doc.setFillColor(...PDF.navySoft);
+  doc.roundedRect(pillX, 4, pillW, pillH, 2, 2, 'F');
   doc.setDrawColor(...PDF.gold);
-  doc.setLineWidth(0.5);
-  doc.line(labelLeftX, ruleTopY, labelRightX, ruleTopY);
-  doc.line(labelLeftX, ruleBotY, labelRightX, ruleBotY);
+  doc.setLineWidth(0.4);
+  doc.roundedRect(pillX, 4, pillW, pillH, 2, 2, 'S');
+  _font(doc, 'bold', 7.5, PDF.goldLt);
+  doc.text(pill, pillX + pillW / 2, 9.5, { align: 'center' });
 
-  _font(doc, 'bold', 8.5, PDF.goldLt);
-  doc.text(docType.toUpperCase(), labelRightX, (ruleTopY + ruleBotY) / 2 + 1.4, { align: 'right' });
+  return 42; // y after header + spacing
+}
 
-  return 50; // y position after header + rule
+function _drawLogoBadge(doc) {
+  doc.setFillColor(...PDF.gold);
+  doc.roundedRect(PDF.PAD, 8, 15, 15, 2.5, 2.5, 'F');
+  _font(doc, 'bold', 13, PDF.navy);
+  doc.text('JTI', PDF.PAD + 2.8, 18.5);
 }
 
 function _sectionLabel(doc, y, text) {
+  // Label + underline
   _font(doc, 'bold', 7, PDF.muted);
   doc.text(text.toUpperCase(), PDF.PAD, y);
   doc.setDrawColor(...PDF.gold);
@@ -1096,6 +1343,7 @@ function _totalBar(doc, y, label, value, barColor) {
   const barH = 12;
   doc.setFillColor(...(barColor || PDF.navy));
   doc.roundedRect(PDF.PAD, y, PDF.W - PDF.PAD * 2, barH, 2.5, 2.5, 'F');
+  // Gold left accent on bar
   doc.setFillColor(...PDF.gold);
   doc.roundedRect(PDF.PAD, y, 3, barH, 1, 1, 'F');
   _font(doc, 'bold', 10.5, PDF.white);
@@ -1105,6 +1353,7 @@ function _totalBar(doc, y, label, value, barColor) {
 }
 
 function _footer(doc, y, lines) {
+  // Separator
   doc.setDrawColor(...PDF.border);
   doc.setLineWidth(0.3);
   doc.setLineDash([], 0);
@@ -1119,9 +1368,16 @@ function _footer(doc, y, lines) {
     }
   });
 
+  y += 1;
+  // Contact strip
+  _font(doc, 'bold', 7.5, PDF.navy);
+  doc.text(BRAND.phone1 + '  |  ' + BRAND.phone2 + '  |  ' + BRAND.email, PDF.W / 2, y, { align: 'center' });
+  y += 6;
+
   // Bottom gold strip
   doc.setFillColor(...PDF.gold);
   doc.rect(0, 196, PDF.W, 4, 'F');
+  // Bottom navy strip
   doc.setFillColor(...PDF.navy);
   doc.rect(0, 196.5, PDF.W, 3.5, 'F');
 }
@@ -1134,10 +1390,12 @@ function _save(doc, filename) {
 // ════════════════════════════════════════════════
 //  PAYMENT RECEIPT PDF
 // ════════════════════════════════════════════════
+
 function downloadReceiptPdf() {
   const area = document.getElementById('receipt-print-area');
   if (!area) { toast('No receipt open.', 'error'); return; }
 
+  // Build data map from rendered DOM
   const data = {};
   area.querySelectorAll('.receipt-row').forEach(row => {
     const spans = row.querySelectorAll('span');
@@ -1181,7 +1439,10 @@ function downloadReceiptPdf() {
   y = _row(doc, y, 'Balance Remaining', bal, { color: balZero ? PDF.success : PDF.danger, shade: true });
   y += 6;
 
-  _footer(doc, y, stampLines);
+  _footer(doc, y, [
+    ...stampLines,
+    'Generated: ' + new Date().toLocaleDateString('en-KE', { day: '2-digit', month: 'long', year: 'numeric' }),
+  ]);
 
   const rcpNo = (data['Receipt No.'] || 'receipt').replace(/[/\\]/g, '-');
   _save(doc, 'JTI_Receipt_' + rcpNo + '.pdf');
@@ -1190,6 +1451,7 @@ function downloadReceiptPdf() {
 // ════════════════════════════════════════════════
 //  FEE / CHARGE INVOICE PDF
 // ════════════════════════════════════════════════
+
 function downloadInvoicePdf() {
   const area = document.getElementById('invoice-print-area');
   if (!area) { toast('No invoice open.', 'error'); return; }
@@ -1245,7 +1507,10 @@ function downloadInvoicePdf() {
   y = _totalBar(doc, y, totalLabel, totalValue, isCharge ? PDF.navySoft : PDF.navy);
   y += 2;
 
-  _footer(doc, y, stampLines);
+  _footer(doc, y, [
+    ...stampLines,
+    'Generated: ' + new Date().toLocaleDateString('en-KE', { day: '2-digit', month: 'long', year: 'numeric' }),
+  ]);
 
   const regNo = (data['Reg. No.'] || 'invoice').replace(/[/\\]/g, '-');
   const date  = new Date().toISOString().split('T')[0];
@@ -1256,12 +1521,14 @@ function downloadInvoicePdf() {
 function printReceipt() { downloadReceiptPdf(); }
 function printInvoice() { downloadInvoicePdf(); }
 
+
 // ════════════════════════════════════════════════
 //  CHARGE INVOICE
 // ════════════════════════════════════════════════
 function openChargeModal(regNo) {
   if (!can('charge')) { toast('Access denied.', 'error'); return; }
   const sel = document.getElementById('charge-student');
+  // Populate dropdown
   sel.innerHTML = '<option value="">Choose student&hellip;</option>' +
     state.students.map(s => `<option value="${s.regNo}">${s.regNo} — ${s.fullName}</option>`).join('');
   if (regNo) {
@@ -1330,6 +1597,7 @@ async function submitCharge() {
       toast(`Invoice ${res.invoiceNo} raised — KES ${fmt(amount)} charged.`, 'success');
       closeModal('modal-charge');
       reloadAfterWrite();
+      // Show printable invoice
       showChargeInvoice(res, payload, state.students.find(x => x.regNo === regNo));
     } else {
       toast('Error: ' + (res.error || 'Unknown'), 'error');
@@ -1340,31 +1608,11 @@ async function submitCharge() {
   btn.innerHTML = '&#129534; Raise Invoice';
 }
 
-// ── HTML charge invoice (modal) — professional letterhead layout ─────
 function showChargeInvoice(res, payload, student) {
   if (!student) return;
   document.getElementById('modal-invoice-body').innerHTML = `
     <div class="receipt-wrap" id="invoice-print-area">
-      <div class="receipt-header">
-        <div class="receipt-header-inner">
-          <div class="receipt-header-logo">
-            <img src="${JTI.logo}" alt="JTI Logo" class="receipt-logo"
-                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-            <span class="receipt-logo-fallback">JTI</span>
-          </div>
-          <div class="receipt-header-info">
-            <div class="receipt-title">${JTI.name}</div>
-            <div class="receipt-subtitle">${JTI.branch}</div>
-            <div class="receipt-contact">
-              <span>&#128222; ${JTI.phones}</span>
-              <span class="receipt-contact-sep">|</span>
-              <span>&#9993; ${JTI.email}</span>
-            </div>
-          </div>
-          <div class="receipt-doc-badge">CHARGE<br>INVOICE</div>
-        </div>
-        <div class="receipt-header-rule"></div>
-      </div>
+      ${receiptBrandHeaderHtml('Charge Invoice')}
       <hr class="receipt-divider">
       <div class="receipt-row"><span class="rl">Invoice No.</span><span class="rr">${res.invoiceNo}</span></div>
       <div class="receipt-row"><span class="rl">Date</span><span class="rr">${fmtDate(payload.date)}</span></div>
@@ -1378,17 +1626,19 @@ function showChargeInvoice(res, payload, student) {
       <div class="receipt-total"><span>Amount Charged</span><span>KES ${fmt(payload.amount)}</span></div>
       <div class="receipt-row" style="margin-top:10px;"><span class="rl">Updated Total Fee</span><span class="rr">KES ${fmt(res.newTotalFee)}</span></div>
       <div class="receipt-row"><span class="rl">New Balance Due</span><span class="rr" style="color:var(--danger);font-weight:700;">KES ${fmt(res.newBalance)}</span></div>
-      <div class="receipt-stamp">This charge has been applied to the student's account.<br>Tel: ${JTI.phones} &nbsp;|&nbsp; ${JTI.email}<br>${JTI.name} &middot; ${JTI.branch}</div>
+      <div class="receipt-stamp">This charge has been applied to the student's account.<br>${BRAND.name} &middot; ${BRAND.branch}</div>
+      ${receiptContactFooterHtml()}
     </div>`;
   openModal('modal-invoice');
 }
 
 // ════════════════════════════════════════════════
-//  INVOICES PAGE
+//  INVOICES PAGE (charge history + summary)
 // ════════════════════════════════════════════════
 function generateInvoices() { renderInvoices(); }
 
 function renderInvoices(filtered) {
+  // Tab 1: Fee summary per student
   const data  = filtered || state.students;
   const tbody = document.getElementById('invoices-tbody');
   if (!data.length) { tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:32px;">No data</td></tr>'; return; }
@@ -1411,6 +1661,7 @@ function renderInvoices(filtered) {
     </tr>`;
   }).join('');
 
+  // Tab 2: Charge history
   renderChargeHistory();
 }
 
@@ -1455,32 +1706,12 @@ function switchInvTab(tab) {
   if (tab === 'history') renderChargeHistory();
 }
 
-// ── HTML fee invoice (modal) — professional letterhead layout ────────
 function printStudentInvoice(regNo) {
   const s = state.students.find(x=>x.regNo===regNo);
   if (!s) return;
   document.getElementById('modal-invoice-body').innerHTML = `
     <div class="receipt-wrap" id="invoice-print-area">
-      <div class="receipt-header">
-        <div class="receipt-header-inner">
-          <div class="receipt-header-logo">
-            <img src="${JTI.logo}" alt="JTI Logo" class="receipt-logo"
-                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-            <span class="receipt-logo-fallback">JTI</span>
-          </div>
-          <div class="receipt-header-info">
-            <div class="receipt-title">${JTI.name}</div>
-            <div class="receipt-subtitle">${JTI.branch}</div>
-            <div class="receipt-contact">
-              <span>&#128222; ${JTI.phones}</span>
-              <span class="receipt-contact-sep">|</span>
-              <span>&#9993; ${JTI.email}</span>
-            </div>
-          </div>
-          <div class="receipt-doc-badge">FEE<br>INVOICE</div>
-        </div>
-        <div class="receipt-header-rule"></div>
-      </div>
+      ${receiptBrandHeaderHtml('Fee Invoice')}
       <hr class="receipt-divider">
       <div class="receipt-row"><span class="rl">Invoice Date</span><span class="rr">${new Date().toLocaleDateString('en-KE')}</span></div>
       <div class="receipt-row"><span class="rl">Invoice To</span><span class="rr">${s.fullName}</span></div>
@@ -1492,10 +1723,12 @@ function printStudentInvoice(regNo) {
       <div class="receipt-row"><span class="rl">Program Fee</span><span class="rr">KES ${fmt(s.totalFee)}</span></div>
       <div class="receipt-row"><span class="rl">Amount Paid</span><span class="rr" style="color:var(--success);">KES ${fmt(s.amountPaid)}</span></div>
       <div class="receipt-total"><span>Balance Due</span><span>KES ${fmt(s.feeBalance)}</span></div>
-      <div class="receipt-stamp">Please make payments via M-Pesa or Bank Transfer<br>Tel: ${JTI.phones} &nbsp;|&nbsp; ${JTI.email}<br>${JTI.name} &middot; ${JTI.branch}</div>
+      <div class="receipt-stamp">Please make payments via M-Pesa or Bank Transfer<br>${BRAND.name} &middot; ${BRAND.branch}</div>
+      ${receiptContactFooterHtml()}
     </div>`;
   openModal('modal-invoice');
 }
+
 
 // ════════════════════════════════════════════════
 //  COURSES
@@ -1609,6 +1842,87 @@ function renderReports() {
         </td>
       </tr>`).join('')
     :'<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--success);">&#9989; All students are up to date!</td></tr>';
+
+  const smsLogCard = document.getElementById('sms-log-card');
+  if (smsLogCard) smsLogCard.style.display = can('sms') ? '' : 'none';
+}
+
+// ════════════════════════════════════════════════
+//  SMS DELIVERY LOG
+//  Fetched on-demand (not part of getAll) since the log
+//  can grow large — one row is written per recipient phone.
+// ════════════════════════════════════════════════
+
+async function loadSmsLog() {
+  if (!can('sms')) { toast('Access denied.', 'error'); return; }
+  const tbody = document.getElementById('sms-log-tbody');
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);"><span class="loader" style="border-color:var(--border);border-top-color:var(--gold);"></span> Loading&hellip;</td></tr>';
+  try {
+    const res = await api('getSmsLog');
+    if (res.success) {
+      state.smsLog = res.data || [];
+      renderSmsLog();
+      toast('SMS log loaded.', 'success');
+    } else {
+      toast('Error loading SMS log: ' + (res.error || 'Unknown'), 'error');
+    }
+  } catch (e) {
+    toast('Failed to load SMS log: ' + e.message, 'error');
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);">Failed to load. Click Refresh to retry.</td></tr>';
+  }
+}
+
+function renderSmsLog(filtered) {
+  const data = filtered || state.smsLog || [];
+  const tbody = document.getElementById('sms-log-tbody');
+
+  const total = data.length;
+  const sent  = data.filter(l => l.status === 'sent').length;
+  const failed = data.filter(l => l.status === 'failed').length;
+  document.getElementById('sms-log-count').textContent  = total + ' records';
+  document.getElementById('sms-log-total').textContent   = total;
+  document.getElementById('sms-log-success').textContent = sent;
+  document.getElementById('sms-log-failed').textContent  = failed;
+
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);">No SMS sent yet, or click Refresh to load the log</td></tr>';
+    return;
+  }
+
+  const purposeLabels = { welcome: 'Welcome', receipt: 'Receipt', defaulter: 'Defaulter Reminder', manual: 'Manual' };
+  tbody.innerHTML = [...data].sort((a,b) => new Date(b.sentAt) - new Date(a.sentAt)).map(l => `
+    <tr>
+      <td style="font-size:12px;color:var(--muted);">${fmtDate(l.sentAt)} ${fmtTime(l.sentAt)}</td>
+      <td>${l.phone||'&mdash;'}</td>
+      <td><span class="badge badge-purple">${purposeLabels[l.purpose] || l.purpose || 'Manual'}</span></td>
+      <td>${l.studentName ? l.studentName + (l.regNo ? ' <small style="color:var(--muted);">('+l.regNo+')</small>' : '') : '&mdash;'}</td>
+      <td><span class="badge ${l.status==='sent'?'badge-success':'badge-danger'}">${l.status==='sent'?'Sent':'Failed'}</span></td>
+      <td style="font-size:12px;color:var(--danger);max-width:220px;">${l.error||'&mdash;'}</td>
+      <td style="font-size:12px;color:var(--muted);">${l.sentBy||'&mdash;'}</td>
+    </tr>`).join('');
+}
+
+function filterSmsLog() {
+  const q       = document.getElementById('sms-log-search').value.toLowerCase();
+  const purpose = document.getElementById('sms-log-purpose-filter').value;
+  const status  = document.getElementById('sms-log-status-filter').value;
+  const filtered = (state.smsLog || []).filter(l => {
+    const mq = !q || [l.phone, l.studentName, l.regNo, l.purpose].some(v => v && v.toLowerCase().includes(q));
+    const mp = !purpose || l.purpose === purpose;
+    const ms = !status || l.status === status;
+    return mq && mp && ms;
+  });
+  renderSmsLog(filtered);
+}
+
+function exportSmsLog() {
+  const data = state.smsLog || [];
+  if (!data.length) { toast('No SMS log data to export. Click Refresh first.', 'warning'); return; }
+  downloadWorkbook(data.map(l => ({
+    'Date/Time': l.sentAt || '', 'Phone': l.phone || '', 'Purpose': l.purpose || '',
+    'Reg No.': l.regNo || '', 'Student': l.studentName || '', 'Status': l.status || '',
+    'Error': l.error || '', 'Sent By': l.sentBy || '', 'Message': l.message || '',
+  })), 'SMS Log', 'JTI_SMS_Log');
 }
 
 // ════════════════════════════════════════════════
@@ -1655,10 +1969,755 @@ function exportDefaulters() {
 }
 
 // ════════════════════════════════════════════════
+//  OFFICE SERVICES MODULE
+//  (Printing, Browsing, eCitizen, Photocopying, etc.)
+// ════════════════════════════════════════════════
+
+/** Default seed list — used only when no service types exist yet on first load */
+const DEFAULT_SERVICE_TYPES = [
+  { name: 'Printing',       icon: '\u{1F5A8}\uFE0F', price: 10  },
+  { name: 'Photocopying',   icon: '\u{1F4C4}',        price: 5   },
+  { name: 'Scanning',       icon: '\u{1F5C2}\uFE0F',  price: 20  },
+  { name: 'Browsing',       icon: '\u{1F4BB}',        price: 50  },
+  { name: 'eCitizen',       icon: '\u{1F3DB}\uFE0F',  price: 200 },
+  { name: 'Lamination',     icon: '\u{1F4D1}',        price: 50  },
+  { name: 'Binding',        icon: '\u{1F4DA}',        price: 100 },
+  { name: 'Typesetting',    icon: '\u{2328}\uFE0F',   price: 50  },
+  { name: 'CV Writing',     icon: '\u{1F4C3}',        price: 300 },
+  { name: 'Other',          icon: '\u{2795}',          price: 0   },
+];
+
+let _svcLogShowAll = false;
+
+function initServicesPage() {
+  // Default date filters to today on first visit
+  const today = new Date().toISOString().split('T')[0];
+  const svcDateEl   = document.getElementById('svc-date');
+  const reconDateEl = document.getElementById('recon-date');
+  const logDateEl   = document.getElementById('svc-log-date');
+  if (svcDateEl && !svcDateEl.value)     svcDateEl.value   = today;
+  if (reconDateEl && !reconDateEl.value) reconDateEl.value = today;
+  if (logDateEl && !logDateEl.value && !_svcLogShowAll) logDateEl.value = today;
+
+  renderServiceTypeGrid();
+  renderServiceTypesTable();
+  populateServiceTypeFilter();
+  filterServiceLog();
+  renderReconciliation();
+}
+
+function switchSvcTab(tabId) {
+  ['svc-record','svc-log','svc-recon','svc-types'].forEach(id => {
+    document.getElementById('tab-' + id).style.display = (id === tabId) ? 'block' : 'none';
+  });
+  document.querySelectorAll('#page-services .tab-btn').forEach((b,i) => {
+    const order = ['svc-record','svc-log','svc-recon','svc-types'];
+    b.classList.toggle('active', order[i] === tabId);
+  });
+  if (tabId === 'svc-log')   filterServiceLog();
+  if (tabId === 'svc-recon') renderReconciliation();
+  if (tabId === 'svc-types') renderServiceTypesTable();
+}
+
+/** Effective list of service types: server-saved ones, or defaults if none saved yet */
+function effectiveServiceTypes() {
+  return state.serviceTypes && state.serviceTypes.length ? state.serviceTypes : DEFAULT_SERVICE_TYPES;
+}
+
+function renderServiceTypeGrid() {
+  const grid = document.getElementById('svc-type-grid');
+  if (!grid) return;
+  const types = effectiveServiceTypes();
+  const selected = document.getElementById('svc-selected-type')?.value || '';
+  grid.innerHTML = types.map(t => `
+    <div class="service-type-chip ${t.name===selected?'selected':''}" onclick="selectServiceType('${t.name.replace(/'/g,"\\'")}')">
+      <div class="stc-icon">${t.icon||'&#128424;'}</div>
+      <div class="stc-name">${t.name}</div>
+      <div class="stc-price">KES ${fmt(t.price||0)}</div>
+    </div>`).join('');
+}
+
+function selectServiceType(name) {
+  const types = effectiveServiceTypes();
+  const t = types.find(x => x.name === name);
+  document.getElementById('svc-selected-type').value = name;
+  if (t) document.getElementById('svc-unit-price').value = t.price || '';
+  recalcServiceAmount();
+  renderServiceTypeGrid();
+}
+
+function recalcServiceAmount() {
+  const qty   = +document.getElementById('svc-qty').value || 1;
+  const price = +document.getElementById('svc-unit-price').value || 0;
+  document.getElementById('svc-amount').value = qty * price;
+}
+
+function clearServiceForm() {
+  document.getElementById('svc-selected-type').value = '';
+  document.getElementById('svc-desc').value = '';
+  document.getElementById('svc-qty').value = 1;
+  document.getElementById('svc-unit-price').value = '';
+  document.getElementById('svc-amount').value = '';
+  document.getElementById('svc-method').value = 'Cash';
+  document.getElementById('svc-customer').value = '';
+  document.getElementById('svc-phone').value = '';
+  document.getElementById('svc-date').value = new Date().toISOString().split('T')[0];
+  renderServiceTypeGrid();
+}
+
+async function submitService() {
+  if (!can('services')) { toast('Access denied.', 'error'); return; }
+  const btn = document.getElementById('svc-submit-btn');
+
+  const serviceType = document.getElementById('svc-selected-type').value;
+  const amount       = +document.getElementById('svc-amount').value;
+
+  if (!serviceType) { toast('Select a service type.', 'error'); return; }
+  if (!amount || amount <= 0) { toast('Enter a valid amount.', 'error'); return; }
+
+  const payload = {
+    serviceType,
+    description: document.getElementById('svc-desc').value.trim(),
+    qty:         +document.getElementById('svc-qty').value || 1,
+    unitPrice:   +document.getElementById('svc-unit-price').value || 0,
+    amount,
+    method:      document.getElementById('svc-method').value,
+    customer:    document.getElementById('svc-customer').value.trim(),
+    phone:       document.getElementById('svc-phone').value.trim(),
+    date:        document.getElementById('svc-date').value || new Date().toISOString().split('T')[0],
+    recordedBy:  state.user?.fullName || state.user?.username || 'System',
+  };
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Saving&hellip;';
+  try {
+    const res = await apiPost('recordService', payload);
+    if (res.success) {
+      toast('Service recorded!', 'success');
+      reloadAfterWrite();
+      showServiceReceipt(payload, res.receiptNo);
+      clearServiceForm();
+    } else {
+      toast('Error: ' + (res.error || 'Unknown'), 'error');
+    }
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+  btn.disabled = false;
+  btn.innerHTML = '&#128179; Record &amp; Print Receipt';
+}
+
+function showServiceReceipt(p, rcpNo) {
+  document.getElementById('modal-svc-receipt-body').innerHTML = `
+    <div class="receipt-wrap" id="svc-receipt-print-area">
+      ${receiptBrandHeaderHtml('Office Services Receipt')}
+      <hr class="receipt-divider">
+      <div class="receipt-row"><span class="rl">Receipt No.</span><span class="rr">${rcpNo||'&mdash;'}</span></div>
+      <div class="receipt-row"><span class="rl">Date</span><span class="rr">${fmtDate(p.date)}</span></div>
+      <hr class="receipt-divider">
+      <div class="receipt-row"><span class="rl">Service</span><span class="rr">${p.serviceType}</span></div>
+      ${p.description?`<div class="receipt-row"><span class="rl">Description</span><span class="rr" style="max-width:200px;text-align:right;">${p.description}</span></div>`:''}
+      <div class="receipt-row"><span class="rl">Quantity</span><span class="rr">${p.qty}</span></div>
+      <div class="receipt-row"><span class="rl">Unit Price</span><span class="rr">KES ${fmt(p.unitPrice)}</span></div>
+      <hr class="receipt-divider">
+      <div class="receipt-row"><span class="rl">Payment Method</span><span class="rr">${p.method}</span></div>
+      ${p.customer?`<div class="receipt-row"><span class="rl">Customer</span><span class="rr">${p.customer}</span></div>`:''}
+      ${p.phone?`<div class="receipt-row"><span class="rl">Phone</span><span class="rr">${p.phone}</span></div>`:''}
+      <div class="receipt-total"><span>Amount Paid</span><span>KES ${fmt(p.amount)}</span></div>
+      <div class="receipt-stamp">Thank you for visiting our office.<br>${BRAND.name} &middot; ${BRAND.branch}</div>
+      ${receiptContactFooterHtml()}
+    </div>`;
+  openModal('modal-svc-receipt');
+}
+
+function showServiceReceiptById(receiptNo) {
+  const r = state.services.find(x => x.receiptNo === receiptNo);
+  if (!r) { toast('Receipt not found.', 'error'); return; }
+  showServiceReceipt(r, r.receiptNo);
+}
+
+function downloadServiceReceiptPdf() {
+  const area = document.getElementById('svc-receipt-print-area');
+  if (!area) { toast('No receipt open.', 'error'); return; }
+
+  const data = {};
+  area.querySelectorAll('.receipt-row').forEach(row => {
+    const spans = row.querySelectorAll('span');
+    if (spans.length >= 2) data[spans[0].textContent.trim()] = spans[1].textContent.trim();
+  });
+  const totalSpans = area.querySelectorAll('.receipt-total span');
+  const totalLabel = totalSpans[0]?.textContent.trim() || 'Amount Paid';
+  const totalValue = totalSpans[1]?.textContent.trim() || '';
+  const stampLines = (area.querySelector('.receipt-stamp')?.innerText || '').split('\n').filter(Boolean);
+
+  const doc = _newDoc();
+  let y = _drawHeader(doc, 'Service Receipt');
+
+  y = _sectionLabel(doc, y, 'Receipt Details');
+  y = _row(doc, y, 'Receipt No.', data['Receipt No.'] || '—', { shade: true });
+  y = _row(doc, y, 'Date',        data['Date']        || '—');
+  y += 3;
+
+  y = _divider(doc, y);
+
+  y = _sectionLabel(doc, y, 'Service Details');
+  y = _row(doc, y, 'Service',     data['Service']     || '—', { shade: true });
+  if (data['Description']) y = _row(doc, y, 'Description', data['Description']);
+  y = _row(doc, y, 'Quantity',    data['Quantity']    || '1');
+  y = _row(doc, y, 'Unit Price',  data['Unit Price']  || '—');
+  y += 3;
+
+  y = _divider(doc, y);
+
+  y = _sectionLabel(doc, y, 'Payment Details');
+  y = _row(doc, y, 'Method', data['Payment Method'] || '—', { shade: true });
+  if (data['Customer']) y = _row(doc, y, 'Customer', data['Customer']);
+  if (data['Phone'])    y = _row(doc, y, 'Phone',    data['Phone']);
+  y += 3;
+
+  y = _divider(doc, y, false);
+
+  y = _totalBar(doc, y, totalLabel, totalValue);
+  y += 4;
+
+  _footer(doc, y, [
+    ...stampLines,
+    'Generated: ' + new Date().toLocaleDateString('en-KE', { day: '2-digit', month: 'long', year: 'numeric' }),
+  ]);
+
+  const rcpNo = (data['Receipt No.'] || 'service-receipt').replace(/[/\\]/g, '-');
+  _save(doc, 'JTI_ServiceReceipt_' + rcpNo + '.pdf');
+}
+
+// ── Admin: Edit / Delete service transactions (duty segregation) ──
+// Staff can record service transactions but cannot edit or delete them
+// once saved — only Admin (servicesManage permission) can correct or
+// remove a transaction, and every edit is logged with who/when/why.
+
+function openEditServiceModal(receiptNo) {
+  if (!can('servicesManage')) { toast('Only an Admin can edit service transactions.', 'error'); return; }
+  const s = state.services.find(x => x.receiptNo === receiptNo);
+  if (!s) { toast('Transaction not found.', 'error'); return; }
+
+  document.getElementById('esvc-receipt-no').value      = s.receiptNo;
+  document.getElementById('esvc-receipt-display').value = s.receiptNo;
+  document.getElementById('esvc-type').value             = s.serviceType || '';
+  document.getElementById('esvc-desc').value              = s.description || '';
+  document.getElementById('esvc-qty').value               = s.qty || 1;
+  document.getElementById('esvc-amount').value            = s.amount || '';
+  document.getElementById('esvc-method').value            = s.method || 'Cash';
+  document.getElementById('esvc-date').value              = toDateInputValue(s.date) || s.date;
+  document.getElementById('esvc-customer').value          = s.customer || '';
+  document.getElementById('esvc-phone').value              = s.phone || '';
+  document.getElementById('esvc-reason').value            = '';
+  openModal('modal-edit-service');
+}
+
+async function saveEditedService() {
+  if (!can('servicesManage')) { toast('Only an Admin can edit service transactions.', 'error'); return; }
+
+  const receiptNo = document.getElementById('esvc-receipt-no').value;
+  const amount    = +document.getElementById('esvc-amount').value;
+  const reason    = document.getElementById('esvc-reason').value.trim();
+
+  if (!amount || amount <= 0) { toast('Enter a valid amount.', 'error'); return; }
+  if (!reason) { toast('A reason for the edit is required (audit log).', 'error'); return; }
+
+  const payload = {
+    receiptNo,
+    serviceType: document.getElementById('esvc-type').value.trim(),
+    description: document.getElementById('esvc-desc').value.trim(),
+    qty:         +document.getElementById('esvc-qty').value || 1,
+    amount,
+    method:      document.getElementById('esvc-method').value,
+    date:        document.getElementById('esvc-date').value,
+    customer:    document.getElementById('esvc-customer').value.trim(),
+    phone:       document.getElementById('esvc-phone').value.trim(),
+    editReason:  reason,
+    editedBy:    state.user?.fullName || state.user?.username || 'Admin',
+  };
+
+  const btn = document.getElementById('esvc-save-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Saving&hellip;';
+  try {
+    const res = await apiPost('updateService', payload);
+    if (res.success) {
+      toast('Transaction updated and logged.', 'success');
+      closeModal('modal-edit-service');
+      reloadAfterWrite();
+    } else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+  btn.disabled = false;
+  btn.innerHTML = '&#128190; Save Changes';
+}
+
+async function deleteServiceTransaction(receiptNo) {
+  if (!can('servicesManage')) { toast('Only an Admin can delete service transactions.', 'error'); return; }
+  const s = state.services.find(x => x.receiptNo === receiptNo);
+  if (!s) return;
+  const reason = prompt(`Delete transaction ${receiptNo} (KES ${fmt(s.amount)})?\n\nEnter a reason for this deletion (required for audit log):`);
+  if (reason === null) return; // cancelled
+  if (!reason.trim()) { toast('A reason is required to delete a transaction.', 'error'); return; }
+
+  try {
+    const res = await apiPost('deleteService', {
+      receiptNo,
+      deletedBy: state.user?.fullName || state.user?.username || 'Admin',
+      deleteReason: reason.trim(),
+    });
+    if (res.success) { toast('Transaction deleted.', 'success'); reloadAfterWrite(); }
+    else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+// ── Daily Log ────────────────────────────────────────────
+
+function populateServiceTypeFilter() {
+  const sel = document.getElementById('svc-log-type-filter');
+  if (!sel) return;
+  const current = sel.value;
+  const types = [...new Set(state.services.map(s => s.serviceType).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">All Service Types</option>' + types.map(t => `<option value="${t}">${t}</option>`).join('');
+  if (current) sel.value = current;
+}
+
+function renderServiceLog(filtered) {
+  const data  = filtered || state.services;
+  const tbody = document.getElementById('svc-log-tbody');
+  document.getElementById('svc-log-count').textContent = data.length + ' records';
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--muted);">No service transactions found</td></tr>'; return; }
+  tbody.innerHTML = [...data].sort((a,b) => new Date(b.createdAt||b.date) - new Date(a.createdAt||a.date)).map((s,i) => `
+    <tr>
+      <td>${data.length - i}</td>
+      <td>${fmtDate(s.date)}</td>
+      <td><strong>${s.receiptNo||'&mdash;'}</strong>${s.editedAt ? '<br><span class="badge badge-warning" style="margin-top:3px;" title="Edited by '+(s.editedBy||'Admin')+' on '+fmtDate(s.editedAt)+'">&#9999; Edited</span>' : ''}</td>
+      <td><span class="badge badge-purple">${s.serviceType}</span></td>
+      <td style="font-size:12.5px;">${s.description||'&mdash;'}</td>
+      <td>${s.qty||1}</td>
+      <td style="font-weight:700;color:var(--success);">KES ${fmt(s.amount)}</td>
+      <td><span class="badge badge-info">${s.method}</span></td>
+      <td>${s.customer||'&mdash;'}</td>
+      <td style="font-size:12px;color:var(--muted);">${s.recordedBy||'&mdash;'}</td>
+      <td><div class="actions-cell">
+        <button class="btn btn-outline btn-sm" onclick="showServiceReceiptById('${s.receiptNo}')">&#129534;</button>
+        ${can('servicesManage') ? `<button class="btn btn-primary btn-sm" onclick="openEditServiceModal('${s.receiptNo}')">&#9999;</button>` : ''}
+        ${can('servicesManage') ? `<button class="btn btn-danger btn-sm" onclick="deleteServiceTransaction('${s.receiptNo}')">&#128465;</button>` : ''}
+      </div></td>
+    </tr>`).join('');
+}
+
+function filterServiceLog() {
+  const q    = (document.getElementById('svc-log-search')?.value || '').toLowerCase();
+  const date = document.getElementById('svc-log-date')?.value || '';
+  const type = document.getElementById('svc-log-type-filter')?.value || '';
+  const filtered = state.services.filter(s => {
+    const mq = !q || [s.customer, s.serviceType, s.receiptNo, s.description].some(v => v && v.toLowerCase().includes(q));
+    const md = !date || dateKey(s.date) === date;
+    const mt = !type || s.serviceType === type;
+    return mq && md && mt;
+  });
+  renderServiceLog(filtered);
+}
+
+function toggleServiceLogShowAll() {
+  _svcLogShowAll = !_svcLogShowAll;
+  const dateEl = document.getElementById('svc-log-date');
+  const btn    = document.getElementById('svc-log-showall-btn');
+  if (_svcLogShowAll) {
+    dateEl.value = '';
+    dateEl.disabled = true;
+    btn.innerHTML = '&#128197; Today Only';
+    btn.classList.add('btn-gold');
+  } else {
+    dateEl.disabled = false;
+    dateEl.value = new Date().toISOString().split('T')[0];
+    btn.innerHTML = '&#128197; Show All Dates';
+    btn.classList.remove('btn-gold');
+  }
+  filterServiceLog();
+}
+
+function clearServiceLogFilter() {
+  document.getElementById('svc-log-search').value = '';
+  document.getElementById('svc-log-type-filter').value = '';
+  if (!_svcLogShowAll) {
+    document.getElementById('svc-log-date').value = new Date().toISOString().split('T')[0];
+  } else {
+    document.getElementById('svc-log-date').value = '';
+  }
+  filterServiceLog();
+}
+
+function exportServiceLog() {
+  const q    = (document.getElementById('svc-log-search')?.value || '').toLowerCase();
+  const date = document.getElementById('svc-log-date')?.value || '';
+  const type = document.getElementById('svc-log-type-filter')?.value || '';
+  const data = state.services.filter(s => {
+    const mq = !q || [s.customer, s.serviceType, s.receiptNo, s.description].some(v => v && v.toLowerCase().includes(q));
+    const md = !date || dateKey(s.date) === date;
+    const mt = !type || s.serviceType === type;
+    return mq && md && mt;
+  });
+  downloadWorkbook(data.map(s => ({
+    'Receipt No.': s.receiptNo||'', 'Date': s.date||'', 'Service Type': s.serviceType||'',
+    'Description': s.description||'', 'Qty': +s.qty||1, 'Unit Price': +s.unitPrice||0,
+    'Amount': +s.amount||0, 'Method': s.method||'', 'Customer': s.customer||'',
+    'Phone': s.phone||'', 'Recorded By': s.recordedBy||'',
+  })), 'Service Log', 'JTI_Service_Log');
+}
+
+// ── Daily Reconciliation ─────────────────────────────────
+
+function renderReconciliation() {
+  const dateEl = document.getElementById('recon-date');
+  if (!dateEl) return;
+  const date = dateEl.value || new Date().toISOString().split('T')[0];
+
+  const dayTx = state.services.filter(s => dateKey(s.date) === date);
+
+  const total = dayTx.reduce((a, s) => a + (+s.amount || 0), 0);
+  const svcCash  = dayTx.filter(s => s.method === 'Cash').reduce((a, s) => a + (+s.amount || 0), 0);
+  const digital = total - svcCash;
+
+  // Fee payments (Students/Fees module) made in cash on the same date — these land
+  // in the same physical drawer, so they belong in the same cash reconciliation.
+  const dayFeeCashTx = state.payments.filter(p => p.method === 'Cash' && dateKey(p.date) === date);
+  const feeCash = dayFeeCashTx.reduce((a, p) => a + (+p.amount || 0), 0);
+
+  const systemCashTotal = svcCash + feeCash;
+
+  document.getElementById('recon-tx-count').textContent = dayTx.length;
+  document.getElementById('recon-total').textContent    = 'KES ' + fmt(total);
+  document.getElementById('recon-cash').textContent     = 'KES ' + fmt(systemCashTotal);
+  document.getElementById('recon-digital').textContent  = 'KES ' + fmt(digital);
+
+  // Breakdown by service type
+  const byType = {};
+  dayTx.forEach(s => {
+    const k = s.serviceType || 'Other';
+    if (!byType[k]) byType[k] = { count: 0, total: 0 };
+    byType[k].count++;
+    byType[k].total += (+s.amount || 0);
+  });
+  const typeRows = Object.entries(byType).sort((a,b) => b[1].total - a[1].total);
+  document.getElementById('recon-by-type-tbody').innerHTML = typeRows.length
+    ? typeRows.map(([name, v]) => `<tr><td>${name}</td><td>${v.count}</td><td style="font-weight:600;">KES ${fmt(v.total)}</td></tr>`).join('')
+    : '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--muted);">No transactions for this date</td></tr>';
+
+  // Breakdown by payment method (office services only)
+  const byMethod = {};
+  dayTx.forEach(s => {
+    const k = s.method || 'Cash';
+    byMethod[k] = (byMethod[k] || 0) + (+s.amount || 0);
+  });
+  const methodEntries = Object.entries(byMethod);
+  document.getElementById('recon-by-method').innerHTML = methodEntries.length
+    ? methodEntries.map(([m, v]) => `<div class="method-pill"><span class="mp-dot"></span>${m}: <strong>&nbsp;KES ${fmt(v)}</strong></div>`).join('')
+    : '<div style="color:var(--muted);font-size:13px;">No transactions for this date</div>';
+
+  // Office service transactions table
+  const txBody = document.getElementById('recon-tx-tbody');
+  txBody.innerHTML = dayTx.length
+    ? [...dayTx].sort((a,b) => new Date(a.createdAt||a.date) - new Date(b.createdAt||b.date)).map(s => `
+        <tr>
+          <td>${fmtTime(s.createdAt) || '&mdash;'}</td>
+          <td><strong>${s.receiptNo||'&mdash;'}</strong></td>
+          <td>${s.serviceType||'&mdash;'}</td>
+          <td style="font-weight:600;">KES ${fmt(s.amount)}</td>
+          <td><span class="badge badge-info">${s.method}</span></td>
+          <td>${s.customer||'&mdash;'}</td>
+          <td style="font-size:12px;color:var(--muted);">${s.recordedBy||'&mdash;'}</td>
+        </tr>`).join('')
+    : '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);">No transactions for this date</td></tr>';
+
+  // Fee payment (cash) transactions table
+  const feeCashBody = document.getElementById('recon-fee-cash-tbody');
+  feeCashBody.innerHTML = dayFeeCashTx.length
+    ? [...dayFeeCashTx].sort((a,b) => new Date(a.recordedAt||a.date) - new Date(b.recordedAt||b.date)).map(p => `
+        <tr>
+          <td>${fmtTime(p.recordedAt) || '&mdash;'}</td>
+          <td><strong>${p.receiptNo||'&mdash;'}</strong></td>
+          <td>${p.studentName||'&mdash;'}<br><small style="color:var(--muted);">${p.regNo||''}</small></td>
+          <td style="font-weight:600;color:var(--success);">KES ${fmt(p.amount)}</td>
+          <td style="font-size:12px;color:var(--muted);">${p.ref||'&mdash;'}</td>
+        </tr>`).join('')
+    : '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);">No cash fee payments for this date</td></tr>';
+
+  // ── Cash reconciliation card (Admin-only — duty segregation) ──
+  document.getElementById('recon-system-cash-display').value = 'KES ' + fmt(systemCashTotal);
+  document.getElementById('recon-cash-source-breakdown').innerHTML = `
+    <div class="method-pill"><span class="mp-dot"></span>Office Services Cash: <strong>&nbsp;KES ${fmt(svcCash)}</strong></div>
+    <div class="method-pill"><span class="mp-dot"></span>Fee Payments Cash: <strong>&nbsp;KES ${fmt(feeCash)}</strong></div>`;
+
+  const countedInput = document.getElementById('recon-counted-cash');
+  const notesInput    = document.getElementById('recon-notes');
+  const saveBtn        = document.getElementById('recon-save-btn');
+  const statusBanner   = document.getElementById('recon-status-banner');
+  const lastSavedEl     = document.getElementById('recon-last-saved');
+
+  // Pre-fill from any existing saved reconciliation for this date
+  const existing = (state.reconciliations || []).find(r => dateKey(r.date) === date);
+  countedInput.value = existing ? existing.countedCash : '';
+  notesInput.value   = existing ? existing.notes : '';
+
+  if (!can('reconcile')) {
+    countedInput.disabled = true;
+    notesInput.disabled = true;
+    saveBtn.disabled = true;
+    saveBtn.style.display = 'none';
+    statusBanner.style.display = 'block';
+    statusBanner.innerHTML = `<div class="notice neutral">
+      <div class="notice-icon">&#128274;</div>
+      <div><div class="notice-title">Admin-only</div>
+      <div class="notice-body">Only an Admin can count and reconcile cash. Ask your Admin to complete today's reconciliation.</div></div></div>`;
+  } else {
+    countedInput.disabled = false;
+    notesInput.disabled = false;
+    saveBtn.disabled = false;
+    saveBtn.style.display = '';
+    statusBanner.style.display = 'none';
+  }
+
+  if (existing) {
+    lastSavedEl.innerHTML = `Last reconciled by <strong>${existing.reconciledBy||'Admin'}</strong> on ${fmtDate(existing.createdAt)} ${fmtTime(existing.createdAt)}`;
+  } else {
+    lastSavedEl.innerHTML = '';
+  }
+
+  updateReconVariance();
+  renderReconciliationHistory();
+}
+
+/** Recomputes the variance display whenever the counted-cash figure changes */
+function updateReconVariance() {
+  const cashText = document.getElementById('recon-system-cash-display').value || '';
+  const systemCash = +(cashText.replace(/[^\d.-]/g, '')) || 0;
+  const countedRaw = document.getElementById('recon-counted-cash').value;
+  const varianceEl = document.getElementById('recon-variance-display');
+
+  if (countedRaw === '' || countedRaw === null) {
+    varianceEl.value = '';
+    varianceEl.style.color = '';
+    return;
+  }
+  const counted  = +countedRaw || 0;
+  const variance = counted - systemCash;
+
+  if (variance === 0) {
+    varianceEl.value = 'KES 0 — Balanced';
+    varianceEl.style.color = 'var(--success)';
+  } else if (variance > 0) {
+    varianceEl.value = '+KES ' + fmt(variance) + ' (Surplus)';
+    varianceEl.style.color = 'var(--info)';
+  } else {
+    varianceEl.value = '-KES ' + fmt(Math.abs(variance)) + ' (Shortage)';
+    varianceEl.style.color = 'var(--danger)';
+  }
+}
+
+/** Admin saves the cash reconciliation for the selected date (system vs counted) */
+async function saveCashReconciliation() {
+  if (!can('reconcile')) { toast('Only an Admin can reconcile cash.', 'error'); return; }
+
+  const date = document.getElementById('recon-date').value || new Date().toISOString().split('T')[0];
+  const cashText = document.getElementById('recon-system-cash-display').value || '';
+  const systemCash = +(cashText.replace(/[^\d.-]/g, '')) || 0;
+  const digitalText = document.getElementById('recon-digital').textContent || '';
+  const systemDigital = +(digitalText.replace(/[^\d.-]/g, '')) || 0;
+  const countedRaw = document.getElementById('recon-counted-cash').value;
+
+  if (countedRaw === '' || countedRaw === null) { toast('Enter the physically counted cash amount.', 'error'); return; }
+  const countedCash = +countedRaw;
+  if (isNaN(countedCash) || countedCash < 0) { toast('Enter a valid counted cash amount.', 'error'); return; }
+
+  const payload = {
+    date, systemCash, countedCash, systemDigital,
+    notes: document.getElementById('recon-notes').value.trim(),
+    reconciledBy: state.user?.fullName || state.user?.username || 'Admin',
+  };
+
+  const btn = document.getElementById('recon-save-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Saving&hellip;';
+  try {
+    const res = await apiPost('saveReconciliation', payload);
+    if (res.success) {
+      const variance = res.variance || 0;
+      const msg = variance === 0
+        ? 'Reconciled — cash balances exactly.'
+        : variance > 0
+          ? `Reconciled — surplus of KES ${fmt(variance)}.`
+          : `Reconciled — shortage of KES ${fmt(Math.abs(variance))}.`;
+      toast(msg, variance === 0 ? 'success' : 'warning');
+      reloadAfterWrite();
+    } else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+  btn.disabled = false;
+  btn.innerHTML = '&#9989; Save Reconciliation';
+}
+
+/** Renders the table of all previously saved daily reconciliations, most recent first */
+function renderReconciliationHistory() {
+  const tbody = document.getElementById('recon-history-tbody');
+  if (!tbody) return;
+  const records = [...(state.reconciliations || [])].sort((a, b) => new Date(b.date) - new Date(a.date));
+  if (!records.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted);">No reconciliations saved yet</td></tr>';
+    return;
+  }
+  const currentDate = document.getElementById('recon-date')?.value || '';
+  tbody.innerHTML = records.map(r => {
+    const variance = +r.variance || 0;
+    const badge = variance === 0 ? 'badge-success' : variance > 0 ? 'badge-info' : 'badge-danger';
+    const label = variance === 0 ? 'Balanced' : variance > 0 ? '+KES ' + fmt(variance) : '-KES ' + fmt(Math.abs(variance));
+    const isCurrentRow = dateKey(r.date) === currentDate;
+    return `<tr style="${isCurrentRow ? 'background:var(--cream);' : ''}">
+      <td><strong>${fmtDate(r.date)}</strong></td>
+      <td>KES ${fmt(r.systemCash)}</td>
+      <td>KES ${fmt(r.countedCash)}</td>
+      <td><span class="badge ${badge}">${label}</span></td>
+      <td style="font-size:12px;color:var(--muted);">${r.reconciledBy||'&mdash;'}</td>
+      <td style="font-size:12px;color:var(--muted);">${fmtDate(r.createdAt)} ${fmtTime(r.createdAt)}</td>
+      <td style="font-size:12.5px;max-width:180px;">${r.notes||'&mdash;'}</td>
+      <td><button class="btn btn-outline btn-sm" onclick="jumpToReconDate('${dateKey(r.date)}')">&#128065; View</button></td>
+    </tr>`;
+  }).join('');
+}
+
+/** Jumps the reconciliation date picker to a given date and re-renders */
+function jumpToReconDate(dateStr) {
+  if (!dateStr) return;
+  document.getElementById('recon-date').value = dateStr;
+  renderReconciliation();
+  document.getElementById('recon-cash-count-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function exportReconciliationHistory() {
+  const records = [...(state.reconciliations || [])].sort((a, b) => new Date(b.date) - new Date(a.date));
+  if (!records.length) { toast('No reconciliation history to export.', 'warning'); return; }
+  downloadWorkbook(records.map(r => ({
+    'Date': r.date || '', 'System Cash': +r.systemCash || 0, 'Counted Cash': +r.countedCash || 0,
+    'Variance': +r.variance || 0, 'System Digital (M-Pesa/Bank)': +r.systemDigital || 0,
+    'Total System': +r.totalSystem || 0, 'Reconciled By': r.reconciledBy || '',
+    'Saved At': r.createdAt || '', 'Notes': r.notes || '',
+  })), 'Reconciliation History', 'JTI_Reconciliation_History');
+}
+
+function exportReconciliation() {
+  const date = document.getElementById('recon-date').value || new Date().toISOString().split('T')[0];
+  const dayTx = state.services.filter(s => dateKey(s.date) === date);
+  if (!dayTx.length) { toast('No transactions to export for this date.', 'warning'); return; }
+  downloadWorkbook(dayTx.map(s => ({
+    'Time': fmtTime(s.createdAt) || '', 'Receipt No.': s.receiptNo||'', 'Service Type': s.serviceType||'',
+    'Description': s.description||'', 'Amount': +s.amount||0, 'Method': s.method||'',
+    'Customer': s.customer||'', 'Phone': s.phone||'', 'Recorded By': s.recordedBy||'',
+  })), 'Reconciliation_' + date, 'JTI_Daily_Reconciliation_' + date);
+}
+
+function printReconciliation() {
+  window.print();
+}
+
+// ── Service Types (Price List) management ────────────────
+
+function renderServiceTypesTable() {
+  const tbody = document.getElementById('svc-types-tbody');
+  if (!tbody) return;
+  const types = effectiveServiceTypes();
+  if (!types.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--muted);">No service types yet</td></tr>'; return; }
+  tbody.innerHTML = types.map(t => `
+    <tr>
+      <td style="font-size:18px;">${t.icon||'&#128424;'}</td>
+      <td>${t.name}</td>
+      <td>KES ${fmt(t.price||0)}</td>
+      <td><div class="actions-cell">
+        ${can('services') ? `<button class="btn btn-outline btn-sm" onclick="editServiceType('${t.name.replace(/'/g,"\\'")}')">&#9999; Edit</button>` : ''}
+        ${can('services') ? `<button class="btn btn-danger btn-sm" onclick="deleteServiceType('${t.name.replace(/'/g,"\\'")}')">&#128465;</button>` : ''}
+        ${!can('services') ? '&mdash;' : ''}
+      </div></td>
+    </tr>`).join('');
+}
+
+function editServiceType(name) {
+  if (!can('services')) { toast('Access denied.', 'error'); return; }
+  const t = effectiveServiceTypes().find(x => x.name === name);
+  if (!t) return;
+  document.getElementById('svct-name').value           = t.name;
+  document.getElementById('svct-icon').value            = t.icon || '';
+  document.getElementById('svct-price').value           = t.price || '';
+  document.getElementById('svct-edit-mode').value       = 'true';
+  document.getElementById('svct-original-name').value   = t.name;
+  document.getElementById('svct-form-title').textContent = 'Edit Service Type';
+  document.getElementById('svct-save-btn').textContent  = 'Update Service Type';
+  document.getElementById('svct-cancel-btn').style.display = '';
+  document.getElementById('svct-name').focus();
+}
+
+function clearServiceTypeForm() {
+  ['svct-name','svct-icon','svct-price'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('svct-edit-mode').value       = 'false';
+  document.getElementById('svct-original-name').value   = '';
+  document.getElementById('svct-form-title').textContent = 'Add Service Type';
+  document.getElementById('svct-save-btn').textContent  = 'Save Service Type';
+  document.getElementById('svct-cancel-btn').style.display = 'none';
+}
+
+async function saveServiceType() {
+  if (!can('services')) { toast('Access denied.', 'error'); return; }
+  const name     = document.getElementById('svct-name').value.trim();
+  const icon     = document.getElementById('svct-icon').value.trim() || '\u{1F4C4}';
+  const price    = +document.getElementById('svct-price').value || 0;
+  const editMode = document.getElementById('svct-edit-mode').value === 'true';
+  const origName = document.getElementById('svct-original-name').value;
+
+  if (!name) { toast('Service name is required.', 'error'); return; }
+
+  const btn = document.getElementById('svct-save-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Saving&hellip;';
+
+  try {
+    const action  = editMode ? 'updateServiceType' : 'addServiceType';
+    const payload = editMode ? { originalName: origName, name, icon, price } : { name, icon, price };
+    const res = await apiPost(action, payload);
+    if (res.success) {
+      toast(editMode ? 'Service type updated!' : 'Service type saved!', 'success');
+      reloadAfterWrite();
+      clearServiceTypeForm();
+    } else toast('Error: ' + res.error, 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+
+  btn.disabled = false;
+  btn.innerHTML = editMode ? 'Update Service Type' : 'Save Service Type';
+}
+
+async function deleteServiceType(name) {
+  if (!can('services')) { toast('Access denied.', 'error'); return; }
+  if (!confirm('Delete service type "' + name + '"?')) return;
+  try {
+    const res = await apiPost('deleteServiceType', { name });
+    if (res.success) { toast('Deleted.', 'success'); reloadAfterWrite(); clearServiceTypeForm(); }
+    else toast('Error: ' + res.error, 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+// ════════════════════════════════════════════════
 //  UTILS
 // ════════════════════════════════════════════════
 function fmt(n) { return Number(n||0).toLocaleString('en-KE'); }
+/** Normalises any date-ish value (Date object, ISO string, "2026-06-20", etc.)
+ *  to a plain "YYYY-MM-DD" key for reliable same-day comparisons. Returns ''
+ *  if the value can't be parsed, so callers can safely compare against it. */
+function dateKey(d) {
+  if (!d) return '';
+  const dt = new Date(d);
+  if (isNaN(dt)) return '';
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth() + 1).padStart(2, '0');
+  const day = String(dt.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 function fmtDate(d) { if(!d) return '&mdash;'; try { return new Date(d).toLocaleDateString('en-KE',{day:'2-digit',month:'short',year:'numeric'}); } catch{return d;} }
+function fmtTime(d) { if(!d) return ''; try { const dt = new Date(d); if (isNaN(dt)) return ''; return dt.toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'}); } catch { return ''; } }
 function fmtIntake(d) {
   if(!d) return '&mdash;';
   const dt=new Date(d);
@@ -1680,6 +2739,7 @@ function populateProgramDropdowns() {
     if(current) el.value=current;
   });
   populatePayStudentDropdown();
+  populateServiceTypeFilter();
 }
 
 function toast(msg, type='info') {
@@ -1695,20 +2755,26 @@ function toast(msg, type='info') {
 //  INIT
 // ════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
+  // Clear stale cache keys from older versions
   ['jti_cache_v1'].forEach(k => { try { localStorage.removeItem(k); } catch(_) {} });
 
+  // Pre-warm the logo image so it's ready by the time a PDF is generated
+  preloadLogoForPdf();
+
+  // Restore session
   const saved = sessionStorage.getItem('jti_user');
   if (saved) {
     try {
       state.user = JSON.parse(saved);
       applyRoleUI();
       showAppPage();
-      loadAll();
+      loadAll();           // uses cache-then-network automatically
     } catch(_) { showLoginPage(); }
   } else {
     showLoginPage();
   }
 
+  // Enter key on login
   document.getElementById('login-password').addEventListener('keydown', e => {
     if (e.key === 'Enter') submitLogin();
   });
@@ -1716,9 +2782,14 @@ window.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') submitLogin();
   });
 
+  // Default dates
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('enroll-date').value = today;
   document.getElementById('pay-date').value    = today;
+  const svcDateEl   = document.getElementById('svc-date');
+  const reconDateEl = document.getElementById('recon-date');
+  if (svcDateEl)   svcDateEl.value   = today;
+  if (reconDateEl) reconDateEl.value = today;
 
   if (window.innerWidth <= 768) document.getElementById('menu-toggle').style.display = 'flex';
 
@@ -1726,6 +2797,7 @@ window.addEventListener('DOMContentLoaded', () => {
     m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
   });
 
+  // Refresh data when tab becomes visible again after being hidden
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') silentRefresh();
   });

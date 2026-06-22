@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>JTI College Management System</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="Styles.css">
+  <link rel="stylesheet" href="styles.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -17,7 +17,8 @@
 <div id="login-page">
   <div class="login-card">
     <div class="login-logo">
-      <div class="login-logo-icon">JTI</div>
+      <img src="images/JTI logo.jpg" alt="JTI Logo" class="login-logo-img" onerror="this.style.display='none';document.getElementById('login-logo-fallback').style.display='flex';">
+      <div id="login-logo-fallback" class="login-logo-icon" style="display:none;">JTI</div>
       <div>
         <div class="login-logo-name">Joshcab Training Institute</div>
         <div class="login-logo-branch">Mwiki Branch &middot; Management Portal</div>
@@ -35,7 +36,17 @@
     </div>
     <div id="login-error" class="login-error"></div>
     <button class="btn btn-primary" id="login-btn" onclick="submitLogin()" style="width:100%;margin-top:18px;padding:12px;font-size:14px;">Sign In</button>
-    <div class="login-footer">Default admin: <strong>admin</strong> / <strong>admin123</strong><br><span style="font-size:11px;color:var(--muted);">Change password after first login</span></div>
+    <div class="login-footer">
+      Default admin: <strong>admin</strong> / <strong>admin123</strong><br>
+      <span class="text-xs text-muted">Change password after first login</span>
+      <div class="login-contact-strip">
+        <span>&#128222; 0734 080 808</span>
+        <span class="login-contact-sep">|</span>
+        <span>0722 699 212</span>
+        <span class="login-contact-sep">|</span>
+        <span>&#9993; <a href="mailto:jckmwiki@gmail.com">jckmwiki@gmail.com</a></span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -48,7 +59,8 @@
 <nav id="sidebar">
   <div class="sidebar-logo">
     <div class="logo-badge">
-      <div class="logo-icon">JTI</div>
+      <img src="images/JTI logo.jpg" alt="JTI Logo" class="sidebar-logo-img" onerror="this.style.display='none';document.getElementById('sidebar-logo-fallback').style.display='flex';">
+      <div id="sidebar-logo-fallback" class="logo-icon" style="display:none;">JTI</div>
       <div class="logo-text">
         <strong>Joshcab Training</strong>
         <span>Institute &middot; Mwiki</span>
@@ -75,6 +87,10 @@
       <div class="nav-label">Academic</div>
       <div class="nav-item" onclick="navigate('courses')"><span class="nav-icon">&#128218;</span> Courses &amp; Programs</div>
     </div>
+    <div class="nav-section" id="nav-services-section">
+      <div class="nav-label">Office Services</div>
+      <div class="nav-item" onclick="navigate('services')"><span class="nav-icon">&#128424;</span> Services &amp; Reconciliation</div>
+    </div>
     <div class="nav-section">
       <div class="nav-label">Reports</div>
       <div class="nav-item" onclick="navigate('reports')"><span class="nav-icon">&#128200;</span> Reports</div>
@@ -84,7 +100,13 @@
       <div class="nav-item" onclick="navigate('users')"><span class="nav-icon">&#128101;</span> User Management</div>
     </div>
   </div>
-  <div class="sidebar-footer">Powered by <strong>Google Sheets</strong><br>JTI CMS v2.1</div>
+  <div class="sidebar-footer">
+    Powered by <strong>Google Sheets</strong><br>JTI CMS v2.1
+    <div class="sidebar-contact">
+      <div>&#128222; 0734 080 808 &nbsp;|&nbsp; 0722 699 212</div>
+      <div>&#9993; jckmwiki@gmail.com</div>
+    </div>
+  </div>
 </nav>
 
 <!-- MAIN -->
@@ -125,24 +147,40 @@
         <div class="stat-card green"><div class="stat-label">Fees Collected</div><div class="stat-value" id="stat-collected">&mdash;</div><div class="stat-sub">total payments received</div></div>
         <div class="stat-card red"><div class="stat-label">Outstanding</div><div class="stat-value" id="stat-outstanding">&mdash;</div><div class="stat-sub">pending fee balance</div></div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-        <h3 style="font-family:var(--font-h);font-size:15px;font-weight:600;color:var(--navy);">This Month</h3>
+      <div class="section-row">
+        <h3 class="section-title lg">Today's Revenue</h3>
+        <span class="badge badge-gold" id="dash-today-label">&mdash;</span>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card gold"><div class="stat-label">Total Revenue Today</div><div class="stat-value" id="stat-today-total">&mdash;</div><div class="stat-sub">fees + office services combined</div></div>
+        <div class="stat-card green"><div class="stat-label">Fee Payments</div><div class="stat-value" id="stat-today-fees">&mdash;</div><div class="stat-sub">student fee payments today</div></div>
+        <div class="stat-card blue"><div class="stat-label">Office Services</div><div class="stat-value" id="stat-today-services">&mdash;</div><div class="stat-sub">printing, browsing, eCitizen, etc.</div></div>
+        <div class="stat-card"><div class="stat-label">Total Transactions</div><div class="stat-value" id="stat-today-txcount">&mdash;</div><div class="stat-sub">across both fees and services</div></div>
+      </div>
+      <div class="section-row">
+        <h3 class="section-title lg">This Month</h3>
         <span class="badge badge-gold" id="dash-month-label">&mdash;</span>
       </div>
       <div class="stats-grid">
         <div class="stat-card blue"><div class="stat-label">New Enrollments</div><div class="stat-value" id="stat-month-enrollments">&mdash;</div><div class="stat-sub">students registered this month</div></div>
         <div class="stat-card green"><div class="stat-label">Fees Collected</div><div class="stat-value" id="stat-month-collected">&mdash;</div><div class="stat-sub">payments received this month</div></div>
-        <div class="stat-card gold"><div class="stat-label">Payments Made</div><div class="stat-value" id="stat-month-paycount">&mdash;</div><div class="stat-sub">transactions this month</div></div>
-        <div class="stat-card"><div class="stat-label">Avg. Payment</div><div class="stat-value" id="stat-month-avg">&mdash;</div><div class="stat-sub">average transaction this month</div></div>
+        <div class="stat-card gold"><div class="stat-label">Services Revenue</div><div class="stat-value" id="stat-month-services">&mdash;</div><div class="stat-sub">office services this month</div></div>
+        <div class="stat-card"><div class="stat-label">Avg. Payment</div><div class="stat-value" id="stat-month-avg">&mdash;</div><div class="stat-sub">average fee transaction this month</div></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
         <div class="card">
           <div class="card-header"><h3>Recent Enrollments</h3><button class="btn btn-outline btn-sm" onclick="navigate('students')">View All</button></div>
-          <div class="card-body" style="padding:0;"><div id="recent-enrollments"><div class="empty-state"><div class="loader" style="border-color:var(--border);border-top-color:var(--gold);width:24px;height:24px;margin:0 auto;"></div></div></div></div>
+          <div class="card-body flush"><div id="recent-enrollments"><div class="empty-state"><div class="loader panel"></div></div></div></div>
         </div>
         <div class="card">
           <div class="card-header"><h3>Recent Payments</h3><button class="btn btn-outline btn-sm" onclick="navigate('payments')">View All</button></div>
-          <div class="card-body" style="padding:0;"><div id="recent-payments"><div class="empty-state"><div class="loader" style="border-color:var(--border);border-top-color:var(--gold);width:24px;height:24px;margin:0 auto;"></div></div></div></div>
+          <div class="card-body flush"><div id="recent-payments"><div class="empty-state"><div class="loader panel"></div></div></div></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr;gap:20px;margin-top:20px;">
+        <div class="card">
+          <div class="card-header"><h3>Recent Office Services</h3><button class="btn btn-outline btn-sm" onclick="navigate('services')">View All</button></div>
+          <div class="card-body flush"><div id="recent-services"><div class="empty-state"><div class="loader panel"></div></div></div></div>
         </div>
       </div>
     </div>
@@ -152,7 +190,7 @@
       <div class="card">
         <div class="card-header">
           <h3>All Students</h3>
-          <div style="display:flex;gap:8px;">
+          <div class="row">
             <button class="btn btn-outline btn-sm" onclick="exportStudents()">&#128190; Export Excel</button>
             <button class="btn btn-primary btn-sm" onclick="navigate('register')">+ Register New</button>
           </div>
@@ -167,7 +205,7 @@
           </div>
           <div class="table-wrapper">
             <table><thead><tr><th>Reg No.</th><th>Name</th><th>Program</th><th>Intake</th><th>Phone</th><th>Status</th><th>Balance</th><th>Actions</th></tr></thead>
-            <tbody id="students-tbody"><tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted);">Loading&hellip;</td></tr></tbody></table>
+            <tbody id="students-tbody"><tr><td colspan="8" class="empty-msg">Loading&hellip;</td></tr></tbody></table>
           </div>
         </div>
       </div>
@@ -175,12 +213,12 @@
 
     <!-- REGISTER -->
     <div class="page" id="page-register">
-      <div class="card" style="max-width:760px;">
+      <div class="card card-lg">
         <div class="card-header"><h3 id="reg-form-title">Register New Student</h3></div>
         <div class="card-body">
           <div class="form-grid">
             <input type="hidden" id="edit-reg-no">
-            <div class="form-group"><label>Registration Number</label><input type="text" id="reg-no" placeholder="Auto-generated" readonly style="background:var(--cream);"></div>
+            <div class="form-group"><label>Registration Number</label><input type="text" id="reg-no" placeholder="Auto-generated" readonly></div>
             <div class="form-group"><label>Full Name *</label><input type="text" id="full-name" placeholder="e.g. Jane Wanjiku Mwangi"></div>
             <div class="form-group"><label>National ID / Passport</label><input type="text" id="national-id" placeholder="e.g. 12345678"></div>
             <div class="form-group"><label>Date of Birth</label><input type="date" id="dob"></div>
@@ -194,11 +232,11 @@
             <div class="form-group"><label>Status</label><select id="status"><option value="Active">Active</option><option value="Inactive">Inactive</option><option value="Graduated">Graduated</option><option value="Suspended">Suspended</option></select></div>
             <div class="form-group"><label>Total Fee (KES)</label><input type="number" id="total-fee" placeholder="e.g. 35000" oninput="updateFeeBalance()"></div>
             <div class="form-group"><label>Amount Paid (KES)</label><input type="number" id="amount-paid" placeholder="0" oninput="updateFeeBalance()"></div>
-            <div class="form-group"><label>Fee Balance</label><input type="number" id="fee-balance" placeholder="Auto-calculated" readonly style="background:var(--cream);"></div>
+            <div class="form-group"><label>Fee Balance</label><input type="number" id="fee-balance" placeholder="Auto-calculated" readonly></div>
             <div class="form-group full"><label>Next of Kin / Guardian</label><input type="text" id="guardian" placeholder="Name and phone number"></div>
             <div class="form-group full"><label>Notes / Remarks</label><textarea id="notes" placeholder="Any additional notes&hellip;"></textarea></div>
           </div>
-          <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+          <div class="row end mt-4">
             <button class="btn btn-outline" onclick="clearRegForm()">Clear</button>
             <button class="btn btn-primary" id="reg-submit-btn" onclick="submitStudent()"><span>&#128190;</span> Register Student</button>
           </div>
@@ -223,20 +261,20 @@
         <div class="card">
           <div class="card-header">
             <h3>Student Fee Status</h3>
-            <div style="display:flex;gap:8px;">
+            <div class="row">
               <select id="fee-filter-program" onchange="filterFeeTable()"><option value="">All Programs</option></select>
               <select id="fee-filter-status" onchange="filterFeeTable()"><option value="">All</option><option value="paid">Fully Paid</option><option value="partial">Partial</option><option value="unpaid">Unpaid</option></select>
               <button class="btn btn-outline btn-sm" onclick="exportFeeOverview()">&#128190; Export</button>
             </div>
           </div>
-          <div class="card-body" style="padding:0;"><div class="table-wrapper">
+          <div class="card-body flush"><div class="table-wrapper">
             <table><thead><tr><th>Reg No.</th><th>Name</th><th>Program</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Progress</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody id="fee-overview-tbody"><tr><td colspan="9" style="text-align:center;padding:32px;color:var(--muted);">Loading&hellip;</td></tr></tbody></table>
+            <tbody id="fee-overview-tbody"><tr><td colspan="9" class="empty-msg">Loading&hellip;</td></tr></tbody></table>
           </div></div>
         </div>
       </div>
       <div id="tab-fee-record" style="display:none;">
-        <div class="card" style="max-width:600px;">
+        <div class="card card-md">
           <div class="card-header"><h3>Record Fee Payment</h3></div>
           <div class="card-body">
             <div class="form-grid">
@@ -244,12 +282,12 @@
               <div id="student-fee-info" style="display:none;" class="full">
                 <div class="student-fee-header">
                   <div class="student-avatar" id="pay-avatar">&mdash;</div>
-                  <div><div style="font-weight:600;font-size:14px;" id="pay-student-name">&mdash;</div><div style="font-size:12px;color:var(--muted);" id="pay-program-name">&mdash;</div></div>
-                  <div style="margin-left:auto;text-align:right;"><div style="font-size:12px;color:var(--muted);">Outstanding Balance</div><div style="font-family:var(--font-h);font-size:20px;font-weight:700;color:var(--danger);" id="pay-balance">KES 0</div></div>
+                  <div><div style="font-weight:600;font-size:14px;" id="pay-student-name">&mdash;</div><div class="text-sm text-muted" id="pay-program-name">&mdash;</div></div>
+                  <div style="margin-left:auto;text-align:right;"><div class="text-sm text-muted">Outstanding Balance</div><div style="font-family:var(--font-h);font-size:20px;font-weight:700;color:var(--danger);" id="pay-balance">KES 0</div></div>
                 </div>
               </div>
               <div class="form-group"><label>Amount Paying (KES) *</label><input type="number" id="pay-amount" placeholder="e.g. 5000" oninput="calcNewBalance()"></div>
-              <div class="form-group"><label>New Balance After</label><input type="number" id="pay-new-balance" readonly style="background:var(--cream);"></div>
+              <div class="form-group"><label>New Balance After</label><input type="number" id="pay-new-balance" readonly></div>
               <div class="form-group"><label>Payment Date *</label><input type="date" id="pay-date"></div>
               <div class="form-group"><label>Payment Method</label><select id="pay-method"><option>M-Pesa</option><option>Bank Transfer</option><option>Cash</option><option>Cheque</option></select></div>
               <div class="form-group"><label>Reference / Transaction No.</label><input type="text" id="pay-ref" placeholder="e.g. QGJ7UXZ9K1"></div>
@@ -263,7 +301,7 @@
         </div>
       </div>
       <div id="tab-fee-structures" style="display:none;">
-        <div class="card" style="max-width:600px;margin-bottom:20px;">
+        <div class="card card-md mb-5">
           <div class="card-header"><h3>Add Fee Structure</h3></div>
           <div class="card-body">
             <div class="form-grid">
@@ -277,9 +315,9 @@
         </div>
         <div class="card">
           <div class="card-header"><h3>Fee Structures</h3></div>
-          <div class="card-body" style="padding:0;">
+          <div class="card-body flush">
             <table><thead><tr><th>Program</th><th>Total Fee</th><th>Duration</th><th>Description</th><th>Actions</th></tr></thead>
-            <tbody id="fee-structures-tbody"><tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted);">No structures yet</td></tr></tbody></table>
+            <tbody id="fee-structures-tbody"><tr><td colspan="5" class="empty-msg compact">No structures yet</td></tr></tbody></table>
           </div>
         </div>
       </div>
@@ -290,7 +328,7 @@
       <div class="card">
         <div class="card-header">
           <h3>Payment History</h3>
-          <div style="display:flex;gap:8px;align-items:center;">
+          <div class="row">
             <span id="payments-count" class="badge badge-info">&mdash;</span>
             <button class="btn btn-outline btn-sm" onclick="exportPayments()">&#128190; Export Excel</button>
           </div>
@@ -302,7 +340,7 @@
           </div>
           <div class="table-wrapper">
             <table><thead><tr><th>#</th><th>Date</th><th>Student</th><th>Program</th><th>Amount</th><th>Method</th><th>Reference</th><th>Balance After</th><th>Actions</th></tr></thead>
-            <tbody id="payments-tbody"><tr><td colspan="9" style="text-align:center;padding:32px;color:var(--muted);">Loading&hellip;</td></tr></tbody></table>
+            <tbody id="payments-tbody"><tr><td colspan="9" class="empty-msg">Loading&hellip;</td></tr></tbody></table>
           </div>
         </div>
       </div>
@@ -313,35 +351,30 @@
       <div class="card">
         <div class="card-header">
           <h3>Invoices</h3>
-          <div style="display:flex;gap:8px;">
+          <div class="row">
             <button class="btn btn-outline btn-sm" onclick="exportInvoices()">&#128190; Export Excel</button>
             <button class="btn btn-primary btn-sm" onclick="generateInvoices()">&#128260; Refresh</button>
             <button class="btn btn-gold btn-sm" onclick="openChargeModal()">+ Charge Invoice</button>
           </div>
         </div>
         <div class="card-body">
-          <!-- Tabs -->
-          <div class="tabs" style="margin-bottom:16px;">
+          <div class="tabs mb-4">
             <button class="tab-btn inv-tab-btn active" id="inv-btn-summary" onclick="switchInvTab('summary')">Fee Summary</button>
             <button class="tab-btn inv-tab-btn" id="inv-btn-history" onclick="switchInvTab('history')">Charge History</button>
           </div>
           <div class="filter-bar">
             <div class="search-input"><span class="search-icon">&#128269;</span><input type="text" id="inv-search" placeholder="Search student or description&hellip;" oninput="filterInvoices()"></div>
           </div>
-
-          <!-- Tab: Fee Summary -->
           <div id="inv-tab-summary">
             <div class="table-wrapper">
               <table><thead><tr><th>Reg No.</th><th>Student</th><th>Program</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Status</th><th>Actions</th></tr></thead>
-              <tbody id="invoices-tbody"><tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted);">Loading&hellip;</td></tr></tbody></table>
+              <tbody id="invoices-tbody"><tr><td colspan="8" class="empty-msg">Loading&hellip;</td></tr></tbody></table>
             </div>
           </div>
-
-          <!-- Tab: Charge History -->
           <div id="inv-tab-history" style="display:none;">
             <div class="table-wrapper">
               <table><thead><tr><th>Invoice No.</th><th>Date</th><th>Student</th><th>Program</th><th>Description</th><th>Amount</th><th>Charged By</th><th>Balance After</th></tr></thead>
-              <tbody id="charge-history-tbody"><tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted);">No charges yet</td></tr></tbody></table>
+              <tbody id="charge-history-tbody"><tr><td colspan="8" class="empty-msg">No charges yet</td></tr></tbody></table>
             </div>
           </div>
         </div>
@@ -350,7 +383,7 @@
 
     <!-- COURSES -->
     <div class="page" id="page-courses">
-      <div style="display:grid;grid-template-columns:340px 1fr;gap:22px;align-items:start;">
+      <div class="form-table-layout">
         <div class="card">
           <div class="card-header"><h3>Add Program</h3></div>
           <div class="card-body">
@@ -366,9 +399,191 @@
         </div>
         <div class="card">
           <div class="card-header"><h3>Programs &amp; Courses</h3></div>
-          <div class="card-body" style="padding:0;">
+          <div class="card-body flush">
             <table><thead><tr><th>Code</th><th>Program</th><th>Duration</th><th>Fee (KES)</th><th>Students</th><th>Actions</th></tr></thead>
-            <tbody id="courses-tbody"><tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted);">No programs added yet</td></tr></tbody></table>
+            <tbody id="courses-tbody"><tr><td colspan="6" class="empty-msg">No programs added yet</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OFFICE SERVICES -->
+    <div class="page" id="page-services">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchSvcTab('svc-record')">Record Service</button>
+        <button class="tab-btn" onclick="switchSvcTab('svc-log')">Daily Log</button>
+        <button class="tab-btn" onclick="switchSvcTab('svc-recon')">Daily Reconciliation</button>
+        <button class="tab-btn" onclick="switchSvcTab('svc-types')">Service Price List</button>
+      </div>
+
+      <!-- TAB: Record Service -->
+      <div id="tab-svc-record">
+        <div class="card card-lg">
+          <div class="card-header"><h3>New Walk-in Service</h3></div>
+          <div class="card-body">
+            <label style="display:block;margin-bottom:8px;">Select Service Type *</label>
+            <div class="service-type-grid" id="svc-type-grid"></div>
+            <input type="hidden" id="svc-selected-type" value="">
+
+            <div class="form-grid" style="margin-top:18px;">
+              <div class="form-group full"><label>Description</label><input type="text" id="svc-desc" placeholder="e.g. 5 pages B&amp;W printing, KRA Pin retrieval&hellip;"></div>
+              <div class="form-group"><label>Quantity</label><input type="number" id="svc-qty" value="1" min="1" oninput="recalcServiceAmount()"></div>
+              <div class="form-group"><label>Unit Price (KES)</label><input type="number" id="svc-unit-price" placeholder="0" oninput="recalcServiceAmount()"></div>
+              <div class="form-group"><label>Amount (KES) *</label><input type="number" id="svc-amount" placeholder="0"></div>
+              <div class="form-group"><label>Payment Method</label>
+                <select id="svc-method"><option>Cash</option><option>M-Pesa</option><option>Bank Transfer</option></select>
+              </div>
+              <div class="form-group"><label>Customer Name</label><input type="text" id="svc-customer" placeholder="Optional, for walk-ins"></div>
+              <div class="form-group"><label>Customer Phone</label><input type="tel" id="svc-phone" placeholder="Optional, e.g. 0712345678"></div>
+              <div class="form-group"><label>Date</label><input type="date" id="svc-date"></div>
+            </div>
+
+            <div class="row end mt-4">
+              <button class="btn btn-outline" onclick="clearServiceForm()">Clear</button>
+              <button class="btn btn-success" id="svc-submit-btn" onclick="submitService()">&#128179; Record &amp; Print Receipt</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Daily Log -->
+      <div id="tab-svc-log" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <h3>Service Transactions</h3>
+            <div class="row">
+              <span id="svc-log-count" class="badge badge-info">&mdash;</span>
+              <button class="btn btn-outline btn-sm" onclick="exportServiceLog()">&#128190; Export Excel</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="filter-bar">
+              <div class="search-input"><span class="search-icon">&#128269;</span><input type="text" id="svc-log-search" placeholder="Search by customer, type, ref&hellip;" oninput="filterServiceLog()"></div>
+              <input type="date" id="svc-log-date" onchange="filterServiceLog()" title="Filter by date">
+              <select id="svc-log-type-filter" onchange="filterServiceLog()"><option value="">All Service Types</option></select>
+              <button class="btn btn-outline btn-sm" id="svc-log-showall-btn" onclick="toggleServiceLogShowAll()">&#128197; Show All Dates</button>
+              <button class="btn btn-outline btn-sm" onclick="clearServiceLogFilter()">&#10005; Clear</button>
+            </div>
+            <div class="table-wrapper">
+              <table><thead><tr><th>#</th><th>Date</th><th>Receipt No.</th><th>Service</th><th>Description</th><th>Qty</th><th>Amount</th><th>Method</th><th>Customer</th><th>Recorded By</th><th>Actions</th></tr></thead>
+              <tbody id="svc-log-tbody"><tr><td colspan="11" class="empty-msg">Loading&hellip;</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Daily Reconciliation -->
+      <div id="tab-svc-recon" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <h3>Daily Reconciliation</h3>
+            <div class="row">
+              <input type="date" id="recon-date" onchange="renderReconciliation()">
+              <button class="btn btn-outline btn-sm" onclick="exportReconciliation()">&#128190; Export</button>
+              <button class="btn btn-outline btn-sm" onclick="printReconciliation()">&#128424; Print</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="recon-summary-bar">
+              <div class="rsb-item"><span class="rsb-label">Transactions</span><span class="rsb-value" id="recon-tx-count">0</span></div>
+              <div class="rsb-divider"></div>
+              <div class="rsb-item"><span class="rsb-label">Total Collected</span><span class="rsb-value" id="recon-total">KES 0</span></div>
+              <div class="rsb-divider"></div>
+              <div class="rsb-item"><span class="rsb-label">Total Cash (System)</span><span class="rsb-value" id="recon-cash">KES 0</span></div>
+              <div class="rsb-divider"></div>
+              <div class="rsb-item"><span class="rsb-label">M-Pesa / Bank</span><span class="rsb-value" id="recon-digital">KES 0</span></div>
+            </div>
+
+            <div id="recon-cash-count-section" class="mb-6">
+              <h4 class="section-title">&#128176; Cash Reconciliation — System vs. Counted</h4>
+              <div class="card" style="margin-bottom:0;background:var(--cream);box-shadow:none;border:1.5px solid var(--border);">
+                <div class="card-body">
+                  <div class="method-breakdown mb-4" id="recon-cash-source-breakdown"></div>
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label>System Cash (Services + Fee Payments)</label>
+                      <input type="text" id="recon-system-cash-display" readonly style="background:#fff;font-weight:700;">
+                    </div>
+                    <div class="form-group">
+                      <label>Cash Physically Counted (KES) *</label>
+                      <input type="number" id="recon-counted-cash" placeholder="Enter counted amount" oninput="updateReconVariance()">
+                    </div>
+                    <div class="form-group">
+                      <label>Variance</label>
+                      <input type="text" id="recon-variance-display" readonly style="background:#fff;font-weight:700;">
+                    </div>
+                  </div>
+                  <div class="form-group full" style="margin-top:14px;">
+                    <label>Notes (optional)</label>
+                    <input type="text" id="recon-notes" placeholder="e.g. KES 50 short — likely change-giving error">
+                  </div>
+                  <div id="recon-status-banner" style="margin-top:14px;display:none;"></div>
+                  <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+                    <button class="btn btn-success" id="recon-save-btn" onclick="saveCashReconciliation()">&#9989; Save Reconciliation</button>
+                  </div>
+                  <div id="recon-last-saved" style="margin-top:10px;font-size:12px;color:var(--muted);"></div>
+                </div>
+              </div>
+            </div>
+
+            <h4 class="section-title">Breakdown by Service Type</h4>
+            <div class="table-wrapper mb-6">
+              <table><thead><tr><th>Service Type</th><th>Transactions</th><th>Total Amount</th></tr></thead>
+              <tbody id="recon-by-type-tbody"><tr><td colspan="3" class="empty-msg compact">No data</td></tr></tbody></table>
+            </div>
+
+            <h4 class="section-title">Breakdown by Payment Method (Office Services only)</h4>
+            <div class="method-breakdown mb-6" id="recon-by-method"></div>
+
+            <h4 class="section-title">Office Service Transactions for Selected Date</h4>
+            <div class="table-wrapper mb-6">
+              <table id="recon-table"><thead><tr><th>Time</th><th>Receipt No.</th><th>Service</th><th>Amount</th><th>Method</th><th>Customer</th><th>Recorded By</th></tr></thead>
+              <tbody id="recon-tx-tbody"><tr><td colspan="7" class="empty-msg compact">No transactions</td></tr></tbody></table>
+            </div>
+
+            <h4 class="section-title">Fee Payment (Cash) Transactions for Selected Date</h4>
+            <div class="table-wrapper mb-6">
+              <table id="recon-fee-cash-table"><thead><tr><th>Time</th><th>Receipt No.</th><th>Student</th><th>Amount</th><th>Reference</th></tr></thead>
+              <tbody id="recon-fee-cash-tbody"><tr><td colspan="5" class="empty-msg compact">No cash fee payments</td></tr></tbody></table>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <h4 style="font-family:var(--font-h);font-size:13.5px;color:var(--navy);">&#128203; Reconciliation History</h4>
+              <button class="btn btn-outline btn-sm" onclick="exportReconciliationHistory()">&#128190; Export History</button>
+            </div>
+            <div class="table-wrapper">
+              <table><thead><tr><th>Date</th><th>System Cash</th><th>Counted Cash</th><th>Variance</th><th>Reconciled By</th><th>Saved</th><th>Notes</th><th></th></tr></thead>
+              <tbody id="recon-history-tbody"><tr><td colspan="8" class="empty-msg compact">No reconciliations saved yet</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Service Price List -->
+      <div id="tab-svc-types" style="display:none;">
+        <div class="form-table-layout">
+          <div class="card">
+            <div class="card-header"><h3 id="svct-form-title">Add Service Type</h3></div>
+            <div class="card-body">
+              <input type="hidden" id="svct-edit-mode" value="false">
+              <input type="hidden" id="svct-original-name" value="">
+              <div class="form-grid">
+                <div class="form-group full"><label>Service Name *</label><input type="text" id="svct-name" placeholder="e.g. Printing (per page)"></div>
+                <div class="form-group full"><label>Icon (emoji)</label><input type="text" id="svct-icon" placeholder="e.g. &#128424;" maxlength="4"></div>
+                <div class="form-group full"><label>Default Price (KES)</label><input type="number" id="svct-price" placeholder="e.g. 10"></div>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:14px;">
+                <button class="btn btn-outline" id="svct-cancel-btn" onclick="clearServiceTypeForm()" style="display:none;">Cancel</button>
+                <button class="btn btn-primary" id="svct-save-btn" style="flex:1;" onclick="saveServiceType()">Save Service Type</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Service Price List</h3></div>
+            <div class="card-body flush">
+              <table><thead><tr><th>Icon</th><th>Service Name</th><th>Default Price</th><th>Actions</th></tr></thead>
+              <tbody id="svc-types-tbody"><tr><td colspan="4" class="empty-msg">No service types yet</td></tr></tbody></table>
+            </div>
           </div>
         </div>
       </div>
@@ -383,18 +598,56 @@
         <div class="stat-card red"><div class="stat-label">Total Balance</div><div class="stat-value" id="report-total-balance">&mdash;</div></div>
       </div>
       <div class="card">
-        <div class="card-header"><h3>Fee Report by Program</h3><div style="display:flex;gap:8px;"><button class="btn btn-outline btn-sm" onclick="exportProgramReport()">&#128190; Export</button><button class="btn btn-outline btn-sm" onclick="window.print()">&#128424; Print</button></div></div>
-        <div class="card-body" style="padding:0;"><table><thead><tr><th>Program</th><th>Students</th><th>Total Billed</th><th>Total Paid</th><th>Balance</th><th>Collection %</th></tr></thead><tbody id="report-tbody"></tbody></table></div>
+        <div class="card-header"><h3>Fee Report by Program</h3><div class="row"><button class="btn btn-outline btn-sm" onclick="exportProgramReport()">&#128190; Export</button><button class="btn btn-outline btn-sm" onclick="window.print()">&#128424; Print</button></div></div>
+        <div class="card-body flush"><table><thead><tr><th>Program</th><th>Students</th><th>Total Billed</th><th>Total Paid</th><th>Balance</th><th>Collection %</th></tr></thead><tbody id="report-tbody"></tbody></table></div>
       </div>
       <div class="card">
         <div class="card-header">
           <h3>Defaulters List (Balance &gt; 0)</h3>
-          <div style="display:flex;gap:8px;">
+          <div class="row">
             <button class="btn btn-outline btn-sm" onclick="exportDefaulters()">&#128190; Export</button>
             <button class="btn btn-sms btn-sm" onclick="sendBulkDefaultersSms()">&#128241; Bulk SMS</button>
           </div>
         </div>
-        <div class="card-body" style="padding:0;"><table><thead><tr><th>Reg No.</th><th>Name</th><th>Program</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Actions</th></tr></thead><tbody id="defaulters-tbody"></tbody></table></div>
+        <div class="card-body flush"><table><thead><tr><th>Reg No.</th><th>Name</th><th>Program</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Actions</th></tr></thead><tbody id="defaulters-tbody"></tbody></table></div>
+      </div>
+      <div class="card" id="sms-log-card">
+        <div class="card-header">
+          <h3>&#128241; SMS Delivery Log</h3>
+          <div class="row">
+            <span id="sms-log-count" class="badge badge-info">&mdash;</span>
+            <button class="btn btn-outline btn-sm" onclick="loadSmsLog()">&#128260; Refresh</button>
+            <button class="btn btn-outline btn-sm" onclick="exportSmsLog()">&#128190; Export</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="recon-summary-bar mb-4" id="sms-log-summary">
+            <div class="rsb-item"><span class="rsb-label">Total Sent</span><span class="rsb-value" id="sms-log-total">0</span></div>
+            <div class="rsb-divider"></div>
+            <div class="rsb-item"><span class="rsb-label">Successful</span><span class="rsb-value" id="sms-log-success" style="color:var(--success);">0</span></div>
+            <div class="rsb-divider"></div>
+            <div class="rsb-item"><span class="rsb-label">Failed</span><span class="rsb-value" id="sms-log-failed" style="color:var(--danger);">0</span></div>
+          </div>
+          <div class="filter-bar">
+            <div class="search-input"><span class="search-icon">&#128269;</span><input type="text" id="sms-log-search" placeholder="Search by phone, student, purpose&hellip;" oninput="filterSmsLog()"></div>
+            <select id="sms-log-purpose-filter" onchange="filterSmsLog()">
+              <option value="">All Purposes</option>
+              <option value="welcome">Welcome</option>
+              <option value="receipt">Receipt</option>
+              <option value="defaulter">Defaulter Reminder</option>
+              <option value="manual">Manual</option>
+            </select>
+            <select id="sms-log-status-filter" onchange="filterSmsLog()">
+              <option value="">All Status</option>
+              <option value="sent">Sent</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+          <div class="table-wrapper">
+            <table><thead><tr><th>Date/Time</th><th>Phone</th><th>Purpose</th><th>Student</th><th>Status</th><th>Error</th><th>Sent By</th></tr></thead>
+            <tbody id="sms-log-tbody"><tr><td colspan="7" class="empty-msg compact">Click Refresh to load the SMS log</td></tr></tbody></table>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -428,17 +681,17 @@
             </div>
             <div class="role-legend">
               <div class="role-legend-title">Role Permissions</div>
-              <div class="role-legend-row"><span class="role-badge role-admin">Admin</span><span>Full access — students, payments, courses, users, SMS</span></div>
-              <div class="role-legend-row"><span class="role-badge role-staff">Staff</span><span>Register students, record payments, send SMS</span></div>
+              <div class="role-legend-row"><span class="role-badge role-admin">Admin</span><span>Full access — students, payments, courses, users, SMS, edit/delete service transactions, cash reconciliation</span></div>
+              <div class="role-legend-row"><span class="role-badge role-staff">Staff</span><span>Register students, record payments, send SMS, record office services (cannot edit/delete service transactions or reconcile cash)</span></div>
               <div class="role-legend-row"><span class="role-badge role-viewer">Viewer</span><span>View only — no edits, no payments, no SMS</span></div>
             </div>
           </div>
         </div>
         <div class="card">
           <div class="card-header"><h3>System Users</h3><span class="badge badge-info" id="users-count">&mdash;</span></div>
-          <div class="card-body" style="padding:0;">
+          <div class="card-body flush">
             <table><thead><tr><th>Username</th><th>Full Name</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody id="users-tbody"><tr><td colspan="5" style="text-align:center;padding:32px;color:var(--muted);">Loading&hellip;</td></tr></tbody></table>
+            <tbody id="users-tbody"><tr><td colspan="5" class="empty-msg">Loading&hellip;</td></tr></tbody></table>
           </div>
         </div>
       </div>
@@ -450,11 +703,12 @@
 
 <!-- ════════ MODALS ════════ -->
 <div class="modal-overlay" id="modal-student">
-  <div class="modal" style="max-width:700px;">
+  <div class="modal size-xl">
     <div class="modal-header"><h2>Student Profile</h2><button class="btn-close" onclick="closeModal('modal-student')">&times;</button></div>
     <div class="modal-body" id="modal-student-body">&mdash;</div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-student')">Close</button>
+      <button class="btn btn-danger" id="modal-delete-student-btn">&#128465; Delete</button>
       <button class="btn btn-sms" id="modal-sms-student-btn">&#128241; Send SMS</button>
       <button class="btn btn-gold" id="modal-charge-student-btn">+ Charge</button>
       <button class="btn btn-primary" id="modal-edit-btn">&#9999; Edit</button>
@@ -463,7 +717,7 @@
 </div>
 
 <div class="modal-overlay" id="modal-receipt">
-  <div class="modal" style="max-width:480px;">
+  <div class="modal size-md">
     <div class="modal-header"><h2>Payment Receipt</h2><button class="btn-close" onclick="closeModal('modal-receipt')">&times;</button></div>
     <div class="modal-body" id="modal-receipt-body">&mdash;</div>
     <div class="modal-footer">
@@ -474,7 +728,7 @@
 </div>
 
 <div class="modal-overlay" id="modal-invoice">
-  <div class="modal" style="max-width:480px;">
+  <div class="modal size-md">
     <div class="modal-header"><h2>Fee Invoice</h2><button class="btn-close" onclick="closeModal('modal-invoice')">&times;</button></div>
     <div class="modal-body" id="modal-invoice-body">&mdash;</div>
     <div class="modal-footer">
@@ -485,12 +739,12 @@
 </div>
 
 <div class="modal-overlay" id="modal-sms">
-  <div class="modal" style="max-width:480px;">
+  <div class="modal size-md">
     <div class="modal-header"><h2>&#128241; Send SMS</h2><button class="btn-close" onclick="closeModal('modal-sms')">&times;</button></div>
     <div class="modal-body">
       <div class="sms-recipient-bar">
         <div class="student-avatar" style="width:38px;height:38px;font-size:13px;flex-shrink:0;">&#128100;</div>
-        <div><div style="font-weight:600;font-size:13.5px;" id="sms-modal-name">&mdash;</div><div style="font-size:12px;color:var(--muted);" id="sms-modal-phone">&mdash;</div></div>
+        <div><div class="val-label" id="sms-modal-name">&mdash;</div><div class="text-sm text-muted" id="sms-modal-phone">&mdash;</div></div>
       </div>
       <div class="form-group" style="margin-bottom:12px;"><label>Phone Number</label><input type="tel" id="sms-to" placeholder="e.g. 0712345678"></div>
       <div class="sms-templates">
@@ -509,7 +763,7 @@
 </div>
 
 <div class="modal-overlay" id="modal-charge">
-  <div class="modal" style="max-width:520px;">
+  <div class="modal size-lg">
     <div class="modal-header">
       <h2>&#129534; Charge Invoice</h2>
       <button class="btn-close" onclick="closeModal('modal-charge')">&times;</button>
@@ -519,24 +773,21 @@
         <label>Select Student *</label>
         <select id="charge-student" onchange="onChargeStudentSelect()"><option value="">Choose student&hellip;</option></select>
       </div>
-
-      <!-- Student info strip -->
       <div id="charge-student-info" style="display:none;margin-bottom:16px;">
         <div class="student-fee-header" style="padding:12px 14px;">
           <div class="student-avatar" id="charge-avatar" style="width:40px;height:40px;font-size:13px;">&mdash;</div>
           <div>
-            <div style="font-weight:600;font-size:13.5px;" id="charge-student-name">&mdash;</div>
-            <div style="font-size:12px;color:var(--muted);" id="charge-program">&mdash;</div>
+            <div class="val-label" id="charge-student-name">&mdash;</div>
+            <div class="text-sm text-muted" id="charge-program">&mdash;</div>
           </div>
           <div style="margin-left:auto;display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;text-align:right;">
-            <div><div style="font-size:11px;color:var(--muted);">Current Total Fee</div><div style="font-weight:700;font-size:13px;" id="charge-current-total">&mdash;</div></div>
-            <div><div style="font-size:11px;color:var(--muted);">Current Balance</div><div style="font-weight:700;font-size:13px;color:var(--danger);" id="charge-current-bal">&mdash;</div></div>
-            <div><div style="font-size:11px;color:var(--muted);">New Total Fee</div><div style="font-weight:700;font-size:13px;color:var(--navy);" id="charge-new-total">&mdash;</div></div>
-            <div><div style="font-size:11px;color:var(--muted);">New Balance</div><div style="font-weight:700;font-size:13px;color:var(--danger);" id="charge-new-bal">&mdash;</div></div>
+            <div><div class="text-xs text-muted">Current Total Fee</div><div style="font-weight:700;font-size:13px;" id="charge-current-total">&mdash;</div></div>
+            <div><div class="text-xs text-muted">Current Balance</div><div class="val-danger" id="charge-current-bal">&mdash;</div></div>
+            <div><div class="text-xs text-muted">New Total Fee</div><div style="font-weight:700;font-size:13px;color:var(--navy);" id="charge-new-total">&mdash;</div></div>
+            <div><div class="text-xs text-muted">New Balance</div><div class="val-danger" id="charge-new-bal">&mdash;</div></div>
           </div>
         </div>
       </div>
-
       <div class="form-grid">
         <div class="form-group">
           <label>Category</label>
@@ -572,16 +823,87 @@
 </div>
 
 <div class="modal-overlay" id="modal-bulk-sms">
-  <div class="modal" style="max-width:440px;">
+  <div class="modal size-sm">
     <div class="modal-header"><h2>&#128241; Bulk SMS — Defaulters</h2><button class="btn-close" onclick="closeModal('modal-bulk-sms')">&times;</button></div>
     <div class="modal-body">
-      <div class="bulk-sms-info">
-        <div class="bulk-sms-icon">&#128241;</div>
-        <div><div style="font-weight:700;font-size:15px;color:var(--navy);">Send reminders to <span id="bulk-sms-count">0</span> students</div><div style="font-size:12.5px;color:var(--muted);margin-top:4px;">Each student receives a personalised balance reminder via UjumbeSMS.</div></div>
+      <div class="notice success">
+        <div class="notice-icon">&#128241;</div>
+        <div><div class="notice-title">Send reminders to <span id="bulk-sms-count">0</span> students</div><div class="notice-body">Each student receives a personalised balance reminder via UjumbeSMS.</div></div>
       </div>
-      <div style="margin-top:16px;"><div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;">PREVIEW (first student)</div><div id="bulk-sms-preview" style="background:var(--cream);border-radius:8px;padding:12px;font-size:13px;border:1px solid var(--border);line-height:1.6;">&mdash;</div></div>
+      <div class="mt-4"><div class="section-title" style="margin-bottom:6px;">Preview (first student)</div><div id="bulk-sms-preview" style="background:var(--cream);border-radius:8px;padding:12px;font-size:13px;border:1px solid var(--border);line-height:1.6;">&mdash;</div></div>
     </div>
     <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-bulk-sms')">Cancel</button><button class="btn btn-sms" id="bulk-sms-confirm-btn" onclick="confirmBulkSms()">&#128241; Confirm &amp; Send</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-svc-receipt">
+  <div class="modal size-md">
+    <div class="modal-header"><h2>Service Receipt</h2><button class="btn-close" onclick="closeModal('modal-svc-receipt')">&times;</button></div>
+    <div class="modal-body" id="modal-svc-receipt-body">&mdash;</div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-svc-receipt')">Close</button>
+      <button class="btn btn-primary" onclick="downloadServiceReceiptPdf()">&#11123; Download PDF</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-edit-service">
+  <div class="modal size-lg">
+    <div class="modal-header"><h2>&#9999; Edit Service Transaction</h2><button class="btn-close" onclick="closeModal('modal-edit-service')">&times;</button></div>
+    <div class="modal-body">
+      <div class="notice warning mb-4">
+        <div class="notice-icon">&#9888;&#65039;</div>
+        <div><div class="notice-title">Admin-only action</div><div class="notice-body">This edit will be logged with your name and timestamp for audit purposes.</div></div>
+      </div>
+      <input type="hidden" id="esvc-receipt-no">
+      <div class="form-grid">
+        <div class="form-group full"><label>Receipt No.</label><input type="text" id="esvc-receipt-display" readonly></div>
+        <div class="form-group full"><label>Service Type</label><input type="text" id="esvc-type"></div>
+        <div class="form-group full"><label>Description</label><input type="text" id="esvc-desc"></div>
+        <div class="form-group"><label>Quantity</label><input type="number" id="esvc-qty" min="1"></div>
+        <div class="form-group"><label>Amount (KES) *</label><input type="number" id="esvc-amount"></div>
+        <div class="form-group"><label>Payment Method</label>
+          <select id="esvc-method"><option>Cash</option><option>M-Pesa</option><option>Bank Transfer</option></select>
+        </div>
+        <div class="form-group"><label>Date</label><input type="date" id="esvc-date"></div>
+        <div class="form-group"><label>Customer Name</label><input type="text" id="esvc-customer"></div>
+        <div class="form-group"><label>Customer Phone</label><input type="tel" id="esvc-phone"></div>
+        <div class="form-group full"><label>Reason for Edit *</label><input type="text" id="esvc-reason" placeholder="e.g. Corrected amount entry error"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-edit-service')">Cancel</button>
+      <button class="btn btn-primary" id="esvc-save-btn" onclick="saveEditedService()">&#128190; Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-edit-payment">
+  <div class="modal size-lg">
+    <div class="modal-header"><h2>&#9999; Edit Payment</h2><button class="btn-close" onclick="closeModal('modal-edit-payment')">&times;</button></div>
+    <div class="modal-body">
+      <div class="notice warning mb-4">
+        <div class="notice-icon">&#9888;&#65039;</div>
+        <div><div class="notice-title">Admin-only action</div><div class="notice-body">Changing the amount will automatically adjust the student's paid total and balance. This edit is logged with your name and timestamp.</div></div>
+      </div>
+      <input type="hidden" id="epay-receipt-no">
+      <div class="form-grid">
+        <div class="form-group full"><label>Receipt No.</label><input type="text" id="epay-receipt-display" readonly></div>
+        <div class="form-group full"><label>Student</label><input type="text" id="epay-student-display" readonly></div>
+        <div class="form-group"><label>Amount (KES) *</label><input type="number" id="epay-amount"></div>
+        <div class="form-group"><label>Payment Method</label>
+          <select id="epay-method"><option>M-Pesa</option><option>Bank Transfer</option><option>Cash</option><option>Cheque</option></select>
+        </div>
+        <div class="form-group"><label>Date</label><input type="date" id="epay-date"></div>
+        <div class="form-group"><label>Reference / Transaction No.</label><input type="text" id="epay-ref"></div>
+        <div class="form-group full"><label>Remarks</label><input type="text" id="epay-remarks"></div>
+        <div class="form-group full"><label>Reason for Edit *</label><input type="text" id="epay-reason" placeholder="e.g. Corrected amount — entered KES 5,000 instead of KES 500"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-edit-payment')">Cancel</button>
+      <button class="btn btn-primary" id="epay-save-btn" onclick="saveEditedPayment()">&#128190; Save Changes</button>
+    </div>
   </div>
 </div>
 
