@@ -19,6 +19,7 @@ let state = {
   students: [], payments: [], courses: [], feeStructures: [],
   invoiceRecords: [],
   services: [], serviceTypes: [], reconciliations: [],
+  attendance: [],
   smsLog: [],
   currentPage: 'dashboard', editMode: false, editRegNo: null,
   user: null,
@@ -368,6 +369,7 @@ const pageTitles = {
   dashboard:'Dashboard', students:'Students', register:'Register Student',
   fees:'Fee Management', payments:'Payments', invoices:'Invoices',
   courses:'Courses & Programs', services:'Office Services & Reconciliation',
+  attendance:'Staff Attendance Register',
   reports:'Reports', users:'User Management',
 };
 
@@ -386,12 +388,13 @@ function navigate(page) {
   document.getElementById('page-title').textContent = pageTitles[page] || page;
   state.currentPage = page;
   if (page === 'register' && !state.editMode) prepRegisterForm();
-  if (page === 'fees')     renderFeeOverview();
-  if (page === 'payments') renderPayments();
-  if (page === 'invoices') renderInvoices();
-  if (page === 'reports')  renderReports();
-  if (page === 'users')    loadUsersTable();
-  if (page === 'services') initServicesPage();
+  if (page === 'fees')       renderFeeOverview();
+  if (page === 'payments')   renderPayments();
+  if (page === 'invoices')   renderInvoices();
+  if (page === 'reports')    renderReports();
+  if (page === 'users')      loadUsersTable();
+  if (page === 'services')   initServicesPage();
+  if (page === 'attendance') initAttendancePage();
 }
 
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
@@ -420,6 +423,7 @@ function applyData(bundle, renderMode) {
   state.services        = bundle.services || [];
   state.serviceTypes    = bundle.serviceTypes || [];
   state.reconciliations = bundle.reconciliations || [];
+  state.attendance      = bundle.attendance || [];
   populateProgramDropdowns();
   // renderMode 'current' = only active page (background refresh)
   // renderMode 'all'     = every page (first load)
@@ -448,8 +452,9 @@ function renderCurrentPage() {
   else if (p === 'payments') renderPayments();
   else if (p === 'invoices') renderInvoices();
   else if (p === 'reports')  renderReports();
-  else if (p === 'courses')  renderCourses();
-  else if (p === 'services') { renderServiceTypeGrid(); renderServiceTypesTable(); filterServiceLog(); renderReconciliation(); }
+  else if (p === 'courses')    renderCourses();
+  else if (p === 'services')   { renderServiceTypeGrid(); renderServiceTypesTable(); filterServiceLog(); renderReconciliation(); }
+  else if (p === 'attendance') initAttendancePage();
   // Always keep dashboard stats fresh too
   if (p !== 'dashboard') renderDashboard();
 }
@@ -485,6 +490,7 @@ async function fetchFresh(silent = false) {
     services:        res.services        || [],
     serviceTypes:    res.serviceTypes    || [],
     reconciliations: res.reconciliations || [],
+    attendance:      res.attendance      || [],
   };
   saveCache(bundle);
   return bundle;
@@ -2698,6 +2704,529 @@ async function deleteServiceType(name) {
     if (res.success) { toast('Deleted.', 'success'); reloadAfterWrite(); clearServiceTypeForm(); }
     else toast('Error: ' + res.error, 'error');
   } catch (e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+// ════════════════════════════════════════════════
+//  STAFF ATTENDANCE MODULE
+// ════════════════════════════════════════════════
+
+/** Constants — must match WORK_START_HOUR/MINUTE in code.gs */
+const ATT_START_HOUR   = 8;
+const ATT_START_MINUTE = 0;
+
+const LEAVE_STATUSES = new Set([
+  'Annual Leave','Sick Leave','Maternity Leave','Paternity Leave',
+  'Study Leave','Compassionate Leave','Unpaid Leave',
+]);
+
+/**
+ * The staff dropdown used by "Mark Attendance (Admin)" is populated from
+ * state.users, which is normally only fetched when the User Management
+ * page is visited (loadUsersTable()). If an Admin opens Attendance first,
+ * that list would still be empty and the dropdown would have nothing to
+ * select — so this is now async and loads the user list itself when
+ * needed, before rendering anything that depends on it.
+ */
+async function initAttendancePage() {
+  const today = new Date().toISOString().split('T')[0];
+  const todayLabel = new Date().toLocaleDateString('en-KE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+
+  // Set default dates
+  const regDateEl = document.getElementById('att-reg-date');
+  const markDateEl = document.getElementById('att-mark-date');
+  const summaryEl  = document.getElementById('att-summary-month');
+  if (regDateEl && !regDateEl.value)   regDateEl.value   = today;
+  if (markDateEl && !markDateEl.value) markDateEl.value  = today;
+  if (summaryEl && !summaryEl.value)   summaryEl.value   = today.slice(0, 7);
+
+  // Today label
+  const todayLabelEl = document.getElementById('att-today-label');
+  if (todayLabelEl) todayLabelEl.textContent = todayLabel;
+
+  // Show/hide admin-only card
+  const adminCard = document.getElementById('att-admin-mark-card');
+  if (adminCard) adminCard.style.display = can('delete') ? '' : 'none';
+
+  // Staff list (Users) is normally only loaded when User Management is
+  // visited. If Attendance is opened first, load it here too so the
+  // "Mark Attendance" dropdown isn't empty.
+  if (can('delete') && (!state.users || !state.users.length)) {
+    await loadUsersTable();
+  }
+
+  // Populate staff dropdown
+  populateAttStaffDropdown();
+
+  // Render current user clock status
+  renderMyClockStatus();
+
+  // Render today summary
+  renderTodaySummary();
+  renderAttRegister();
+  renderAttSummary();
+}
+
+function switchAttTab(tabId) {
+  ['att-clockin','att-register','att-summary'].forEach(id => {
+    document.getElementById('tab-' + id).style.display = (id === tabId) ? '' : 'none';
+  });
+  document.querySelectorAll('#page-attendance .tab-btn').forEach((b, i) => {
+    const order = ['att-clockin','att-register','att-summary'];
+    b.classList.toggle('active', order[i] === tabId);
+  });
+  if (tabId === 'att-register') renderAttRegister();
+  if (tabId === 'att-summary')  renderAttSummary();
+}
+
+function populateAttStaffDropdown() {
+  const sel = document.getElementById('att-mark-staff');
+  if (!sel) return;
+  const staffList = (state.users || []).filter(u => u.status === 'Active');
+  sel.innerHTML = '<option value="">Select staff&hellip;</option>' +
+    staffList.map(u => `<option value="${u.username}" data-name="${u.fullName||u.username}">${u.fullName||u.username}</option>`).join('');
+}
+
+function renderMyClockStatus() {
+  const me = state.user;
+  if (!me) return;
+  const today = new Date().toISOString().split('T')[0];
+  const myRecord = (state.attendance || []).find(r => r.staffUsername === me.username && dateKey(r.date) === today);
+
+  const statusEl  = document.getElementById('att-clock-status');
+  const inBtn     = document.getElementById('att-clockin-btn');
+  const outBtn    = document.getElementById('att-clockout-btn');
+  if (!statusEl) return;
+
+  if (!myRecord) {
+    statusEl.innerHTML = `
+      <div class="notice neutral">
+        <div class="notice-icon">&#128198;</div>
+        <div><div class="notice-title">Not clocked in yet</div>
+        <div class="notice-body">Your attendance for today has not been recorded. Click Clock In to start.</div></div>
+      </div>`;
+    if (inBtn)  { inBtn.disabled = false; }
+    if (outBtn) { outBtn.disabled = true; }
+  } else if (myRecord.timeOut) {
+    const hours = calcHours(myRecord.timeIn, myRecord.timeOut);
+    statusEl.innerHTML = `
+      <div class="notice success">
+        <div class="notice-icon">&#9989;</div>
+        <div><div class="notice-title">Attendance complete for today</div>
+        <div class="notice-body">Clocked in: <strong>${myRecord.timeIn}</strong> &nbsp;|&nbsp; Clocked out: <strong>${myRecord.timeOut}</strong> &nbsp;|&nbsp; Hours: <strong>${hours}</strong>
+        ${myRecord.lateFlag === 'Late' ? ' &nbsp;|&nbsp; <span style="color:var(--warning);font-weight:700;">&#9888; Arrived Late</span>' : ''}</div></div>
+      </div>`;
+    if (inBtn)  { inBtn.disabled = true; }
+    if (outBtn) { outBtn.disabled = true; }
+  } else {
+    statusEl.innerHTML = `
+      <div class="notice" style="background:#EFF8FF;border-color:#93C5FD;">
+        <div class="notice-icon">&#9200;</div>
+        <div><div class="notice-title">Clocked in at ${myRecord.timeIn}
+          ${myRecord.lateFlag === 'Late' ? ' <span class="badge badge-warning">Late</span>' : '<span class="badge badge-success">On Time</span>'}
+        </div>
+        <div class="notice-body">Clock out when you leave for the day.</div></div>
+      </div>`;
+    if (inBtn)  { inBtn.disabled = true; }
+    if (outBtn) { outBtn.disabled = false; }
+  }
+}
+
+function renderTodaySummary() {
+  const today = new Date().toISOString().split('T')[0];
+  const todayRecs = (state.attendance || []).filter(r => dateKey(r.date) === today);
+
+  const present = todayRecs.filter(r => r.status === 'Present').length;
+  const late    = todayRecs.filter(r => r.lateFlag === 'Late').length;
+  const leave   = todayRecs.filter(r => LEAVE_STATUSES.has(r.status)).length;
+  const absent  = todayRecs.filter(r => r.status === 'Absent').length;
+
+  document.getElementById('att-today-present').textContent = present;
+  document.getElementById('att-today-late').textContent    = late;
+  document.getElementById('att-today-leave').textContent   = leave;
+  document.getElementById('att-today-absent').textContent  = absent;
+
+  const tbody = document.getElementById('att-today-tbody');
+  if (!todayRecs.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-msg compact">No attendance recorded yet today</td></tr>';
+    return;
+  }
+  tbody.innerHTML = [...todayRecs].sort((a,b) => (a.staffName||'').localeCompare(b.staffName||'')).map(r => `
+    <tr>
+      <td><strong>${r.staffName||r.staffUsername}</strong></td>
+      <td>${r.timeIn||'&mdash;'}</td>
+      <td>${r.timeOut||'&mdash;'}</td>
+      <td>${attStatusBadge(r.status)}</td>
+      <td>${r.lateFlag ? `<span class="badge ${r.lateFlag==='Late'?'badge-warning':'badge-success'}">${r.lateFlag}</span>` : '&mdash;'}</td>
+    </tr>`).join('');
+}
+
+// ── Self clock-in / clock-out ────────────────────────────
+
+async function doClockIn() {
+  const btn = document.getElementById('att-clockin-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Clocking in&hellip;';
+  try {
+    const res = await apiPost('clockIn', {
+      staffUsername: state.user.username,
+      staffName:     state.user.fullName || state.user.username,
+      recordedBy:    state.user.username,
+      remarks:       document.getElementById('att-remarks').value.trim(),
+    });
+    if (res.success) {
+      if (res.alreadyClockedIn) {
+        toast('Already clocked in today at ' + res.timeIn, 'warning');
+      } else {
+        toast('Clocked in at ' + res.timeIn + (res.lateFlag === 'Late' ? ' — marked Late' : ' — On Time') + '.', 'success');
+      }
+      reloadAfterWrite();
+    } else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+  btn.disabled = false;
+  btn.innerHTML = '&#9200; Clock In';
+}
+
+async function doClockOut() {
+  const btn = document.getElementById('att-clockout-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Clocking out&hellip;';
+  try {
+    const res = await apiPost('clockOut', {
+      staffUsername: state.user.username,
+      recordedBy:    state.user.username,
+    });
+    if (res.success) {
+      toast('Clocked out at ' + res.timeOut + '. Have a good day!', 'success');
+      reloadAfterWrite();
+    } else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+  btn.disabled = false;
+  btn.innerHTML = '&#9201; Clock Out';
+}
+
+// ── Admin: Mark attendance ────────────────────────────────
+
+function toggleAttLeaveType() {
+  // Could expand to show/hide a leave-type sub-field but the status
+  // dropdown already carries the leave type directly in its value, so
+  // no separate field is needed.
+}
+
+async function adminMarkAttendance() {
+  if (!can('delete')) { toast('Only an Admin can mark attendance for others.', 'error'); return; }
+  const staffSel   = document.getElementById('att-mark-staff');
+  const username   = staffSel.value;
+  const staffName  = staffSel.options[staffSel.selectedIndex]?.dataset.name || username;
+  const date       = document.getElementById('att-mark-date').value;
+  const status     = document.getElementById('att-mark-status').value;
+
+  if (!username || !date) { toast('Select a staff member and date.', 'error'); return; }
+
+  const payload = {
+    staffUsername: username, staffName, date, status,
+    dayType:    document.getElementById('att-mark-daytype').value,
+    timeIn:     document.getElementById('att-mark-timein').value,
+    timeOut:    document.getElementById('att-mark-timeout').value,
+    remarks:    document.getElementById('att-mark-remarks').value.trim(),
+    recordedBy: state.user?.fullName || state.user?.username || 'Admin',
+  };
+
+  try {
+    const res = await apiPost('markAttendance', payload);
+    if (res.success) {
+      toast('Attendance saved for ' + staffName + '.', 'success');
+      document.getElementById('att-mark-timein').value  = '';
+      document.getElementById('att-mark-timeout').value = '';
+      document.getElementById('att-mark-remarks').value = '';
+      reloadAfterWrite();
+    } else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+// ── Admin: Quick-add a Staff member (from the Attendance page) ──────────
+// The Mark Attendance dropdown can only offer staff who already have a
+// system login (Users sheet). Rather than forcing an Admin to leave the
+// Attendance page and go to User Management just to onboard someone new,
+// this opens a small modal right here that creates a Staff-role user, then
+// immediately refreshes the dropdown so the new person can be marked.
+
+function openAddStaffModal() {
+  if (!can('users')) { toast('Only an Admin can add staff.', 'error'); return; }
+  document.getElementById('staff-fullname').value = '';
+  document.getElementById('staff-username').value = '';
+  document.getElementById('staff-password').value = generateTempPassword();
+  openModal('modal-add-staff');
+}
+
+/** A short, easy-to-read temporary password the Admin can hand off and
+ *  ask the staff member to change after first login. */
+function generateTempPassword() {
+  return 'Jti' + Math.floor(1000 + Math.random() * 9000);
+}
+
+/** Suggests a username from the full name as it's typed (e.g.
+ *  "Mary Wambui" -> "mary.wambui"), which the Admin can still edit. */
+function suggestStaffUsername() {
+  const fullName = document.getElementById('staff-fullname').value.trim();
+  if (!fullName) return;
+  const suggested = fullName.toLowerCase().replace(/[^a-z\s]/g, '').trim().replace(/\s+/g, '.');
+  document.getElementById('staff-username').value = suggested;
+}
+
+async function submitAddStaff() {
+  if (!can('users')) { toast('Only an Admin can add staff.', 'error'); return; }
+  const fullName = document.getElementById('staff-fullname').value.trim();
+  const username = document.getElementById('staff-username').value.trim().toLowerCase();
+  const password  = document.getElementById('staff-password').value.trim();
+  if (!fullName || !username || !password) { toast('Full name, username and password are required.', 'error'); return; }
+
+  const btn = document.getElementById('staff-save-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Adding&hellip;';
+  try {
+    const res = await apiPost('addUser', { username, password, fullName, role: 'Staff', status: 'Active' });
+    if (res.success) {
+      toast(`Staff added — username "${username}", password "${password}". Share these securely.`, 'success');
+      closeModal('modal-add-staff');
+      await loadUsersTable();
+      populateAttStaffDropdown();
+    } else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+  btn.disabled = false;
+  btn.innerHTML = '&#128190; Add Staff';
+}
+
+// ── Daily Register ────────────────────────────────────────
+
+function renderAttRegister() {
+  const dateEl = document.getElementById('att-reg-date');
+  if (!dateEl) return;
+  const date = dateEl.value || new Date().toISOString().split('T')[0];
+  const recs = (state.attendance || []).filter(r => dateKey(r.date) === date);
+
+  const present = recs.filter(r => r.status === 'Present').length;
+  const late    = recs.filter(r => r.lateFlag === 'Late').length;
+  const leave   = recs.filter(r => LEAVE_STATUSES.has(r.status)).length;
+  const absent  = recs.filter(r => r.status === 'Absent').length;
+  document.getElementById('att-reg-present').textContent = present;
+  document.getElementById('att-reg-late').textContent    = late;
+  document.getElementById('att-reg-leave').textContent   = leave;
+  document.getElementById('att-reg-absent').textContent  = absent;
+  document.getElementById('att-reg-total').textContent   = recs.length;
+
+  const tbody = document.getElementById('att-reg-tbody');
+  if (!recs.length) {
+    tbody.innerHTML = '<tr><td colspan="10" class="empty-msg">No attendance records for this date</td></tr>';
+    return;
+  }
+  tbody.innerHTML = [...recs].sort((a,b) => (a.staffName||'').localeCompare(b.staffName||'')).map(r => `
+    <tr>
+      <td><strong>${r.staffName||r.staffUsername}</strong><br><small class="text-muted text-xs">${r.staffUsername}</small></td>
+      <td>${r.dayType||'Weekday'}</td>
+      <td style="font-weight:600;">${r.timeIn||'&mdash;'}</td>
+      <td style="font-weight:600;">${r.timeOut||'&mdash;'}</td>
+      <td>${calcHours(r.timeIn, r.timeOut)}</td>
+      <td>${attStatusBadge(r.status)}</td>
+      <td>${r.lateFlag ? `<span class="badge ${r.lateFlag==='Late'?'badge-warning':'badge-success'}">${r.lateFlag}</span>` : '&mdash;'}</td>
+      <td style="font-size:12.5px;max-width:160px;">${r.remarks||'&mdash;'}${r.editedAt ? ' <span class="badge badge-warning" title="Edited by '+r.editedBy+': '+r.editReason+'">&#9999; Edited</span>' : ''}</td>
+      <td style="font-size:12px;color:var(--muted);">${r.recordedBy||'&mdash;'}</td>
+      <td><div class="actions-cell">
+        ${can('delete') ? `<button class="btn btn-primary btn-sm" onclick="openEditAttModal('${r.attendanceId}')">&#9999;</button>` : ''}
+        ${can('delete') ? `<button class="btn btn-danger btn-sm" onclick="deleteAttRecord('${r.attendanceId}')">&#128465;</button>` : ''}
+      </div></td>
+    </tr>`).join('');
+}
+
+function exportAttRegister() {
+  const date = document.getElementById('att-reg-date')?.value || new Date().toISOString().split('T')[0];
+  const recs = (state.attendance || []).filter(r => dateKey(r.date) === date);
+  if (!recs.length) { toast('No records for this date.', 'warning'); return; }
+  downloadWorkbook(recs.sort((a,b)=>(a.staffName||'').localeCompare(b.staffName||'')).map(r => ({
+    'Staff Name': r.staffName||'', 'Username': r.staffUsername||'', 'Date': r.date||'',
+    'Day Type': r.dayType||'', 'Time In': r.timeIn||'', 'Time Out': r.timeOut||'',
+    'Hours': calcHoursRaw(r.timeIn, r.timeOut), 'Status': r.status||'',
+    'Lateness': r.lateFlag||'', 'Remarks': r.remarks||'', 'Recorded By': r.recordedBy||'',
+  })), 'Attendance_' + date, 'JTI_Attendance_' + date);
+}
+
+function printAttRegister() { window.print(); }
+
+// ── Monthly Summary ───────────────────────────────────────
+
+function renderAttSummary() {
+  const monthEl = document.getElementById('att-summary-month');
+  if (!monthEl) return;
+  const month = monthEl.value || new Date().toISOString().slice(0, 7);
+
+  const recs = (state.attendance || []).filter(r => r.date && r.date.startsWith(month));
+  const tbody = document.getElementById('att-summary-tbody');
+
+  if (!recs.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-msg">No attendance records for this month</td></tr>';
+    return;
+  }
+
+  // Group by staff
+  const byStaff = {};
+  recs.forEach(r => {
+    const key = r.staffUsername;
+    if (!byStaff[key]) byStaff[key] = { name: r.staffName||r.staffUsername, recs: [] };
+    byStaff[key].recs.push(r);
+  });
+
+  // Count working days in the month (Mon–Sat, adjust as needed)
+  const [yr, mo] = month.split('-').map(Number);
+  let workingDays = 0;
+  const dim = new Date(yr, mo, 0).getDate();
+  for (let d = 1; d <= dim; d++) {
+    const dow = new Date(yr, mo - 1, d).getDay();
+    if (dow !== 0) workingDays++; // exclude Sundays
+  }
+
+  tbody.innerHTML = Object.values(byStaff)
+    .sort((a,b) => a.name.localeCompare(b.name))
+    .map(({ name, recs: staffRecs }) => {
+      const present      = staffRecs.filter(r => r.status === 'Present').length;
+      const late         = staffRecs.filter(r => r.lateFlag === 'Late').length;
+      const absent       = staffRecs.filter(r => r.status === 'Absent').length;
+      const annualLeave  = staffRecs.filter(r => r.status === 'Annual Leave').length;
+      const sickLeave    = staffRecs.filter(r => r.status === 'Sick Leave').length;
+      const otherLeave   = staffRecs.filter(r => LEAVE_STATUSES.has(r.status) && r.status !== 'Annual Leave' && r.status !== 'Sick Leave').length;
+      const pct          = workingDays > 0 ? Math.round((present / workingDays) * 100) : 0;
+      return `<tr>
+        <td><strong>${name}</strong></td>
+        <td>${workingDays}</td>
+        <td style="color:var(--success);font-weight:600;">${present}</td>
+        <td style="color:var(--warning);font-weight:600;">${late}</td>
+        <td style="color:var(--danger);font-weight:600;">${absent}</td>
+        <td>${annualLeave}</td>
+        <td>${sickLeave}</td>
+        <td>${otherLeave}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div class="progress-bar" style="width:80px;"><div class="progress-fill ${pct>=90?'success':pct<60?'danger':''}" style="width:${Math.min(pct,100)}%;"></div></div>
+            <span style="font-size:12px;font-weight:600;">${pct}%</span>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+}
+
+function exportAttSummary() {
+  const month = document.getElementById('att-summary-month')?.value || new Date().toISOString().slice(0, 7);
+  const recs  = (state.attendance || []).filter(r => r.date && r.date.startsWith(month));
+  if (!recs.length) { toast('No records for this month.', 'warning'); return; }
+
+  const byStaff = {};
+  recs.forEach(r => {
+    const key = r.staffUsername;
+    if (!byStaff[key]) byStaff[key] = { name: r.staffName||r.staffUsername, recs: [] };
+    byStaff[key].recs.push(r);
+  });
+  const [yr, mo] = month.split('-').map(Number);
+  let workingDays = 0;
+  const dim = new Date(yr, mo, 0).getDate();
+  for (let d = 1; d <= dim; d++) { if (new Date(yr, mo - 1, d).getDay() !== 0) workingDays++; }
+
+  downloadWorkbook(Object.values(byStaff).sort((a,b) => a.name.localeCompare(b.name)).map(({ name, recs: sr }) => ({
+    'Staff Member': name,
+    'Working Days in Month': workingDays,
+    'Present': sr.filter(r => r.status === 'Present').length,
+    'Late': sr.filter(r => r.lateFlag === 'Late').length,
+    'Absent': sr.filter(r => r.status === 'Absent').length,
+    'Annual Leave': sr.filter(r => r.status === 'Annual Leave').length,
+    'Sick Leave': sr.filter(r => r.status === 'Sick Leave').length,
+    'Other Leave': sr.filter(r => LEAVE_STATUSES.has(r.status) && !['Annual Leave','Sick Leave'].includes(r.status)).length,
+    'Attendance %': workingDays > 0 ? Math.round((sr.filter(r => r.status==='Present').length / workingDays) * 100) : 0,
+  })), 'Attendance_Summary_' + month, 'JTI_Attendance_Summary_' + month);
+}
+
+// ── Admin: Edit / Delete attendance ──────────────────────
+
+function openEditAttModal(id) {
+  if (!can('delete')) { toast('Only an Admin can edit attendance records.', 'error'); return; }
+  const r = (state.attendance || []).find(x => x.attendanceId === id);
+  if (!r) { toast('Record not found.', 'error'); return; }
+
+  document.getElementById('eatt-id').value              = r.attendanceId;
+  document.getElementById('eatt-staff-display').value   = (r.staffName||r.staffUsername) + ' — ' + dateKey(r.date);
+  document.getElementById('eatt-status').value          = r.status || 'Present';
+  document.getElementById('eatt-daytype').value         = r.dayType || 'Weekday';
+  document.getElementById('eatt-timein').value          = r.timeIn || '';
+  document.getElementById('eatt-timeout').value         = r.timeOut || '';
+  document.getElementById('eatt-lateflag').value        = r.lateFlag || '';
+  document.getElementById('eatt-remarks').value         = r.remarks || '';
+  document.getElementById('eatt-reason').value          = '';
+  openModal('modal-edit-attendance');
+}
+
+async function saveEditedAttendance() {
+  if (!can('delete')) { toast('Only an Admin can edit attendance records.', 'error'); return; }
+  const id     = document.getElementById('eatt-id').value;
+  const reason = document.getElementById('eatt-reason').value.trim();
+  if (!reason) { toast('A reason for the edit is required.', 'error'); return; }
+
+  const btn = document.getElementById('eatt-save-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="loader"></span> Saving&hellip;';
+  try {
+    const res = await apiPost('updateAttendance', {
+      attendanceId: id,
+      status:    document.getElementById('eatt-status').value,
+      dayType:   document.getElementById('eatt-daytype').value,
+      timeIn:    document.getElementById('eatt-timein').value,
+      timeOut:   document.getElementById('eatt-timeout').value,
+      lateFlag:  document.getElementById('eatt-lateflag').value,
+      remarks:   document.getElementById('eatt-remarks').value.trim(),
+      editReason: reason,
+      editedBy:  state.user?.fullName || state.user?.username || 'Admin',
+    });
+    if (res.success) {
+      toast('Attendance updated.', 'success');
+      closeModal('modal-edit-attendance');
+      reloadAfterWrite();
+    } else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+  btn.disabled = false; btn.innerHTML = '&#128190; Save Changes';
+}
+
+async function deleteAttRecord(id) {
+  if (!can('delete')) { toast('Only an Admin can delete attendance records.', 'error'); return; }
+  const reason = prompt('Delete this attendance record?\n\nEnter a reason (required for audit log):');
+  if (reason === null) return;
+  if (!reason.trim()) { toast('A reason is required.', 'error'); return; }
+  try {
+    const res = await apiPost('deleteAttendance', { attendanceId: id, deleteReason: reason.trim() });
+    if (res.success) { toast('Record deleted.', 'success'); reloadAfterWrite(); }
+    else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+// ── Attendance helpers ────────────────────────────────────
+
+function attStatusBadge(status) {
+  const map = {
+    'Present': 'badge-success', 'Absent': 'badge-danger',
+    'Annual Leave': 'badge-info', 'Sick Leave': 'badge-warning',
+    'Off Day': 'badge-neutral', 'Public Holiday': 'badge-purple',
+  };
+  const cls = map[status] || 'badge-neutral';
+  return `<span class="badge ${cls}">${status||'&mdash;'}</span>`;
+}
+
+function calcHoursRaw(timeIn, timeOut) {
+  if (!timeIn || !timeOut) return 0;
+  const [ih, im] = timeIn.split(':').map(Number);
+  const [oh, om] = timeOut.split(':').map(Number);
+  const mins = (oh * 60 + om) - (ih * 60 + im);
+  return mins > 0 ? +(mins / 60).toFixed(2) : 0;
+}
+
+function calcHours(timeIn, timeOut) {
+  const h = calcHoursRaw(timeIn, timeOut);
+  if (!h) return '&mdash;';
+  const hrs  = Math.floor(h);
+  const mins = Math.round((h - hrs) * 60);
+  return hrs + 'h' + (mins ? ' ' + mins + 'm' : '');
 }
 
 // ════════════════════════════════════════════════
