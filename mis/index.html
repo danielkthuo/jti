@@ -92,6 +92,10 @@
       <div class="nav-item" onclick="navigate('services')"><span class="nav-icon">&#128424;</span> Services &amp; Reconciliation</div>
     </div>
     <div class="nav-section">
+      <div class="nav-label">Staff</div>
+      <div class="nav-item" onclick="navigate('attendance')"><span class="nav-icon">&#128197;</span> Attendance Register</div>
+    </div>
+    <div class="nav-section">
       <div class="nav-label">Reports</div>
       <div class="nav-item" onclick="navigate('reports')"><span class="nav-icon">&#128200;</span> Reports</div>
     </div>
@@ -589,6 +593,154 @@
       </div>
     </div>
 
+    <!-- ATTENDANCE REGISTER -->
+    <div class="page" id="page-attendance">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchAttTab('att-clockin')">&#9200; Clock In / Out</button>
+        <button class="tab-btn" onclick="switchAttTab('att-register')">&#128203; Daily Register</button>
+        <button class="tab-btn" onclick="switchAttTab('att-summary')">&#128200; Monthly Summary</button>
+      </div>
+
+      <!-- TAB: Clock In / Out (self-service) -->
+      <div id="tab-att-clockin">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;">
+
+          <!-- Clock-in card -->
+          <div class="card">
+            <div class="card-header"><h3>&#9200; My Attendance — Today</h3></div>
+            <div class="card-body">
+              <div id="att-clock-status" style="margin-bottom:20px;"></div>
+              <div class="form-grid">
+                <div class="form-group full"><label>Remarks (optional)</label><input type="text" id="att-remarks" placeholder="e.g. Working from office"></div>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:16px;">
+                <button class="btn btn-success" id="att-clockin-btn" onclick="doClockIn()" style="flex:1;">&#9200; Clock In</button>
+                <button class="btn btn-danger" id="att-clockout-btn" onclick="doClockOut()" style="flex:1;" disabled>&#9201; Clock Out</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Today summary card -->
+          <div class="card">
+            <div class="card-header"><h3>&#128202; Today at a Glance</h3><span class="badge badge-gold" id="att-today-label">&mdash;</span></div>
+            <div class="card-body flush">
+              <div class="recon-summary-bar" style="margin:16px;margin-bottom:0;">
+                <div class="rsb-item"><span class="rsb-label">Present</span><span class="rsb-value" id="att-today-present" style="color:var(--success);">0</span></div>
+                <div class="rsb-divider"></div>
+                <div class="rsb-item"><span class="rsb-label">Late</span><span class="rsb-value" id="att-today-late" style="color:var(--warning);">0</span></div>
+                <div class="rsb-divider"></div>
+                <div class="rsb-item"><span class="rsb-label">On Leave</span><span class="rsb-value" id="att-today-leave" style="color:var(--info);">0</span></div>
+                <div class="rsb-divider"></div>
+                <div class="rsb-item"><span class="rsb-label">Absent</span><span class="rsb-value" id="att-today-absent" style="color:var(--danger);">0</span></div>
+              </div>
+              <div class="table-wrapper" style="margin-top:16px;">
+                <table><thead><tr><th>Staff</th><th>Time In</th><th>Time Out</th><th>Status</th><th>Flag</th></tr></thead>
+                <tbody id="att-today-tbody"><tr><td colspan="5" class="empty-msg compact">Loading&hellip;</td></tr></tbody></table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin: Mark attendance for others -->
+        <div class="card" id="att-admin-mark-card" style="margin-top:0;">
+          <div class="card-header">
+            <h3>&#128100; Mark Attendance (Admin)</h3>
+            <div class="row">
+              <button class="btn btn-outline btn-sm" onclick="openAddStaffModal()">+ Add Staff</button>
+              <span class="badge badge-warning">Admin Only</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group"><label>Staff Member *</label>
+                <select id="att-mark-staff"><option value="">Select staff&hellip;</option></select>
+              </div>
+              <div class="form-group"><label>Date *</label><input type="date" id="att-mark-date"></div>
+              <div class="form-group"><label>Status *</label>
+                <select id="att-mark-status" onchange="toggleAttLeaveType()">
+                  <option value="Present">Present</option>
+                  <option value="Absent">Absent</option>
+                  <option value="Annual Leave">Annual Leave</option>
+                  <option value="Sick Leave">Sick Leave</option>
+                  <option value="Maternity Leave">Maternity Leave</option>
+                  <option value="Paternity Leave">Paternity Leave</option>
+                  <option value="Study Leave">Study Leave</option>
+                  <option value="Compassionate Leave">Compassionate Leave</option>
+                  <option value="Unpaid Leave">Unpaid Leave</option>
+                  <option value="Public Holiday">Public Holiday</option>
+                  <option value="Off Day">Off Day</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Day Type</label>
+                <select id="att-mark-daytype">
+                  <option value="Weekday">Weekday</option>
+                  <option value="Saturday">Saturday</option>
+                  <option value="Sunday">Sunday</option>
+                  <option value="Public Holiday">Public Holiday</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Time In</label><input type="time" id="att-mark-timein"></div>
+              <div class="form-group"><label>Time Out</label><input type="time" id="att-mark-timeout"></div>
+              <div class="form-group full"><label>Remarks</label><input type="text" id="att-mark-remarks" placeholder="e.g. Doctor appointment, maternity papers submitted"></div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+              <button class="btn btn-primary" onclick="adminMarkAttendance()">&#128190; Save Entry</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Daily Register -->
+      <div id="tab-att-register" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <h3>Daily Attendance Register</h3>
+            <div class="row">
+              <input type="date" id="att-reg-date" onchange="renderAttRegister()">
+              <button class="btn btn-outline btn-sm" onclick="exportAttRegister()">&#128190; Export</button>
+              <button class="btn btn-outline btn-sm" onclick="printAttRegister()">&#128424; Print</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="recon-summary-bar mb-4">
+              <div class="rsb-item"><span class="rsb-label">Present</span><span class="rsb-value" id="att-reg-present" style="color:var(--success);">0</span></div>
+              <div class="rsb-divider"></div>
+              <div class="rsb-item"><span class="rsb-label">Late</span><span class="rsb-value" id="att-reg-late" style="color:var(--warning);">0</span></div>
+              <div class="rsb-divider"></div>
+              <div class="rsb-item"><span class="rsb-label">On Leave</span><span class="rsb-value" id="att-reg-leave" style="color:var(--info);">0</span></div>
+              <div class="rsb-divider"></div>
+              <div class="rsb-item"><span class="rsb-label">Absent</span><span class="rsb-value" id="att-reg-absent" style="color:var(--danger);">0</span></div>
+              <div class="rsb-divider"></div>
+              <div class="rsb-item"><span class="rsb-label">Total Staff</span><span class="rsb-value" id="att-reg-total">0</span></div>
+            </div>
+            <div class="table-wrapper">
+              <table><thead><tr><th>Staff Member</th><th>Day Type</th><th>Time In</th><th>Time Out</th><th>Hours</th><th>Status</th><th>Lateness</th><th>Remarks</th><th>Recorded By</th><th>Actions</th></tr></thead>
+              <tbody id="att-reg-tbody"><tr><td colspan="10" class="empty-msg">Select a date to view the register</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Monthly Summary -->
+      <div id="tab-att-summary" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <h3>Monthly Attendance Summary</h3>
+            <div class="row">
+              <input type="month" id="att-summary-month" onchange="renderAttSummary()">
+              <button class="btn btn-outline btn-sm" onclick="exportAttSummary()">&#128190; Export</button>
+            </div>
+          </div>
+          <div class="card-body flush">
+            <div class="table-wrapper">
+              <table><thead><tr><th>Staff Member</th><th>Working Days</th><th>Present</th><th>Late</th><th>Absent</th><th>Annual Leave</th><th>Sick Leave</th><th>Other Leave</th><th>Attendance %</th></tr></thead>
+              <tbody id="att-summary-tbody"><tr><td colspan="9" class="empty-msg">Select a month to view summary</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- REPORTS -->
     <div class="page" id="page-reports">
       <div class="stats-grid">
@@ -903,6 +1055,82 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-edit-payment')">Cancel</button>
       <button class="btn btn-primary" id="epay-save-btn" onclick="saveEditedPayment()">&#128190; Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-edit-attendance">
+  <div class="modal size-lg">
+    <div class="modal-header"><h2>&#9999; Edit Attendance Record</h2><button class="btn-close" onclick="closeModal('modal-edit-attendance')">&times;</button></div>
+    <div class="modal-body">
+      <div class="notice warning mb-4">
+        <div class="notice-icon">&#9888;&#65039;</div>
+        <div><div class="notice-title">Admin-only action</div><div class="notice-body">This edit is logged with your name, timestamp, and reason for the audit trail.</div></div>
+      </div>
+      <input type="hidden" id="eatt-id">
+      <div class="form-grid">
+        <div class="form-group full"><label>Staff Member</label><input type="text" id="eatt-staff-display" readonly style="background:var(--cream);"></div>
+        <div class="form-group"><label>Status *</label>
+          <select id="eatt-status">
+            <option value="Present">Present</option>
+            <option value="Absent">Absent</option>
+            <option value="Annual Leave">Annual Leave</option>
+            <option value="Sick Leave">Sick Leave</option>
+            <option value="Maternity Leave">Maternity Leave</option>
+            <option value="Paternity Leave">Paternity Leave</option>
+            <option value="Study Leave">Study Leave</option>
+            <option value="Compassionate Leave">Compassionate Leave</option>
+            <option value="Unpaid Leave">Unpaid Leave</option>
+            <option value="Public Holiday">Public Holiday</option>
+            <option value="Off Day">Off Day</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Day Type</label>
+          <select id="eatt-daytype">
+            <option value="Weekday">Weekday</option>
+            <option value="Saturday">Saturday</option>
+            <option value="Sunday">Sunday</option>
+            <option value="Public Holiday">Public Holiday</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Time In</label><input type="time" id="eatt-timein"></div>
+        <div class="form-group"><label>Time Out</label><input type="time" id="eatt-timeout"></div>
+        <div class="form-group"><label>Lateness Flag</label>
+          <select id="eatt-lateflag">
+            <option value="On Time">On Time</option>
+            <option value="Late">Late</option>
+            <option value="">N/A</option>
+          </select>
+        </div>
+        <div class="form-group full"><label>Remarks</label><input type="text" id="eatt-remarks"></div>
+        <div class="form-group full"><label>Reason for Edit *</label><input type="text" id="eatt-reason" placeholder="e.g. Corrected wrong time — staff was on site but forgot to clock in"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-edit-attendance')">Cancel</button>
+      <button class="btn btn-primary" id="eatt-save-btn" onclick="saveEditedAttendance()">&#128190; Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-add-staff">
+  <div class="modal size-md">
+    <div class="modal-header"><h2>&#128100; Add Staff Member</h2><button class="btn-close" onclick="closeModal('modal-add-staff')">&times;</button></div>
+    <div class="modal-body">
+      <div class="notice neutral mb-4">
+        <div class="notice-icon">&#8505;&#65039;</div>
+        <div><div class="notice-title">Creates a Staff login</div>
+        <div class="notice-body">This adds a system user with the Staff role so they can clock in/out and appear on the register. Share the username and temporary password with them securely.</div></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group full"><label>Full Name *</label><input type="text" id="staff-fullname" placeholder="e.g. Mary Wambui" oninput="suggestStaffUsername()"></div>
+        <div class="form-group full"><label>Username *</label><input type="text" id="staff-username" placeholder="e.g. mary.wambui"></div>
+        <div class="form-group full"><label>Temporary Password *</label><input type="text" id="staff-password"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-staff')">Cancel</button>
+      <button class="btn btn-primary" id="staff-save-btn" onclick="submitAddStaff()">&#128190; Add Staff</button>
     </div>
   </div>
 </div>
