@@ -19,7 +19,7 @@ let state = {
   students: [], payments: [], courses: [], feeStructures: [],
   invoiceRecords: [],
   services: [], serviceTypes: [], reconciliations: [],
-  attendance: [],
+  attendance: [], assets: [],
   smsLog: [],
   currentPage: 'dashboard', editMode: false, editRegNo: null,
   user: null,
@@ -30,14 +30,27 @@ let state = {
 //  ROLE PERMISSIONS
 // ════════════════════════════════════════════════
 const ROLES = {
-  Admin:  { register: true,  payment: true,  delete: true,  courses: true,  users: true,  sms: true,  charge: true,  services: true,  servicesManage: true,  reconcile: true  },
-  Staff:  { register: true,  payment: true,  delete: false, courses: false, users: false, sms: true,  charge: true,  services: true,  servicesManage: false, reconcile: false },
-  Viewer: { register: false, payment: false, delete: false, courses: false, users: false, sms: false, charge: false, services: false, servicesManage: false, reconcile: false },
+  Admin:  { register: true,  payment: true,  delete: true,  courses: true,  users: true,  sms: true,  charge: true,  services: true,  servicesManage: true,  reconcile: true,  viewFinancials: true  },
+  Staff:  { register: true,  payment: true,  delete: false, courses: false, users: false, sms: true,  charge: true,  services: true,  servicesManage: false, reconcile: false, viewFinancials: false },
+  Viewer: { register: false, payment: false, delete: false, courses: false, users: false, sms: false, charge: false, services: false, servicesManage: false, reconcile: false, viewFinancials: false },
 };
 
 function can(action) {
   if (!state.user) return false;
   return !!ROLES[state.user.role]?.[action];
+}
+
+/**
+ * Renders a monetary figure as "KES 1,234" for Admin, or a locked
+ * placeholder badge for Staff/Viewer. Used on the Dashboard so financial
+ * totals (fees collected, outstanding balances, revenue, etc.) are only
+ * ever visible to Admin accounts — everyone else sees a neutral lock icon
+ * in the same spot instead of the actual figure.
+ */
+function moneyOrLocked(amount) {
+  return can('viewFinancials')
+    ? 'KES ' + fmt(amount)
+    : '<span class="locked-figure" title="Visible to Admin only">&#128274; Admin Only</span>';
 }
 
 // ════════════════════════════════════════════════
@@ -369,7 +382,7 @@ const pageTitles = {
   dashboard:'Dashboard', students:'Students', register:'Register Student',
   fees:'Fee Management', payments:'Payments', invoices:'Invoices',
   courses:'Courses & Programs', services:'Office Services & Reconciliation',
-  attendance:'Staff Attendance Register',
+  attendance:'Staff Attendance Register', assets:'Asset Ledger',
   reports:'Reports', users:'User Management',
 };
 
@@ -395,6 +408,7 @@ function navigate(page) {
   if (page === 'users')      loadUsersTable();
   if (page === 'services')   initServicesPage();
   if (page === 'attendance') initAttendancePage();
+  if (page === 'assets')     initAssetsPage();
 }
 
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
@@ -424,6 +438,7 @@ function applyData(bundle, renderMode) {
   state.serviceTypes    = bundle.serviceTypes || [];
   state.reconciliations = bundle.reconciliations || [];
   state.attendance      = bundle.attendance || [];
+  state.assets          = bundle.assets || [];
   populateProgramDropdowns();
   // renderMode 'current' = only active page (background refresh)
   // renderMode 'all'     = every page (first load)
@@ -455,6 +470,7 @@ function renderCurrentPage() {
   else if (p === 'courses')    renderCourses();
   else if (p === 'services')   { renderServiceTypeGrid(); renderServiceTypesTable(); filterServiceLog(); renderReconciliation(); }
   else if (p === 'attendance') initAttendancePage();
+  else if (p === 'assets')     initAssetsPage();
   // Always keep dashboard stats fresh too
   if (p !== 'dashboard') renderDashboard();
 }
@@ -491,6 +507,7 @@ async function fetchFresh(silent = false) {
     serviceTypes:    res.serviceTypes    || [],
     reconciliations: res.reconciliations || [],
     attendance:      res.attendance      || [],
+    assets:          res.assets          || [],
   };
   saveCache(bundle);
   return bundle;
@@ -574,8 +591,8 @@ function renderDashboard() {
   const totalBal  = s.reduce((a, x) => a + (+x.feeBalance || 0), 0);
   document.getElementById('stat-total').textContent       = s.length;
   document.getElementById('stat-active').textContent      = active;
-  document.getElementById('stat-collected').textContent   = 'KES ' + fmt(totalPaid);
-  document.getElementById('stat-outstanding').textContent = 'KES ' + fmt(totalBal);
+  document.getElementById('stat-collected').innerHTML     = moneyOrLocked(totalPaid);
+  document.getElementById('stat-outstanding').innerHTML   = moneyOrLocked(totalBal);
 
   const now = new Date(), curYear = now.getFullYear(), curMonth = now.getMonth();
   const isThisMonth = d => { if (!d) return false; const dt = new Date(d); return !isNaN(dt) && dt.getFullYear() === curYear && dt.getMonth() === curMonth; };
@@ -591,10 +608,10 @@ function renderDashboard() {
   const todayServicesTotal = todayServices.reduce((a, sv) => a + (+sv.amount || 0), 0);
   const todayCombinedTotal = todayFeesTotal + todayServicesTotal;
 
-  document.getElementById('stat-today-total').textContent    = 'KES ' + fmt(todayCombinedTotal);
-  document.getElementById('stat-today-fees').textContent     = 'KES ' + fmt(todayFeesTotal);
-  document.getElementById('stat-today-services').textContent = 'KES ' + fmt(todayServicesTotal);
-  document.getElementById('stat-today-txcount').textContent  = todayPayments.length + todayServices.length;
+  document.getElementById('stat-today-total').innerHTML       = moneyOrLocked(todayCombinedTotal);
+  document.getElementById('stat-today-fees').innerHTML        = moneyOrLocked(todayFeesTotal);
+  document.getElementById('stat-today-services').innerHTML    = moneyOrLocked(todayServicesTotal);
+  document.getElementById('stat-today-txcount').textContent   = todayPayments.length + todayServices.length;
 
   document.getElementById('dash-month-label').textContent =
     now.toLocaleDateString('en-KE', { month: 'long', year: 'numeric' });
@@ -604,13 +621,13 @@ function renderDashboard() {
 
   const monthPayments  = state.payments.filter(p => isThisMonth(p.date));
   const monthCollected = monthPayments.reduce((a, p) => a + (+p.amount || 0), 0);
-  document.getElementById('stat-month-collected').textContent = 'KES ' + fmt(monthCollected);
+  document.getElementById('stat-month-collected').innerHTML = moneyOrLocked(monthCollected);
   const avgPayment = monthPayments.length ? monthCollected / monthPayments.length : 0;
-  document.getElementById('stat-month-avg').textContent = 'KES ' + fmt(Math.round(avgPayment));
+  document.getElementById('stat-month-avg').innerHTML = moneyOrLocked(Math.round(avgPayment));
 
   const monthServices      = state.services.filter(sv => isThisMonth(sv.date));
   const monthServicesTotal = monthServices.reduce((a, sv) => a + (+sv.amount || 0), 0);
-  document.getElementById('stat-month-services').textContent = 'KES ' + fmt(monthServicesTotal);
+  document.getElementById('stat-month-services').innerHTML = moneyOrLocked(monthServicesTotal);
 
   const rec = [...monthEnrollments].sort((a,b) => new Date(b.enrollDate) - new Date(a.enrollDate)).slice(0,5);
   document.getElementById('recent-enrollments').innerHTML = rec.length
@@ -632,7 +649,7 @@ function renderDashboard() {
           <div style="font-size:11.5px;color:var(--muted);">${fmtDate(p.date)} &middot; ${p.method}</div>
         </td>
         <td style="padding:10px 14px;border-bottom:1px solid var(--cream-dk);text-align:right;font-weight:700;color:var(--success);">
-          + KES ${fmt(p.amount)}
+          ${can('viewFinancials') ? '+ KES ' + fmt(p.amount) : '<span class="locked-figure" title="Visible to Admin only">&#128274;</span>'}
         </td></tr>`).join('')}</table>`
     : '<div class="empty-state"><div class="empty-icon">&#128179;</div><p>No payments recorded this month</p></div>';
 
@@ -646,7 +663,7 @@ function renderDashboard() {
             <div style="font-size:11.5px;color:var(--muted);">${fmtDate(sv.date)} &middot; ${sv.method} &middot; ${sv.recordedBy||''}</div>
           </td>
           <td style="padding:10px 14px;border-bottom:1px solid var(--cream-dk);text-align:right;font-weight:700;color:var(--info);">
-            + KES ${fmt(sv.amount)}
+            ${can('viewFinancials') ? '+ KES ' + fmt(sv.amount) : '<span class="locked-figure" title="Visible to Admin only">&#128274;</span>'}
           </td></tr>`).join('')}</table>`
       : '<div class="empty-state"><div class="empty-icon">&#128424;</div><p>No office services recorded this month</p></div>';
   }
@@ -2707,6 +2724,473 @@ async function deleteServiceType(name) {
 }
 
 // ════════════════════════════════════════════════
+//  ASSET LEDGER MODULE
+// ════════════════════════════════════════════════
+
+const ASSET_CATEGORIES = [
+  'Furniture & Fittings','IT Equipment','Office Equipment',
+  'Vehicles','Kitchen & Domestic Equipment','Teaching & Academic Equipment','Other',
+];
+
+const ASSET_CONDITIONS = ['Excellent','Good','Fair','Poor'];
+const ASSET_STATUSES   = ['Active','Under Repair','Disposed','Lost'];
+
+function initAssetsPage() {
+  renderAssetStats();
+  filterAssets();
+  renderDisposalLog();
+}
+
+function switchAssetTab(tabId) {
+  ['asset-register','asset-add','asset-disposed'].forEach(id => {
+    document.getElementById('tab-' + id).style.display = id === tabId ? '' : 'none';
+  });
+  document.querySelectorAll('#page-assets .tab-btn').forEach((b, i) => {
+    const order = ['asset-register','asset-add','asset-disposed'];
+    b.classList.toggle('active', order[i] === tabId);
+  });
+  if (tabId === 'asset-register') filterAssets();
+  if (tabId === 'asset-disposed') renderDisposalLog();
+  if (tabId === 'asset-add' && !document.getElementById('asset-edit-id').value) clearAssetForm();
+}
+
+// ── Stats ─────────────────────────────────────────────────
+
+function renderAssetStats() {
+  const assets = state.assets || [];
+  const active   = assets.filter(a => a.status === 'Active').length;
+  const repair   = assets.filter(a => a.status === 'Under Repair').length;
+  const disposed = assets.filter(a => a.status === 'Disposed').length;
+  const lost     = assets.filter(a => a.status === 'Lost').length;
+  const totalCost = assets.reduce((s, a) => s + (+a.purchaseCost || 0), 0);
+
+  document.getElementById('asset-stat-active').textContent   = active;
+  document.getElementById('asset-stat-repair').textContent   = repair;
+  document.getElementById('asset-stat-disposed').textContent = disposed;
+  document.getElementById('asset-stat-lost').textContent     = lost;
+  document.getElementById('asset-stat-cost').textContent     = 'KES ' + fmt(totalCost);
+}
+
+// ── Register ──────────────────────────────────────────────
+
+function filterAssets() {
+  const q    = (document.getElementById('asset-search')?.value || '').toLowerCase();
+  const cat  = document.getElementById('asset-filter-category')?.value || '';
+  const stat = document.getElementById('asset-filter-status')?.value || '';
+  const cond = document.getElementById('asset-filter-condition')?.value || '';
+
+  const filtered = (state.assets || []).filter(a => {
+    const mq = !q || [a.name, a.assetId, a.assetTag, a.serialNo, a.location, a.assignedTo, a.supplier]
+      .some(v => v && v.toLowerCase().includes(q));
+    return mq
+      && (!cat  || a.category  === cat)
+      && (!stat || a.status    === stat)
+      && (!cond || a.condition === cond);
+  });
+
+  renderAssetStats();
+  renderAssetsTable(filtered);
+}
+
+function renderAssetsTable(data) {
+  data = data || state.assets || [];
+  document.getElementById('asset-count').textContent = data.length + ' assets';
+
+  const tbody = document.getElementById('asset-tbody');
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="11" class="empty-msg">No assets found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = [...data]
+    .sort((a, b) => (a.category || '').localeCompare(b.category || '') || (a.name || '').localeCompare(b.name || ''))
+    .map(a => `
+    <tr>
+      <td><strong>${a.assetId}</strong></td>
+      <td>${a.name}${a.receiptUrl ? ` <a href="${a.receiptUrl}" target="_blank" rel="noopener" title="View receipt">&#128206;</a>` : ''}${a.editedAt ? ' <span class="badge badge-warning" title="Edited: '+a.editReason+'">&#9999;</span>' : ''}</td>
+      <td><span class="badge badge-purple">${a.category||'&mdash;'}</span></td>
+      <td>
+        ${a.assetTag ? `<div style="font-weight:600;font-size:12.5px;">${a.assetTag}</div>` : ''}
+        ${a.serialNo ? `<div class="text-muted text-xs">${a.serialNo}</div>` : ''}
+        ${!a.assetTag && !a.serialNo ? '&mdash;' : ''}
+      </td>
+      <td>${a.location||'&mdash;'}</td>
+      <td>${a.assignedTo||'&mdash;'}</td>
+      <td>${fmtDate(a.purchaseDate)}</td>
+      <td>${a.purchaseCost ? 'KES '+fmt(a.purchaseCost) : '&mdash;'}</td>
+      <td><span class="badge ${assetConditionBadge(a.condition)}">${a.condition||'&mdash;'}</span></td>
+      <td><span class="badge ${assetStatusBadge(a.status)}">${a.status||'Active'}</span></td>
+      <td><div class="actions-cell">
+        <button class="btn btn-outline btn-sm" onclick="viewAsset('${a.assetId}')">&#128065;</button>
+        ${can('delete') ? `<button class="btn btn-primary btn-sm" onclick="editAsset('${a.assetId}')">&#9999;</button>` : ''}
+        ${can('delete') && a.status !== 'Disposed' ? `<button class="btn btn-danger btn-sm" onclick="openDisposeModal('${a.assetId}')" title="Dispose">&#128465;</button>` : ''}
+      </div></td>
+    </tr>`).join('');
+}
+
+// ── View Asset Modal ──────────────────────────────────────
+
+function viewAsset(assetId) {
+  const a = (state.assets || []).find(x => x.assetId === assetId);
+  if (!a) return;
+
+  document.getElementById('modal-asset-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+      ${assetInfoRow('Asset ID',     a.assetId)}
+      ${assetInfoRow('Name',         a.name)}
+      ${assetInfoRow('Category',     `<span class="badge badge-purple">${a.category||'&mdash;'}</span>`)}
+      ${assetInfoRow('Status',       `<span class="badge ${assetStatusBadge(a.status)}">${a.status||'Active'}</span>`)}
+      ${assetInfoRow('Asset Tag',    a.assetTag||'&mdash;')}
+      ${assetInfoRow('Serial No.',   a.serialNo||'&mdash;')}
+      ${assetInfoRow('Location',     a.location||'&mdash;')}
+      ${assetInfoRow('Assigned To',  a.assignedTo||'&mdash;')}
+      ${assetInfoRow('Purchase Date',fmtDate(a.purchaseDate))}
+      ${assetInfoRow('Purchase Cost',a.purchaseCost ? 'KES '+fmt(a.purchaseCost) : '&mdash;')}
+      ${assetInfoRow('Supplier',     a.supplier||'&mdash;')}
+      ${assetInfoRow('Condition',    `<span class="badge ${assetConditionBadge(a.condition)}">${a.condition||'&mdash;'}</span>`)}
+    </div>
+    ${a.description ? `<div style="margin-bottom:12px;"><div class="text-xs text-muted" style="margin-bottom:4px;">DESCRIPTION</div><div style="font-size:13.5px;">${a.description}</div></div>` : ''}
+    ${a.receiptUrl ? `
+    <div style="background:var(--cream-dk);border-radius:8px;padding:14px;margin-bottom:12px;">
+      <div class="text-xs text-muted" style="margin-bottom:6px;">RECEIPT / INVOICE COPY</div>
+      <a href="${a.receiptUrl}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">&#128196; View Receipt</a>
+    </div>` : ''}
+    ${a.status==='Disposed'||a.status==='Lost' ? `
+    <div style="background:var(--cream-dk);border-radius:8px;padding:14px;margin-bottom:12px;">
+      <div class="text-xs text-muted" style="margin-bottom:6px;">DISPOSAL INFORMATION</div>
+      <div><strong>Date:</strong> ${fmtDate(a.disposalDate)} &nbsp;|&nbsp; <strong>Reason:</strong> ${a.disposalReason||'&mdash;'}</div>
+    </div>` : ''}
+    ${a.editedAt ? `<div class="text-xs text-muted">Last edited by ${a.editedBy} on ${fmtDate(a.editedAt)} &mdash; ${a.editReason}</div>` : ''}
+    <div class="text-xs text-muted" style="margin-top:6px;">Added by ${a.addedBy||'System'} on ${fmtDate(a.createdAt)}</div>`;
+
+  document.getElementById('asset-edit-btn').style.display    = can('delete') ? '' : 'none';
+  document.getElementById('asset-dispose-btn').style.display = can('delete') && a.status !== 'Disposed' ? '' : 'none';
+  document.getElementById('asset-edit-btn').onclick    = () => { closeModal('modal-asset-view'); editAsset(assetId); };
+  document.getElementById('asset-dispose-btn').onclick = () => { closeModal('modal-asset-view'); openDisposeModal(assetId); };
+  openModal('modal-asset-view');
+}
+
+function assetInfoRow(label, value) {
+  return `<div>
+    <div class="text-xs text-muted" style="font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;">${label}</div>
+    <div style="font-size:13.5px;">${value}</div>
+  </div>`;
+}
+
+// ── Add / Edit Asset ──────────────────────────────────────
+
+/** Reads a File object as a base64 data URL (e.g. "data:image/png;base64,...") */
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+/** Updates the small "current receipt" link/preview under the file input */
+function renderAssetReceiptPreview() {
+  const urlEl = document.getElementById('asset-receipt-url');
+  const box   = document.getElementById('asset-receipt-preview');
+  if (!urlEl || !box) return;
+  const url = urlEl.value;
+  box.innerHTML = url
+    ? `<a href="${url}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">&#128196; View Current Receipt</a> <span class="text-xs text-muted">Choosing a new file will replace this.</span>`
+    : '<span class="text-xs text-muted">No receipt uploaded yet.</span>';
+}
+
+function clearAssetForm() {
+  document.getElementById('asset-edit-id').value = '';
+  ['asset-name','asset-tag','asset-serial','asset-location',
+   'asset-assigned','asset-cost','asset-supplier','asset-desc','asset-edit-reason']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('asset-category').value  = '';
+  document.getElementById('asset-condition').value = 'Good';
+  document.getElementById('asset-status').value    = 'Active';
+  document.getElementById('asset-form-title').textContent  = 'Add New Asset';
+  document.getElementById('asset-submit-btn').textContent  = '💾 Save Asset';
+  document.getElementById('asset-reason-group').style.display = 'none';
+  const dateEl = document.getElementById('asset-purchase-date');
+  if (dateEl) dateEl.value = '';
+  // Receipt upload state
+  const fileEl = document.getElementById('asset-receipt-file');
+  if (fileEl) fileEl.value = '';
+  const urlEl = document.getElementById('asset-receipt-url');
+  if (urlEl) urlEl.value = '';
+  const fidEl = document.getElementById('asset-receipt-fileid');
+  if (fidEl) fidEl.value = '';
+  renderAssetReceiptPreview();
+}
+
+function editAsset(assetId) {
+  if (!can('delete')) { toast('Only an Admin can edit assets.', 'error'); return; }
+  const a = (state.assets || []).find(x => x.assetId === assetId);
+  if (!a) return;
+
+  document.getElementById('asset-edit-id').value        = a.assetId;
+  document.getElementById('asset-name').value            = a.name || '';
+  document.getElementById('asset-category').value        = a.category || '';
+  document.getElementById('asset-tag').value              = a.assetTag || '';
+  document.getElementById('asset-serial').value          = a.serialNo || '';
+  document.getElementById('asset-location').value        = a.location || '';
+  document.getElementById('asset-assigned').value        = a.assignedTo || '';
+  document.getElementById('asset-purchase-date').value   = toDateInputValue(a.purchaseDate);
+  document.getElementById('asset-cost').value            = a.purchaseCost || '';
+  document.getElementById('asset-supplier').value        = a.supplier || '';
+  document.getElementById('asset-condition').value       = a.condition || 'Good';
+  document.getElementById('asset-status').value          = a.status || 'Active';
+  document.getElementById('asset-desc').value            = a.description || '';
+  document.getElementById('asset-edit-reason').value     = '';
+
+  // Receipt upload state — preload existing receipt link (if any) for preview
+  const fileEl = document.getElementById('asset-receipt-file');
+  if (fileEl) fileEl.value = '';
+  const urlEl = document.getElementById('asset-receipt-url');
+  if (urlEl) urlEl.value = a.receiptUrl || '';
+  const fidEl = document.getElementById('asset-receipt-fileid');
+  if (fidEl) fidEl.value = a.receiptFileId || '';
+  renderAssetReceiptPreview();
+
+  document.getElementById('asset-form-title').textContent         = 'Edit Asset — ' + a.assetId;
+  document.getElementById('asset-submit-btn').innerHTML           = '&#128190; Update Asset';
+  document.getElementById('asset-reason-group').style.display     = '';
+  switchAssetTab('asset-add');
+}
+
+async function submitAsset() {
+  const editId = document.getElementById('asset-edit-id').value;
+  const isEdit = !!editId;
+
+  const name     = document.getElementById('asset-name').value.trim();
+  const category = document.getElementById('asset-category').value;
+  if (!name)     { toast('Asset name is required.', 'error'); return; }
+  if (!category) { toast('Category is required.', 'error'); return; }
+
+  if (isEdit && !can('delete')) { toast('Only an Admin can edit assets.', 'error'); return; }
+
+  const reason = isEdit ? document.getElementById('asset-edit-reason').value.trim() : '';
+  if (isEdit && !reason) { toast('A reason for the edit is required.', 'error'); return; }
+
+  const btn = document.getElementById('asset-submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Saving&hellip;';
+
+  // Upload a new receipt file first, if one was selected — falls back to
+  // whatever receipt (if any) was already on the asset.
+  let receiptUrl    = document.getElementById('asset-receipt-url').value;
+  let receiptFileId = document.getElementById('asset-receipt-fileid').value;
+  const fileInput = document.getElementById('asset-receipt-file');
+  const file = fileInput && fileInput.files && fileInput.files[0];
+
+  if (file) {
+    if (file.size > 4 * 1024 * 1024) {
+      toast('Receipt file is too large (max 4MB).', 'error');
+      btn.disabled = false;
+      btn.innerHTML = isEdit ? '&#128190; Update Asset' : '&#128190; Save Asset';
+      return;
+    }
+    try {
+      btn.innerHTML = '<span class="loader"></span> Uploading receipt&hellip;';
+      const dataUrl = await readFileAsBase64(file);
+      const uploadRes = await apiPost('uploadAssetReceipt', {
+        assetId:  editId || '',
+        fileName: file.name,
+        mimeType: file.type || 'application/octet-stream',
+        fileData: dataUrl,
+      });
+      if (uploadRes.success) {
+        receiptUrl    = uploadRes.fileUrl;
+        receiptFileId = uploadRes.fileId;
+      } else {
+        toast('Receipt upload failed: ' + (uploadRes.error || 'Unknown error') + '. Saving asset without it.', 'warning');
+      }
+    } catch (e) {
+      toast('Receipt upload failed: ' + e.message + '. Saving asset without it.', 'warning');
+    }
+    btn.innerHTML = '<span class="loader"></span> Saving&hellip;';
+  }
+
+  const payload = {
+    assetId:      editId || undefined,
+    name,  category,
+    assetTag:     document.getElementById('asset-tag').value.trim(),
+    serialNo:     document.getElementById('asset-serial').value.trim(),
+    location:     document.getElementById('asset-location').value.trim(),
+    assignedTo:   document.getElementById('asset-assigned').value.trim(),
+    purchaseDate: document.getElementById('asset-purchase-date').value,
+    purchaseCost: +document.getElementById('asset-cost').value || 0,
+    supplier:     document.getElementById('asset-supplier').value.trim(),
+    condition:    document.getElementById('asset-condition').value,
+    status:       document.getElementById('asset-status').value,
+    description:  document.getElementById('asset-desc').value.trim(),
+    receiptUrl:    receiptUrl    || '',
+    receiptFileId: receiptFileId || '',
+    addedBy:      state.user?.fullName || state.user?.username || 'System',
+    editReason:   reason,
+    editedBy:     state.user?.fullName || state.user?.username || 'Admin',
+  };
+
+  try {
+    const action = isEdit ? 'updateAsset' : 'addAsset';
+    const res = await apiPost(action, payload);
+    if (res.success) {
+      toast(isEdit ? 'Asset updated!' : 'Asset added!', 'success');
+      clearAssetForm();
+      reloadAfterWrite();
+      switchAssetTab('asset-register');
+    } else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+
+  btn.disabled = false;
+  btn.innerHTML = isEdit ? '&#128190; Update Asset' : '&#128190; Save Asset';
+}
+
+// ── Dispose Asset ─────────────────────────────────────────
+
+function openDisposeModal(assetId) {
+  if (!can('delete')) { toast('Only an Admin can dispose assets.', 'error'); return; }
+  const a = (state.assets || []).find(x => x.assetId === assetId);
+  if (!a) return;
+
+  document.getElementById('dispose-asset-id').value      = a.assetId;
+  document.getElementById('dispose-asset-display').value = a.assetId + ' — ' + a.name;
+  document.getElementById('dispose-date').value          = new Date().toISOString().split('T')[0];
+  document.getElementById('dispose-method').value        = 'Written Off';
+  document.getElementById('dispose-reason').value        = '';
+  openModal('modal-asset-dispose');
+}
+
+async function confirmDisposeAsset() {
+  if (!can('delete')) { toast('Only an Admin can dispose assets.', 'error'); return; }
+  const assetId = document.getElementById('dispose-asset-id').value;
+  const reason  = document.getElementById('dispose-reason').value.trim();
+  const method  = document.getElementById('dispose-method').value;
+  if (!reason) { toast('A disposal reason is required.', 'error'); return; }
+
+  const fullReason = method + ': ' + reason;
+  const btn = document.getElementById('dispose-confirm-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Processing&hellip;';
+
+  try {
+    const res = await apiPost('disposeAsset', {
+      assetId,
+      disposalDate:   document.getElementById('dispose-date').value,
+      disposalReason: fullReason,
+      disposedBy:     state.user?.fullName || state.user?.username || 'Admin',
+    });
+    if (res.success) {
+      toast('Asset disposed and logged.', 'success');
+      closeModal('modal-asset-dispose');
+      reloadAfterWrite();
+    } else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+
+  btn.disabled = false;
+  btn.innerHTML = '&#128465; Confirm Disposal';
+}
+
+async function deleteAssetRecord(assetId) {
+  if (!can('delete')) { toast('Only an Admin can delete asset records.', 'error'); return; }
+  const a = (state.assets || []).find(x => x.assetId === assetId);
+  if (!a) return;
+  const reason = prompt(`Delete asset record "${a.name}" (${a.assetId})?\n\nNote: For actual disposal of a physical asset, use the Dispose button instead.\n\nEnter a reason (required for audit log):`);
+  if (reason === null) return;
+  if (!reason.trim()) { toast('A reason is required.', 'error'); return; }
+  try {
+    const res = await apiPost('deleteAsset', { assetId, deleteReason: reason.trim() });
+    if (res.success) { toast('Asset record deleted.', 'success'); reloadAfterWrite(); }
+    else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+// ── Disposal Log ──────────────────────────────────────────
+
+function renderDisposalLog() {
+  const assets    = state.assets || [];
+  const disposed  = assets.filter(a => a.status === 'Disposed' || a.status === 'Lost');
+  document.getElementById('disposed-count').textContent = disposed.length + ' disposed';
+
+  const tbody = document.getElementById('disposed-tbody');
+  tbody.innerHTML = disposed.length
+    ? [...disposed].sort((a,b) => new Date(b.disposalDate||0) - new Date(a.disposalDate||0)).map(a => `
+      <tr>
+        <td><strong>${a.assetId}</strong></td>
+        <td>${a.name}</td>
+        <td>${a.category||'&mdash;'}</td>
+        <td>${a.assetTag||'&mdash;'}</td>
+        <td>${a.purchaseCost ? 'KES '+fmt(a.purchaseCost) : '&mdash;'}</td>
+        <td>${fmtDate(a.disposalDate)}</td>
+        <td style="font-size:12.5px;max-width:200px;">${a.disposalReason||'&mdash;'}</td>
+        <td class="text-muted text-sm">${a.editedBy||'&mdash;'}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="8" class="empty-msg compact">No disposed assets</td></tr>';
+
+  const liveTbody = document.getElementById('disposed-live-tbody');
+  const liveDisposed = disposed.filter(a => a.status === 'Disposed' || a.status === 'Lost');
+  liveTbody.innerHTML = liveDisposed.length
+    ? liveDisposed.sort((a,b) => (a.name||'').localeCompare(b.name||'')).map(a => `
+      <tr>
+        <td><strong>${a.assetId}</strong></td>
+        <td>${a.name}</td>
+        <td>${a.category||'&mdash;'}</td>
+        <td>${fmtDate(a.disposalDate)}</td>
+        <td style="font-size:12.5px;">${a.disposalReason||'&mdash;'}</td>
+        <td>${a.purchaseCost ? 'KES '+fmt(a.purchaseCost) : '&mdash;'}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="6" class="empty-msg compact">None</td></tr>';
+}
+
+// ── Exports ───────────────────────────────────────────────
+
+function exportAssets() {
+  const q    = (document.getElementById('asset-search')?.value || '').toLowerCase();
+  const cat  = document.getElementById('asset-filter-category')?.value || '';
+  const stat = document.getElementById('asset-filter-status')?.value || '';
+  const cond = document.getElementById('asset-filter-condition')?.value || '';
+  const data = (state.assets || []).filter(a => {
+    const mq = !q || [a.name,a.assetId,a.assetTag,a.serialNo,a.location,a.assignedTo].some(v=>v&&v.toLowerCase().includes(q));
+    return mq && (!cat||a.category===cat) && (!stat||a.status===stat) && (!cond||a.condition===cond);
+  });
+  if (!data.length) { toast('No assets to export.', 'warning'); return; }
+  downloadWorkbook(data.sort((a,b)=>(a.category||'').localeCompare(b.category||'')).map(a => ({
+    'Asset ID': a.assetId, 'Name': a.name, 'Category': a.category||'',
+    'Asset Tag': a.assetTag||'', 'Serial No.': a.serialNo||'',
+    'Location': a.location||'', 'Assigned To': a.assignedTo||'',
+    'Purchase Date': a.purchaseDate||'', 'Purchase Cost (KES)': +a.purchaseCost||0,
+    'Supplier': a.supplier||'', 'Condition': a.condition||'',
+    'Status': a.status||'Active', 'Description': a.description||'',
+    'Receipt URL': a.receiptUrl||'',
+    'Added By': a.addedBy||'', 'Date Added': a.createdAt||'',
+  })), 'Asset Ledger', 'JTI_Asset_Ledger');
+}
+
+function exportDisposedAssets() {
+  const data = (state.assets || []).filter(a => a.status === 'Disposed' || a.status === 'Lost');
+  if (!data.length) { toast('No disposed assets to export.', 'warning'); return; }
+  downloadWorkbook(data.map(a => ({
+    'Asset ID': a.assetId, 'Name': a.name, 'Category': a.category||'',
+    'Asset Tag': a.assetTag||'', 'Purchase Date': a.purchaseDate||'',
+    'Purchase Cost (KES)': +a.purchaseCost||0, 'Disposal Date': a.disposalDate||'',
+    'Status': a.status||'', 'Disposal Reason': a.disposalReason||'',
+    'Receipt URL': a.receiptUrl||'',
+    'Disposed By': a.editedBy||'',
+  })), 'Disposed Assets', 'JTI_Disposed_Assets');
+}
+
+// ── Asset helpers ─────────────────────────────────────────
+
+function assetStatusBadge(s) {
+  const map = { 'Active':'badge-success', 'Under Repair':'badge-warning', 'Disposed':'badge-neutral', 'Lost':'badge-danger' };
+  return map[s] || 'badge-neutral';
+}
+function assetConditionBadge(c) {
+  const map = { 'Excellent':'badge-success', 'Good':'badge-info', 'Fair':'badge-warning', 'Poor':'badge-danger' };
+  return map[c] || 'badge-neutral';
+}
+
+// ════════════════════════════════════════════════
 //  STAFF ATTENDANCE MODULE
 // ════════════════════════════════════════════════
 
@@ -2719,15 +3203,7 @@ const LEAVE_STATUSES = new Set([
   'Study Leave','Compassionate Leave','Unpaid Leave',
 ]);
 
-/**
- * The staff dropdown used by "Mark Attendance (Admin)" is populated from
- * state.users, which is normally only fetched when the User Management
- * page is visited (loadUsersTable()). If an Admin opens Attendance first,
- * that list would still be empty and the dropdown would have nothing to
- * select — so this is now async and loads the user list itself when
- * needed, before rendering anything that depends on it.
- */
-async function initAttendancePage() {
+function initAttendancePage() {
   const today = new Date().toISOString().split('T')[0];
   const todayLabel = new Date().toLocaleDateString('en-KE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
 
@@ -2746,13 +3222,6 @@ async function initAttendancePage() {
   // Show/hide admin-only card
   const adminCard = document.getElementById('att-admin-mark-card');
   if (adminCard) adminCard.style.display = can('delete') ? '' : 'none';
-
-  // Staff list (Users) is normally only loaded when User Management is
-  // visited. If Attendance is opened first, load it here too so the
-  // "Mark Attendance" dropdown isn't empty.
-  if (can('delete') && (!state.users || !state.users.length)) {
-    await loadUsersTable();
-  }
 
   // Populate staff dropdown
   populateAttStaffDropdown();
@@ -2778,9 +3247,27 @@ function switchAttTab(tabId) {
   if (tabId === 'att-summary')  renderAttSummary();
 }
 
-function populateAttStaffDropdown() {
+async function populateAttStaffDropdown() {
   const sel = document.getElementById('att-mark-staff');
   if (!sel) return;
+  // Only Admin sees the "Mark Attendance" card this dropdown lives in —
+  // skip the network call entirely for everyone else.
+  if (!can('delete')) { sel.innerHTML = '<option value="">Select staff&hellip;</option>'; return; }
+
+  // state.users is normally only populated after visiting the User
+  // Management page (loadUsersTable()). If an Admin opens Attendance first
+  // in a session, state.users is still empty — fetch it on demand here so
+  // the dropdown isn't silently blank.
+  if (!state.users || !state.users.length) {
+    try {
+      const res = await apiPost('getUsers', {});
+      state.users = res.data || [];
+    } catch (e) {
+      console.warn('Failed to load staff list for attendance:', e);
+      toast('Could not load staff list. Click Refresh and try again.', 'error');
+    }
+  }
+
   const staffList = (state.users || []).filter(u => u.status === 'Active');
   sel.innerHTML = '<option value="">Select staff&hellip;</option>' +
     staffList.map(u => `<option value="${u.username}" data-name="${u.fullName||u.username}">${u.fullName||u.username}</option>`).join('');
@@ -2941,59 +3428,6 @@ async function adminMarkAttendance() {
       reloadAfterWrite();
     } else toast('Error: ' + (res.error || 'Unknown'), 'error');
   } catch (e) { toast('Failed: ' + e.message, 'error'); }
-}
-
-// ── Admin: Quick-add a Staff member (from the Attendance page) ──────────
-// The Mark Attendance dropdown can only offer staff who already have a
-// system login (Users sheet). Rather than forcing an Admin to leave the
-// Attendance page and go to User Management just to onboard someone new,
-// this opens a small modal right here that creates a Staff-role user, then
-// immediately refreshes the dropdown so the new person can be marked.
-
-function openAddStaffModal() {
-  if (!can('users')) { toast('Only an Admin can add staff.', 'error'); return; }
-  document.getElementById('staff-fullname').value = '';
-  document.getElementById('staff-username').value = '';
-  document.getElementById('staff-password').value = generateTempPassword();
-  openModal('modal-add-staff');
-}
-
-/** A short, easy-to-read temporary password the Admin can hand off and
- *  ask the staff member to change after first login. */
-function generateTempPassword() {
-  return 'Jti' + Math.floor(1000 + Math.random() * 9000);
-}
-
-/** Suggests a username from the full name as it's typed (e.g.
- *  "Mary Wambui" -> "mary.wambui"), which the Admin can still edit. */
-function suggestStaffUsername() {
-  const fullName = document.getElementById('staff-fullname').value.trim();
-  if (!fullName) return;
-  const suggested = fullName.toLowerCase().replace(/[^a-z\s]/g, '').trim().replace(/\s+/g, '.');
-  document.getElementById('staff-username').value = suggested;
-}
-
-async function submitAddStaff() {
-  if (!can('users')) { toast('Only an Admin can add staff.', 'error'); return; }
-  const fullName = document.getElementById('staff-fullname').value.trim();
-  const username = document.getElementById('staff-username').value.trim().toLowerCase();
-  const password  = document.getElementById('staff-password').value.trim();
-  if (!fullName || !username || !password) { toast('Full name, username and password are required.', 'error'); return; }
-
-  const btn = document.getElementById('staff-save-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="loader"></span> Adding&hellip;';
-  try {
-    const res = await apiPost('addUser', { username, password, fullName, role: 'Staff', status: 'Active' });
-    if (res.success) {
-      toast(`Staff added — username "${username}", password "${password}". Share these securely.`, 'success');
-      closeModal('modal-add-staff');
-      await loadUsersTable();
-      populateAttStaffDropdown();
-    } else toast('Error: ' + (res.error || 'Unknown'), 'error');
-  } catch (e) { toast('Failed: ' + e.message, 'error'); }
-  btn.disabled = false;
-  btn.innerHTML = '&#128190; Add Staff';
 }
 
 // ── Daily Register ────────────────────────────────────────

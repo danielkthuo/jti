@@ -96,6 +96,10 @@
       <div class="nav-item" onclick="navigate('attendance')"><span class="nav-icon">&#128197;</span> Attendance Register</div>
     </div>
     <div class="nav-section">
+      <div class="nav-label">Administration</div>
+      <div class="nav-item" onclick="navigate('assets')"><span class="nav-icon">&#127970;</span> Asset Ledger</div>
+    </div>
+    <div class="nav-section">
       <div class="nav-label">Reports</div>
       <div class="nav-item" onclick="navigate('reports')"><span class="nav-icon">&#128200;</span> Reports</div>
     </div>
@@ -593,6 +597,176 @@
       </div>
     </div>
 
+    <!-- ASSET LEDGER -->
+    <div class="page" id="page-assets">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchAssetTab('asset-register')">&#127970; Asset Register</button>
+        <button class="tab-btn" onclick="switchAssetTab('asset-add')">&#43; Add Asset</button>
+        <button class="tab-btn" onclick="switchAssetTab('asset-disposed')">&#128465; Disposal Log</button>
+      </div>
+
+      <!-- TAB: Asset Register -->
+      <div id="tab-asset-register">
+        <div class="card">
+          <div class="card-header">
+            <h3>Asset Register</h3>
+            <div class="row">
+              <span id="asset-count" class="badge badge-info">&mdash;</span>
+              <button class="btn btn-outline btn-sm" onclick="exportAssets()">&#128190; Export Excel</button>
+              <button class="btn btn-primary btn-sm" onclick="switchAssetTab('asset-add')">&#43; Add Asset</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Summary stats -->
+            <div class="stats-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:16px;" id="asset-stats-grid">
+              <div class="stat-card green"><div class="stat-label">Active</div><div class="stat-value" id="asset-stat-active">&mdash;</div></div>
+              <div class="stat-card red"><div class="stat-label">Under Repair</div><div class="stat-value" id="asset-stat-repair">&mdash;</div></div>
+              <div class="stat-card"><div class="stat-label">Disposed</div><div class="stat-value" id="asset-stat-disposed">&mdash;</div></div>
+              <div class="stat-card blue"><div class="stat-label">Lost</div><div class="stat-value" id="asset-stat-lost">&mdash;</div></div>
+              <div class="stat-card gold"><div class="stat-label">Total Cost (KES)</div><div class="stat-value" id="asset-stat-cost">&mdash;</div></div>
+            </div>
+            <!-- Filters -->
+            <div class="filter-bar">
+              <div class="search-input"><span class="search-icon">&#128269;</span><input type="text" id="asset-search" placeholder="Search name, tag, serial, location&hellip;" oninput="filterAssets()"></div>
+              <select id="asset-filter-category" onchange="filterAssets()">
+                <option value="">All Categories</option>
+                <option>Furniture &amp; Fittings</option>
+                <option>IT Equipment</option>
+                <option>Office Equipment</option>
+                <option>Vehicles</option>
+                <option>Kitchen &amp; Domestic Equipment</option>
+                <option>Teaching &amp; Academic Equipment</option>
+                <option>Other</option>
+              </select>
+              <select id="asset-filter-status" onchange="filterAssets()">
+                <option value="">All Status</option>
+                <option>Active</option>
+                <option>Under Repair</option>
+                <option>Disposed</option>
+                <option>Lost</option>
+              </select>
+              <select id="asset-filter-condition" onchange="filterAssets()">
+                <option value="">All Conditions</option>
+                <option>Excellent</option>
+                <option>Good</option>
+                <option>Fair</option>
+                <option>Poor</option>
+              </select>
+            </div>
+            <div class="table-wrapper">
+              <table><thead><tr>
+                <th>Asset ID</th><th>Name</th><th>Category</th><th>Tag / Serial</th>
+                <th>Location</th><th>Assigned To</th><th>Purchase Date</th>
+                <th>Cost (KES)</th><th>Condition</th><th>Status</th><th>Actions</th>
+              </tr></thead>
+              <tbody id="asset-tbody"><tr><td colspan="11" class="empty-msg">Loading&hellip;</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Add / Edit Asset -->
+      <div id="tab-asset-add" style="display:none;">
+        <div class="card card-lg">
+          <div class="card-header"><h3 id="asset-form-title">Add New Asset</h3></div>
+          <div class="card-body">
+            <input type="hidden" id="asset-edit-id">
+            <div class="form-grid">
+              <div class="form-group"><label>Asset Name *</label><input type="text" id="asset-name" placeholder="e.g. HP LaserJet Printer"></div>
+              <div class="form-group"><label>Category *</label>
+                <select id="asset-category">
+                  <option value="">Select category&hellip;</option>
+                  <option>Furniture &amp; Fittings</option>
+                  <option>IT Equipment</option>
+                  <option>Office Equipment</option>
+                  <option>Vehicles</option>
+                  <option>Kitchen &amp; Domestic Equipment</option>
+                  <option>Teaching &amp; Academic Equipment</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Asset Tag / Code</label><input type="text" id="asset-tag" placeholder="e.g. JTI-IT-001"></div>
+              <div class="form-group"><label>Serial Number</label><input type="text" id="asset-serial" placeholder="e.g. SN12345678"></div>
+              <div class="form-group"><label>Location / Room</label><input type="text" id="asset-location" placeholder="e.g. Main Office, Lab 1"></div>
+              <div class="form-group"><label>Assigned To</label><input type="text" id="asset-assigned" placeholder="Staff name or department"></div>
+              <div class="form-group"><label>Purchase Date</label><input type="date" id="asset-purchase-date"></div>
+              <div class="form-group"><label>Purchase Cost (KES)</label><input type="number" id="asset-cost" placeholder="e.g. 45000"></div>
+              <div class="form-group"><label>Supplier / Vendor</label><input type="text" id="asset-supplier" placeholder="e.g. Computers For Africa"></div>
+              <div class="form-group"><label>Condition</label>
+                <select id="asset-condition">
+                  <option value="Excellent">Excellent</option>
+                  <option value="Good" selected>Good</option>
+                  <option value="Fair">Fair</option>
+                  <option value="Poor">Poor</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Status</label>
+                <select id="asset-status">
+                  <option value="Active">Active</option>
+                  <option value="Under Repair">Under Repair</option>
+                  <option value="Lost">Lost</option>
+                </select>
+              </div>
+              <div class="form-group full"><label>Description / Notes</label><textarea id="asset-desc" placeholder="Additional details, warranty info, accessories included&hellip;" style="min-height:60px;"></textarea></div>
+              <!-- Receipt / invoice upload — stored in Google Drive under JTI ▸ Receipts -->
+              <div class="form-group full">
+                <label>Receipt / Invoice Copy (optional)</label>
+                <input type="file" id="asset-receipt-file" accept="image/*,application/pdf">
+                <div id="asset-receipt-preview" class="text-xs text-muted" style="margin-top:6px;">No receipt uploaded yet.</div>
+                <div class="text-xs text-muted" style="margin-top:2px;">Image or PDF, max 4MB. Saved to your Google Drive under JTI &#9656; Receipts.</div>
+                <input type="hidden" id="asset-receipt-url">
+                <input type="hidden" id="asset-receipt-fileid">
+              </div>
+              <!-- Edit-mode reason field (hidden on add) -->
+              <div class="form-group full" id="asset-reason-group" style="display:none;">
+                <label>Reason for Edit *</label>
+                <input type="text" id="asset-edit-reason" placeholder="e.g. Corrected wrong serial number">
+              </div>
+            </div>
+            <div class="row end mt-4" style="gap:10px;">
+              <button class="btn btn-outline" onclick="clearAssetForm()">Clear</button>
+              <button class="btn btn-primary" id="asset-submit-btn" onclick="submitAsset()">&#128190; Save Asset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Disposal Log -->
+      <div id="tab-asset-disposed" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <h3>Disposal Log</h3>
+            <div class="row">
+              <span id="disposed-count" class="badge badge-danger">&mdash;</span>
+              <button class="btn btn-outline btn-sm" onclick="exportDisposedAssets()">&#128190; Export</button>
+            </div>
+          </div>
+          <div class="card-body flush">
+            <div class="table-wrapper">
+              <table><thead><tr>
+                <th>Asset ID</th><th>Name</th><th>Category</th><th>Tag</th>
+                <th>Purchase Cost</th><th>Disposal Date</th><th>Reason</th><th>Disposed By</th>
+              </tr></thead>
+              <tbody id="disposed-tbody"><tr><td colspan="8" class="empty-msg">No disposed assets yet</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+        <!-- Disposed from main register (status=Disposed) -->
+        <div class="card">
+          <div class="card-header"><h3>Assets Currently Marked Disposed / Lost</h3></div>
+          <div class="card-body flush">
+            <div class="table-wrapper">
+              <table><thead><tr>
+                <th>Asset ID</th><th>Name</th><th>Category</th><th>Disposal Date</th>
+                <th>Reason</th><th>Purchase Cost</th>
+              </tr></thead>
+              <tbody id="disposed-live-tbody"><tr><td colspan="6" class="empty-msg">None</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ATTENDANCE REGISTER -->
     <div class="page" id="page-attendance">
       <div class="tabs">
@@ -643,13 +817,7 @@
 
         <!-- Admin: Mark attendance for others -->
         <div class="card" id="att-admin-mark-card" style="margin-top:0;">
-          <div class="card-header">
-            <h3>&#128100; Mark Attendance (Admin)</h3>
-            <div class="row">
-              <button class="btn btn-outline btn-sm" onclick="openAddStaffModal()">+ Add Staff</button>
-              <span class="badge badge-warning">Admin Only</span>
-            </div>
-          </div>
+          <div class="card-header"><h3>&#128100; Mark Attendance (Admin)</h3><span class="badge badge-warning">Admin Only</span></div>
           <div class="card-body">
             <div class="form-grid">
               <div class="form-group"><label>Staff Member *</label>
@@ -833,9 +1001,9 @@
             </div>
             <div class="role-legend">
               <div class="role-legend-title">Role Permissions</div>
-              <div class="role-legend-row"><span class="role-badge role-admin">Admin</span><span>Full access — students, payments, courses, users, SMS, edit/delete service transactions, cash reconciliation</span></div>
-              <div class="role-legend-row"><span class="role-badge role-staff">Staff</span><span>Register students, record payments, send SMS, record office services (cannot edit/delete service transactions or reconcile cash)</span></div>
-              <div class="role-legend-row"><span class="role-badge role-viewer">Viewer</span><span>View only — no edits, no payments, no SMS</span></div>
+              <div class="role-legend-row"><span class="role-badge role-admin">Admin</span><span>Full access — students, payments, courses, users, SMS, edit/delete service transactions, cash reconciliation, financial figures</span></div>
+              <div class="role-legend-row"><span class="role-badge role-staff">Staff</span><span>Register students, record payments, send SMS, record office services (cannot edit/delete service transactions, reconcile cash, or view Dashboard financial figures)</span></div>
+              <div class="role-legend-row"><span class="role-badge role-viewer">Viewer</span><span>View only — no edits, no payments, no SMS, no Dashboard financial figures</span></div>
             </div>
           </div>
         </div>
@@ -1059,6 +1227,52 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-asset-view">
+  <div class="modal size-xl">
+    <div class="modal-header"><h2>&#127970; Asset Details</h2><button class="btn-close" onclick="closeModal('modal-asset-view')">&times;</button></div>
+    <div class="modal-body" id="modal-asset-body">&mdash;</div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-asset-view')">Close</button>
+      <button class="btn btn-danger" id="asset-dispose-btn">&#128465; Dispose Asset</button>
+      <button class="btn btn-primary" id="asset-edit-btn">&#9999; Edit</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-asset-dispose">
+  <div class="modal size-lg">
+    <div class="modal-header"><h2>&#128465; Dispose Asset</h2><button class="btn-close" onclick="closeModal('modal-asset-dispose')">&times;</button></div>
+    <div class="modal-body">
+      <div class="notice warning mb-4">
+        <div class="notice-icon">&#9888;&#65039;</div>
+        <div><div class="notice-title">This action marks the asset as Disposed</div>
+        <div class="notice-body">The asset will remain visible in the register with a Disposed status. A copy is saved to the Disposal Log for audit purposes.</div></div>
+      </div>
+      <input type="hidden" id="dispose-asset-id">
+      <div class="form-grid">
+        <div class="form-group full"><label>Asset</label><input type="text" id="dispose-asset-display" readonly style="background:var(--cream);"></div>
+        <div class="form-group"><label>Disposal Date *</label><input type="date" id="dispose-date"></div>
+        <div class="form-group"><label>Disposal Method</label>
+          <select id="dispose-method">
+            <option>Written Off</option>
+            <option>Sold</option>
+            <option>Donated</option>
+            <option>Stolen / Lost</option>
+            <option>Destroyed / Damaged Beyond Repair</option>
+            <option>Returned to Supplier</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group full"><label>Reason / Notes *</label><input type="text" id="dispose-reason" placeholder="e.g. Screen cracked beyond repair, fully depreciated"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-asset-dispose')">Cancel</button>
+      <button class="btn btn-danger" id="dispose-confirm-btn" onclick="confirmDisposeAsset()">&#128465; Confirm Disposal</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-edit-attendance">
   <div class="modal size-lg">
     <div class="modal-header"><h2>&#9999; Edit Attendance Record</h2><button class="btn-close" onclick="closeModal('modal-edit-attendance')">&times;</button></div>
@@ -1109,28 +1323,6 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-edit-attendance')">Cancel</button>
       <button class="btn btn-primary" id="eatt-save-btn" onclick="saveEditedAttendance()">&#128190; Save Changes</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modal-add-staff">
-  <div class="modal size-md">
-    <div class="modal-header"><h2>&#128100; Add Staff Member</h2><button class="btn-close" onclick="closeModal('modal-add-staff')">&times;</button></div>
-    <div class="modal-body">
-      <div class="notice neutral mb-4">
-        <div class="notice-icon">&#8505;&#65039;</div>
-        <div><div class="notice-title">Creates a Staff login</div>
-        <div class="notice-body">This adds a system user with the Staff role so they can clock in/out and appear on the register. Share the username and temporary password with them securely.</div></div>
-      </div>
-      <div class="form-grid">
-        <div class="form-group full"><label>Full Name *</label><input type="text" id="staff-fullname" placeholder="e.g. Mary Wambui" oninput="suggestStaffUsername()"></div>
-        <div class="form-group full"><label>Username *</label><input type="text" id="staff-username" placeholder="e.g. mary.wambui"></div>
-        <div class="form-group full"><label>Temporary Password *</label><input type="text" id="staff-password"></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('modal-add-staff')">Cancel</button>
-      <button class="btn btn-primary" id="staff-save-btn" onclick="submitAddStaff()">&#128190; Add Staff</button>
     </div>
   </div>
 </div>

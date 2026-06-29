@@ -270,6 +270,7 @@ input, select, textarea {
 }
 input:focus, select:focus, textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,146,42,.12); }
 textarea { resize: vertical; min-height: 80px; }
+input[type="file"] { padding: 7px 10px; font-size: 12.5px; cursor: pointer; }
 
 /* BUTTONS */
 .btn {
@@ -312,6 +313,21 @@ tr:hover td { background: var(--cream); }
 .badge-gold    { background: #FEF3C7; color: #78350F; }
 .badge-neutral { background: var(--cream-dk); color: var(--muted); }
 .badge-purple  { background: #EDE4FB; color: #5B21B6; }
+
+/* Admin-only financial figure lock badge — shown on the Dashboard in place
+   of KES amounts for Staff/Viewer roles (see viewFinancials permission) */
+.locked-figure {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--cream-dk);
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: .2px;
+}
 
 /* MODAL */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(10,22,40,.55); z-index: 1000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px); }
