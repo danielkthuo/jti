@@ -30,27 +30,14 @@ let state = {
 //  ROLE PERMISSIONS
 // ════════════════════════════════════════════════
 const ROLES = {
-  Admin:  { register: true,  payment: true,  delete: true,  courses: true,  users: true,  sms: true,  charge: true,  services: true,  servicesManage: true,  reconcile: true,  viewFinancials: true  },
-  Staff:  { register: true,  payment: true,  delete: false, courses: false, users: false, sms: true,  charge: true,  services: true,  servicesManage: false, reconcile: false, viewFinancials: false },
-  Viewer: { register: false, payment: false, delete: false, courses: false, users: false, sms: false, charge: false, services: false, servicesManage: false, reconcile: false, viewFinancials: false },
+  Admin:  { register: true,  payment: true,  delete: true,  courses: true,  users: true,  sms: true,  charge: true,  services: true,  servicesManage: true,  reconcile: true  },
+  Staff:  { register: true,  payment: true,  delete: false, courses: false, users: false, sms: true,  charge: true,  services: true,  servicesManage: false, reconcile: false },
+  Viewer: { register: false, payment: false, delete: false, courses: false, users: false, sms: false, charge: false, services: false, servicesManage: false, reconcile: false },
 };
 
 function can(action) {
   if (!state.user) return false;
   return !!ROLES[state.user.role]?.[action];
-}
-
-/**
- * Renders a monetary figure as "KES 1,234" for Admin, or a locked
- * placeholder badge for Staff/Viewer. Used on the Dashboard so financial
- * totals (fees collected, outstanding balances, revenue, etc.) are only
- * ever visible to Admin accounts — everyone else sees a neutral lock icon
- * in the same spot instead of the actual figure.
- */
-function moneyOrLocked(amount) {
-  return can('viewFinancials')
-    ? 'KES ' + fmt(amount)
-    : '<span class="locked-figure" title="Visible to Admin only">&#128274; Admin Only</span>';
 }
 
 // ════════════════════════════════════════════════
@@ -246,21 +233,51 @@ async function apiPost(action, payload) {
  * `purpose` is a short tag (e.g. 'welcome', 'receipt', 'defaulter', 'manual')
  * and `context` carries optional regNo/studentName so the log can be
  * traced back to a specific student even after the fact.
+ *
+ * Numbers are screened locally before sending: each is normalised, then
+ * checked against Kenyan landline prefixes (014x, 02x–06x) since SMS
+ * gateways cannot deliver to fixed lines — this used to surface as a
+ * confusing generic "Invalid numbers exist" error from UjumbeSMS. Now
+ * landline numbers are caught here with a specific, actionable message,
+ * and any remaining valid mobile numbers are still sent.
  */
 async function sendSms(phones, message, purpose, context) {
   const phoneList = Array.isArray(phones) ? phones : [phones];
-  const normalised = phoneList
-    .map(p => normalizePhone(p))
-    .filter(p => p.length >= 9);
-  if (!normalised.length) return { success: false, sent: 0, failed: 0 };
-  return apiPost('sendSms', {
-    phones: normalised,
+  const sendable = [];
+  const skipped  = [];
+
+  phoneList.forEach(p => {
+    const norm = normalizePhone(p);
+    if (!/^254\d{9}$/.test(norm)) {
+      skipped.push({ phone: p, reason: 'Could not be parsed as a valid Kenyan number' });
+    } else if (isKenyanLandline(norm)) {
+      skipped.push({ phone: p, reason: 'Landline/fixed-line number — SMS cannot be delivered' });
+    } else {
+      sendable.push(norm);
+    }
+  });
+
+  if (skipped.length) {
+    const summary = skipped.map(s => `${s.phone} (${s.reason})`).join('; ');
+    if (!sendable.length) {
+      toast('SMS not sent — ' + summary, 'error');
+      return { success: false, sent: 0, failed: phoneList.length, skipped };
+    }
+    toast(`${skipped.length} number(s) skipped: ${summary}`, 'warning');
+  }
+
+  if (!sendable.length) return { success: false, sent: 0, failed: 0 };
+
+  const res = await apiPost('sendSms', {
+    phones: sendable,
     message,
     purpose: purpose || 'manual',
     regNo: context?.regNo || '',
     studentName: context?.studentName || '',
     sentBy: state.user?.fullName || state.user?.username || 'System',
   });
+  if (skipped.length) res.skipped = skipped;
+  return res;
 }
 
 /**
@@ -282,6 +299,32 @@ function normalizePhone(p) {
     digits = '254' + digits;
   }
   return digits;
+}
+
+/**
+ * Returns true if a normalised 254XXXXXXXXX number is a Kenyan fixed-line
+ * (landline) number. Per the CA Numbering Plan (April 2024):
+ *   - 01xx = Mobile Telephony (all of 010x, 011x, 012x, 013x, 014x, etc.)
+ *   - 07xx = Mobile Telephony
+ *   - 020   = Nairobi fixed (Geographic NDC)
+ *   - 040-069 = Regional fixed (Geographic NDCs)
+ *
+ * After normalisation the leading 0 is dropped:
+ *   - Mobile 07xx -> local starts with "7"  — never a landline
+ *   - Mobile 01xx -> local starts with "1"  — NEVER a landline (entire 01xx = mobile)
+ *   - Landline 020 -> local starts with "2" — landline
+ *   - Landline 04x-06x -> local starts with "4", "5", or "6" — landline
+ *   - Landline 03x (M2M/reserved) -> local starts with "3"
+ *
+ * Crucially: 014x (e.g. 0140396600) is MOBILE, not a landline.
+ * The entire "1" range (after dropping leading 0) is mobile.
+ */
+function isKenyanLandline(normalised) {
+  if (!normalised.startsWith('254') || normalised.length !== 12) return false;
+  const local = normalised.slice(3); // 9 digits after 254
+  // Only flag as landline if local starts with 2, 3, 4, 5, or 6
+  // Anything starting with 1 (01xx mobile) or 7 (07xx mobile) is NOT a landline
+  return /^[2-6]/.test(local);
 }
 
 function buildPaymentSms(payload, receiptNo) {
@@ -585,33 +628,49 @@ function setStatus(msg) { document.getElementById('sync-status').innerHTML = msg
 //  DASHBOARD
 // ════════════════════════════════════════════════
 function renderDashboard() {
+  const isAdmin = state.user?.role === 'Admin';
+
+  // ── Non-financial counts (visible to all roles) ──
   const s = state.students;
-  const active    = s.filter(x => x.status === 'Active').length;
-  const totalPaid = s.reduce((a, x) => a + (+x.amountPaid || 0), 0);
-  const totalBal  = s.reduce((a, x) => a + (+x.feeBalance || 0), 0);
-  document.getElementById('stat-total').textContent       = s.length;
-  document.getElementById('stat-active').textContent      = active;
-  document.getElementById('stat-collected').innerHTML     = moneyOrLocked(totalPaid);
-  document.getElementById('stat-outstanding').innerHTML   = moneyOrLocked(totalBal);
+  document.getElementById('stat-total').textContent  = s.length;
+  document.getElementById('stat-active').textContent = s.filter(x => x.status === 'Active').length;
+
+  // ── Financial figures (Admin-only) ──
+  const lockHtml = '<span class="badge badge-neutral" title="Only Admins can view financial figures">&#128274; Admin only</span>';
+
+  if (isAdmin) {
+    const totalPaid = s.reduce((a, x) => a + (+x.amountPaid || 0), 0);
+    const totalBal  = s.reduce((a, x) => a + (+x.feeBalance || 0), 0);
+    document.getElementById('stat-collected').textContent   = 'KES ' + fmt(totalPaid);
+    document.getElementById('stat-outstanding').textContent = 'KES ' + fmt(totalBal);
+  } else {
+    document.getElementById('stat-collected').innerHTML   = lockHtml;
+    document.getElementById('stat-outstanding').innerHTML = lockHtml;
+  }
 
   const now = new Date(), curYear = now.getFullYear(), curMonth = now.getMonth();
   const isThisMonth = d => { if (!d) return false; const dt = new Date(d); return !isNaN(dt) && dt.getFullYear() === curYear && dt.getMonth() === curMonth; };
   const todayKey = dateKey(now);
 
-  // ── Today's combined revenue (fees + office services) ──
+  // ── Today's combined revenue (Admin-only) ──
   document.getElementById('dash-today-label').textContent =
     now.toLocaleDateString('en-KE', { day: '2-digit', month: 'long', year: 'numeric' });
 
   const todayPayments = state.payments.filter(p => dateKey(p.date) === todayKey);
   const todayServices = state.services.filter(sv => dateKey(sv.date) === todayKey);
-  const todayFeesTotal     = todayPayments.reduce((a, p) => a + (+p.amount || 0), 0);
-  const todayServicesTotal = todayServices.reduce((a, sv) => a + (+sv.amount || 0), 0);
-  const todayCombinedTotal = todayFeesTotal + todayServicesTotal;
 
-  document.getElementById('stat-today-total').innerHTML       = moneyOrLocked(todayCombinedTotal);
-  document.getElementById('stat-today-fees').innerHTML        = moneyOrLocked(todayFeesTotal);
-  document.getElementById('stat-today-services').innerHTML    = moneyOrLocked(todayServicesTotal);
-  document.getElementById('stat-today-txcount').textContent   = todayPayments.length + todayServices.length;
+  if (isAdmin) {
+    const todayFeesTotal     = todayPayments.reduce((a, p) => a + (+p.amount || 0), 0);
+    const todayServicesTotal = todayServices.reduce((a, sv) => a + (+sv.amount || 0), 0);
+    const todayCombinedTotal = todayFeesTotal + todayServicesTotal;
+    document.getElementById('stat-today-total').textContent    = 'KES ' + fmt(todayCombinedTotal);
+    document.getElementById('stat-today-fees').textContent     = 'KES ' + fmt(todayFeesTotal);
+    document.getElementById('stat-today-services').textContent = 'KES ' + fmt(todayServicesTotal);
+    document.getElementById('stat-today-txcount').textContent  = todayPayments.length + todayServices.length;
+  } else {
+    ['stat-today-total','stat-today-fees','stat-today-services','stat-today-txcount']
+      .forEach(id => { document.getElementById(id).innerHTML = lockHtml; });
+  }
 
   document.getElementById('dash-month-label').textContent =
     now.toLocaleDateString('en-KE', { month: 'long', year: 'numeric' });
@@ -619,15 +678,19 @@ function renderDashboard() {
   const monthEnrollments = s.filter(x => isThisMonth(x.enrollDate));
   document.getElementById('stat-month-enrollments').textContent = monthEnrollments.length;
 
-  const monthPayments  = state.payments.filter(p => isThisMonth(p.date));
-  const monthCollected = monthPayments.reduce((a, p) => a + (+p.amount || 0), 0);
-  document.getElementById('stat-month-collected').innerHTML = moneyOrLocked(monthCollected);
-  const avgPayment = monthPayments.length ? monthCollected / monthPayments.length : 0;
-  document.getElementById('stat-month-avg').innerHTML = moneyOrLocked(Math.round(avgPayment));
-
-  const monthServices      = state.services.filter(sv => isThisMonth(sv.date));
-  const monthServicesTotal = monthServices.reduce((a, sv) => a + (+sv.amount || 0), 0);
-  document.getElementById('stat-month-services').innerHTML = moneyOrLocked(monthServicesTotal);
+  const monthPayments = state.payments.filter(p => isThisMonth(p.date));
+  if (isAdmin) {
+    const monthCollected = monthPayments.reduce((a, p) => a + (+p.amount || 0), 0);
+    document.getElementById('stat-month-collected').textContent = 'KES ' + fmt(monthCollected);
+    const avgPayment = monthPayments.length ? monthCollected / monthPayments.length : 0;
+    document.getElementById('stat-month-avg').textContent = 'KES ' + fmt(Math.round(avgPayment));
+    const monthServicesTotal = state.services.filter(sv => isThisMonth(sv.date))
+      .reduce((a, sv) => a + (+sv.amount || 0), 0);
+    document.getElementById('stat-month-services').textContent = 'KES ' + fmt(monthServicesTotal);
+  } else {
+    ['stat-month-collected','stat-month-avg','stat-month-services']
+      .forEach(id => { document.getElementById(id).innerHTML = lockHtml; });
+  }
 
   const rec = [...monthEnrollments].sort((a,b) => new Date(b.enrollDate) - new Date(a.enrollDate)).slice(0,5);
   document.getElementById('recent-enrollments').innerHTML = rec.length
@@ -641,31 +704,44 @@ function renderDashboard() {
         </td></tr>`).join('')}</table>`
     : '<div class="empty-state"><div class="empty-icon">&#127891;</div><p>No new enrollments this month</p></div>';
 
-  const rp = [...monthPayments].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0,5);
-  document.getElementById('recent-payments').innerHTML = rp.length
-    ? `<table style="width:100%;font-size:13px;">${rp.map(p=>`<tr>
-        <td style="padding:10px 14px;border-bottom:1px solid var(--cream-dk);">
-          <div style="font-weight:600;">${p.studentName}</div>
-          <div style="font-size:11.5px;color:var(--muted);">${fmtDate(p.date)} &middot; ${p.method}</div>
-        </td>
-        <td style="padding:10px 14px;border-bottom:1px solid var(--cream-dk);text-align:right;font-weight:700;color:var(--success);">
-          ${can('viewFinancials') ? '+ KES ' + fmt(p.amount) : '<span class="locked-figure" title="Visible to Admin only">&#128274;</span>'}
-        </td></tr>`).join('')}</table>`
-    : '<div class="empty-state"><div class="empty-icon">&#128179;</div><p>No payments recorded this month</p></div>';
+  // Recent Payments — Admin only
+  if (isAdmin) {
+    const rp = [...monthPayments].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0,5);
+    document.getElementById('recent-payments').innerHTML = rp.length
+      ? `<table style="width:100%;font-size:13px;">${rp.map(p=>`<tr>
+          <td style="padding:10px 14px;border-bottom:1px solid var(--cream-dk);">
+            <div style="font-weight:600;">${p.studentName}</div>
+            <div style="font-size:11.5px;color:var(--muted);">${fmtDate(p.date)} &middot; ${p.method}</div>
+          </td>
+          <td style="padding:10px 14px;border-bottom:1px solid var(--cream-dk);text-align:right;font-weight:700;color:var(--success);">
+            + KES ${fmt(p.amount)}
+          </td></tr>`).join('')}</table>`
+      : '<div class="empty-state"><div class="empty-icon">&#128179;</div><p>No payments recorded this month</p></div>';
+  } else {
+    document.getElementById('recent-payments').innerHTML =
+      '<div class="empty-state"><div class="empty-icon">&#128274;</div><p>Financial data is visible to Admins only</p></div>';
+  }
 
-  const rs = [...monthServices].sort((a,b) => new Date(b.createdAt||b.date) - new Date(a.createdAt||a.date)).slice(0,5);
+  // Recent Services — Admin only
   const recentServicesEl = document.getElementById('recent-services');
   if (recentServicesEl) {
-    recentServicesEl.innerHTML = rs.length
-      ? `<table style="width:100%;font-size:13px;">${rs.map(sv=>`<tr>
-          <td style="padding:10px 14px;border-bottom:1px solid var(--cream-dk);">
-            <div style="font-weight:600;">${sv.serviceType}${sv.customer ? ' &middot; ' + sv.customer : ''}</div>
-            <div style="font-size:11.5px;color:var(--muted);">${fmtDate(sv.date)} &middot; ${sv.method} &middot; ${sv.recordedBy||''}</div>
-          </td>
-          <td style="padding:10px 14px;border-bottom:1px solid var(--cream-dk);text-align:right;font-weight:700;color:var(--info);">
-            ${can('viewFinancials') ? '+ KES ' + fmt(sv.amount) : '<span class="locked-figure" title="Visible to Admin only">&#128274;</span>'}
-          </td></tr>`).join('')}</table>`
-      : '<div class="empty-state"><div class="empty-icon">&#128424;</div><p>No office services recorded this month</p></div>';
+    if (isAdmin) {
+      const monthSvcs = state.services.filter(sv => isThisMonth(sv.date));
+      const rs = [...monthSvcs].sort((a,b) => new Date(b.createdAt||b.date) - new Date(a.createdAt||a.date)).slice(0,5);
+      recentServicesEl.innerHTML = rs.length
+        ? `<table style="width:100%;font-size:13px;">${rs.map(sv=>`<tr>
+            <td style="padding:10px 14px;border-bottom:1px solid var(--cream-dk);">
+              <div style="font-weight:600;">${sv.serviceType}${sv.customer ? ' &middot; ' + sv.customer : ''}</div>
+              <div style="font-size:11.5px;color:var(--muted);">${fmtDate(sv.date)} &middot; ${sv.method} &middot; ${sv.recordedBy||''}</div>
+            </td>
+            <td style="padding:10px 14px;border-bottom:1px solid var(--cream-dk);text-align:right;font-weight:700;color:var(--info);">
+              + KES ${fmt(sv.amount)}
+            </td></tr>`).join('')}</table>`
+        : '<div class="empty-state"><div class="empty-icon">&#128424;</div><p>No office services recorded this month</p></div>';
+    } else {
+      recentServicesEl.innerHTML =
+        '<div class="empty-state"><div class="empty-icon">&#128274;</div><p>Financial data is visible to Admins only</p></div>';
+    }
   }
 }
 
@@ -2807,7 +2883,7 @@ function renderAssetsTable(data) {
     .map(a => `
     <tr>
       <td><strong>${a.assetId}</strong></td>
-      <td>${a.name}${a.receiptUrl ? ` <a href="${a.receiptUrl}" target="_blank" rel="noopener" title="View receipt">&#128206;</a>` : ''}${a.editedAt ? ' <span class="badge badge-warning" title="Edited: '+a.editReason+'">&#9999;</span>' : ''}</td>
+      <td>${a.name}${a.editedAt ? ' <span class="badge badge-warning" title="Edited: '+a.editReason+'">&#9999;</span>' : ''}</td>
       <td><span class="badge badge-purple">${a.category||'&mdash;'}</span></td>
       <td>
         ${a.assetTag ? `<div style="font-weight:600;font-size:12.5px;">${a.assetTag}</div>` : ''}
@@ -2850,18 +2926,18 @@ function viewAsset(assetId) {
       ${assetInfoRow('Condition',    `<span class="badge ${assetConditionBadge(a.condition)}">${a.condition||'&mdash;'}</span>`)}
     </div>
     ${a.description ? `<div style="margin-bottom:12px;"><div class="text-xs text-muted" style="margin-bottom:4px;">DESCRIPTION</div><div style="font-size:13.5px;">${a.description}</div></div>` : ''}
-    ${a.receiptUrl ? `
-    <div style="background:var(--cream-dk);border-radius:8px;padding:14px;margin-bottom:12px;">
-      <div class="text-xs text-muted" style="margin-bottom:6px;">RECEIPT / INVOICE COPY</div>
-      <a href="${a.receiptUrl}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">&#128196; View Receipt</a>
-    </div>` : ''}
     ${a.status==='Disposed'||a.status==='Lost' ? `
     <div style="background:var(--cream-dk);border-radius:8px;padding:14px;margin-bottom:12px;">
       <div class="text-xs text-muted" style="margin-bottom:6px;">DISPOSAL INFORMATION</div>
       <div><strong>Date:</strong> ${fmtDate(a.disposalDate)} &nbsp;|&nbsp; <strong>Reason:</strong> ${a.disposalReason||'&mdash;'}</div>
     </div>` : ''}
     ${a.editedAt ? `<div class="text-xs text-muted">Last edited by ${a.editedBy} on ${fmtDate(a.editedAt)} &mdash; ${a.editReason}</div>` : ''}
-    <div class="text-xs text-muted" style="margin-top:6px;">Added by ${a.addedBy||'System'} on ${fmtDate(a.createdAt)}</div>`;
+    <div class="text-xs text-muted" style="margin-top:6px;">Added by ${a.addedBy||'System'} on ${fmtDate(a.createdAt)}</div>
+    ${a.receiptUrl ? `
+    <div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border);">
+      <div class="text-xs text-muted" style="margin-bottom:6px;">PURCHASE RECEIPT</div>
+      <a href="${a.receiptUrl}" target="_blank" class="btn btn-outline btn-sm">&#128196; View Receipt — ${a.receiptName||'Open in Drive'}</a>
+    </div>` : ''}`;
 
   document.getElementById('asset-edit-btn').style.display    = can('delete') ? '' : 'none';
   document.getElementById('asset-dispose-btn').style.display = can('delete') && a.status !== 'Disposed' ? '' : 'none';
@@ -2879,27 +2955,6 @@ function assetInfoRow(label, value) {
 
 // ── Add / Edit Asset ──────────────────────────────────────
 
-/** Reads a File object as a base64 data URL (e.g. "data:image/png;base64,...") */
-function readFileAsBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload  = () => resolve(reader.result);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
-
-/** Updates the small "current receipt" link/preview under the file input */
-function renderAssetReceiptPreview() {
-  const urlEl = document.getElementById('asset-receipt-url');
-  const box   = document.getElementById('asset-receipt-preview');
-  if (!urlEl || !box) return;
-  const url = urlEl.value;
-  box.innerHTML = url
-    ? `<a href="${url}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">&#128196; View Current Receipt</a> <span class="text-xs text-muted">Choosing a new file will replace this.</span>`
-    : '<span class="text-xs text-muted">No receipt uploaded yet.</span>';
-}
-
 function clearAssetForm() {
   document.getElementById('asset-edit-id').value = '';
   ['asset-name','asset-tag','asset-serial','asset-location',
@@ -2913,14 +2968,72 @@ function clearAssetForm() {
   document.getElementById('asset-reason-group').style.display = 'none';
   const dateEl = document.getElementById('asset-purchase-date');
   if (dateEl) dateEl.value = '';
-  // Receipt upload state
+  // Reset receipt upload
   const fileEl = document.getElementById('asset-receipt-file');
   if (fileEl) fileEl.value = '';
-  const urlEl = document.getElementById('asset-receipt-url');
-  if (urlEl) urlEl.value = '';
-  const fidEl = document.getElementById('asset-receipt-fileid');
-  if (fidEl) fidEl.value = '';
-  renderAssetReceiptPreview();
+  const statusEl = document.getElementById('asset-receipt-status');
+  if (statusEl) statusEl.innerHTML = '';
+}
+
+async function uploadAssetReceiptFile() {
+  const assetId = document.getElementById('asset-edit-id').value;
+  const fileInput = document.getElementById('asset-receipt-file');
+  const statusEl  = document.getElementById('asset-receipt-status');
+  const btn       = document.getElementById('asset-upload-btn');
+
+  if (!assetId) {
+    toast('Save the asset record first, then upload the receipt.', 'warning');
+    return;
+  }
+  if (!fileInput.files || !fileInput.files[0]) {
+    toast('Select a file to upload.', 'warning');
+    return;
+  }
+
+  const file = fileInput.files[0];
+  const maxMB = 10;
+  if (file.size > maxMB * 1024 * 1024) {
+    toast(`File too large. Maximum size is ${maxMB}MB.`, 'error');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Uploading&hellip;';
+  statusEl.innerHTML = '<span style="color:var(--muted);">Reading file&hellip;</span>';
+
+  try {
+    // Read file as base64
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload  = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+
+    statusEl.innerHTML = '<span style="color:var(--muted);">Uploading to Google Drive&hellip;</span>';
+
+    const res = await apiPost('uploadAssetReceipt', {
+      assetId,
+      fileName:  file.name,
+      mimeType:  file.type || 'application/octet-stream',
+      base64Data: base64,
+    });
+
+    if (res.success) {
+      statusEl.innerHTML = `&#9989; Uploaded: <a href="${res.fileUrl}" target="_blank" style="color:var(--gold-dim);font-weight:600;">${res.fileName}</a>`;
+      toast('Receipt uploaded to JTI/Receipts folder.', 'success');
+      reloadAfterWrite();
+    } else {
+      statusEl.innerHTML = `<span style="color:var(--danger);">&#10060; Upload failed: ${res.error || 'Unknown error'}</span>`;
+      toast('Upload failed: ' + (res.error || 'Unknown'), 'error');
+    }
+  } catch (e) {
+    statusEl.innerHTML = `<span style="color:var(--danger);">&#10060; ${e.message}</span>`;
+    toast('Upload error: ' + e.message, 'error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '&#9650; Upload to Drive';
 }
 
 function editAsset(assetId) {
@@ -2943,18 +3056,22 @@ function editAsset(assetId) {
   document.getElementById('asset-desc').value            = a.description || '';
   document.getElementById('asset-edit-reason').value     = '';
 
-  // Receipt upload state — preload existing receipt link (if any) for preview
-  const fileEl = document.getElementById('asset-receipt-file');
-  if (fileEl) fileEl.value = '';
-  const urlEl = document.getElementById('asset-receipt-url');
-  if (urlEl) urlEl.value = a.receiptUrl || '';
-  const fidEl = document.getElementById('asset-receipt-fileid');
-  if (fidEl) fidEl.value = a.receiptFileId || '';
-  renderAssetReceiptPreview();
-
   document.getElementById('asset-form-title').textContent         = 'Edit Asset — ' + a.assetId;
   document.getElementById('asset-submit-btn').innerHTML           = '&#128190; Update Asset';
   document.getElementById('asset-reason-group').style.display     = '';
+
+  // Show existing receipt if one is already uploaded
+  const statusEl = document.getElementById('asset-receipt-status');
+  if (statusEl) {
+    statusEl.innerHTML = a.receiptUrl
+      ? `&#128196; Existing receipt: <a href="${a.receiptUrl}" target="_blank" style="color:var(--gold-dim);font-weight:600;">${a.receiptName||'View in Drive'}</a> &nbsp;|&nbsp; <span style="color:var(--muted);">Upload a new file below to replace it.</span>`
+      : '<span style="color:var(--muted);">No receipt uploaded yet.</span>';
+  }
+
+  // Reset file input
+  const fileEl = document.getElementById('asset-receipt-file');
+  if (fileEl) fileEl.value = '';
+
   switchAssetTab('asset-add');
 }
 
@@ -2972,45 +3089,6 @@ async function submitAsset() {
   const reason = isEdit ? document.getElementById('asset-edit-reason').value.trim() : '';
   if (isEdit && !reason) { toast('A reason for the edit is required.', 'error'); return; }
 
-  const btn = document.getElementById('asset-submit-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="loader"></span> Saving&hellip;';
-
-  // Upload a new receipt file first, if one was selected — falls back to
-  // whatever receipt (if any) was already on the asset.
-  let receiptUrl    = document.getElementById('asset-receipt-url').value;
-  let receiptFileId = document.getElementById('asset-receipt-fileid').value;
-  const fileInput = document.getElementById('asset-receipt-file');
-  const file = fileInput && fileInput.files && fileInput.files[0];
-
-  if (file) {
-    if (file.size > 4 * 1024 * 1024) {
-      toast('Receipt file is too large (max 4MB).', 'error');
-      btn.disabled = false;
-      btn.innerHTML = isEdit ? '&#128190; Update Asset' : '&#128190; Save Asset';
-      return;
-    }
-    try {
-      btn.innerHTML = '<span class="loader"></span> Uploading receipt&hellip;';
-      const dataUrl = await readFileAsBase64(file);
-      const uploadRes = await apiPost('uploadAssetReceipt', {
-        assetId:  editId || '',
-        fileName: file.name,
-        mimeType: file.type || 'application/octet-stream',
-        fileData: dataUrl,
-      });
-      if (uploadRes.success) {
-        receiptUrl    = uploadRes.fileUrl;
-        receiptFileId = uploadRes.fileId;
-      } else {
-        toast('Receipt upload failed: ' + (uploadRes.error || 'Unknown error') + '. Saving asset without it.', 'warning');
-      }
-    } catch (e) {
-      toast('Receipt upload failed: ' + e.message + '. Saving asset without it.', 'warning');
-    }
-    btn.innerHTML = '<span class="loader"></span> Saving&hellip;';
-  }
-
   const payload = {
     assetId:      editId || undefined,
     name,  category,
@@ -3024,12 +3102,14 @@ async function submitAsset() {
     condition:    document.getElementById('asset-condition').value,
     status:       document.getElementById('asset-status').value,
     description:  document.getElementById('asset-desc').value.trim(),
-    receiptUrl:    receiptUrl    || '',
-    receiptFileId: receiptFileId || '',
     addedBy:      state.user?.fullName || state.user?.username || 'System',
     editReason:   reason,
     editedBy:     state.user?.fullName || state.user?.username || 'Admin',
   };
+
+  const btn = document.getElementById('asset-submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Saving&hellip;';
 
   try {
     const action = isEdit ? 'updateAsset' : 'addAsset';
@@ -3161,7 +3241,6 @@ function exportAssets() {
     'Purchase Date': a.purchaseDate||'', 'Purchase Cost (KES)': +a.purchaseCost||0,
     'Supplier': a.supplier||'', 'Condition': a.condition||'',
     'Status': a.status||'Active', 'Description': a.description||'',
-    'Receipt URL': a.receiptUrl||'',
     'Added By': a.addedBy||'', 'Date Added': a.createdAt||'',
   })), 'Asset Ledger', 'JTI_Asset_Ledger');
 }
@@ -3174,7 +3253,6 @@ function exportDisposedAssets() {
     'Asset Tag': a.assetTag||'', 'Purchase Date': a.purchaseDate||'',
     'Purchase Cost (KES)': +a.purchaseCost||0, 'Disposal Date': a.disposalDate||'',
     'Status': a.status||'', 'Disposal Reason': a.disposalReason||'',
-    'Receipt URL': a.receiptUrl||'',
     'Disposed By': a.editedBy||'',
   })), 'Disposed Assets', 'JTI_Disposed_Assets');
 }
@@ -3247,27 +3325,9 @@ function switchAttTab(tabId) {
   if (tabId === 'att-summary')  renderAttSummary();
 }
 
-async function populateAttStaffDropdown() {
+function populateAttStaffDropdown() {
   const sel = document.getElementById('att-mark-staff');
   if (!sel) return;
-  // Only Admin sees the "Mark Attendance" card this dropdown lives in —
-  // skip the network call entirely for everyone else.
-  if (!can('delete')) { sel.innerHTML = '<option value="">Select staff&hellip;</option>'; return; }
-
-  // state.users is normally only populated after visiting the User
-  // Management page (loadUsersTable()). If an Admin opens Attendance first
-  // in a session, state.users is still empty — fetch it on demand here so
-  // the dropdown isn't silently blank.
-  if (!state.users || !state.users.length) {
-    try {
-      const res = await apiPost('getUsers', {});
-      state.users = res.data || [];
-    } catch (e) {
-      console.warn('Failed to load staff list for attendance:', e);
-      toast('Could not load staff list. Click Refresh and try again.', 'error');
-    }
-  }
-
   const staffList = (state.users || []).filter(u => u.status === 'Active');
   sel.innerHTML = '<option value="">Select staff&hellip;</option>' +
     staffList.map(u => `<option value="${u.username}" data-name="${u.fullName||u.username}">${u.fullName||u.username}</option>`).join('');
