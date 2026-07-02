@@ -444,7 +444,7 @@ tr:hover td { background: var(--cream); }
 /* RESPONSIVE */
 @media (max-width: 768px) {
   #sidebar { transform: translateX(-100%); }
-  #sidebar.open { transform: translateX(0); }
+  #sidebar.open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,.35); }
   #main { margin-left: 0; }
   .page-content { padding: 16px; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
@@ -452,7 +452,40 @@ tr:hover td { background: var(--cream); }
   .topbar-user-info { display: none; }
   .login-card { padding: 28px 22px; }
   .service-type-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+  /* Show the X close button inside sidebar on mobile */
+  .sidebar-close-btn { display: flex !important; }
 }
+
+/* Sidebar close button — hidden on desktop, shown on mobile via media query above */
+.sidebar-close-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.12);
+  border: none;
+  color: #fff;
+  font-size: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: background .15s;
+}
+.sidebar-close-btn:hover { background: rgba(255,255,255,.22); }
+
+/* Tap-outside backdrop — invisible on desktop, covers screen behind open sidebar on mobile */
+#sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99; /* just below sidebar (z-index: 100) */
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(2px);
+}
+#sidebar.open ~ #sidebar-backdrop,
+#sidebar-backdrop.visible { display: block; }
 
 @media print {
   #login-page, #sidebar, .topbar, .no-print { display: none !important; }

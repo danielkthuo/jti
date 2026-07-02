@@ -66,6 +66,7 @@
         <span>Institute &middot; Mwiki</span>
       </div>
     </div>
+    <button class="sidebar-close-btn" id="sidebar-close-btn" onclick="closeSidebar()" title="Close menu">&#10005;</button>
   </div>
   <div class="sidebar-nav">
     <div class="nav-section">
@@ -116,6 +117,9 @@
     </div>
   </div>
 </nav>
+
+<!-- Mobile sidebar backdrop — tapping this closes the sidebar -->
+<div id="sidebar-backdrop" onclick="closeSidebar()"></div>
 
 <!-- MAIN -->
 <div id="main">

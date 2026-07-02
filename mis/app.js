@@ -454,7 +454,18 @@ function navigate(page) {
   if (page === 'assets')     initAssetsPage();
 }
 
-function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function toggleSidebar() {
+  const sidebar  = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  const isOpen   = sidebar.classList.toggle('open');
+  if (backdrop) backdrop.classList.toggle('visible', isOpen);
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  if (backdrop) backdrop.classList.remove('visible');
+}
 
 function switchTab(tabId, page) {
   document.querySelectorAll('[id^="tab-fee-"]').forEach(t => t.style.display = 'none');
