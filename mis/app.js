@@ -20,6 +20,9 @@ let state = {
   invoiceRecords: [],
   services: [], serviceTypes: [], reconciliations: [],
   attendance: [], assets: [],
+  expenses: [], expenseCategories: [],
+  stockItems: [], stockMovements: [],
+  paymentPlans: [],
   smsLog: [],
   currentPage: 'dashboard', editMode: false, editRegNo: null,
   user: null,
@@ -30,9 +33,9 @@ let state = {
 //  ROLE PERMISSIONS
 // ════════════════════════════════════════════════
 const ROLES = {
-  Admin:  { register: true,  payment: true,  delete: true,  courses: true,  users: true,  sms: true,  charge: true,  services: true,  servicesManage: true,  reconcile: true  },
-  Staff:  { register: true,  payment: true,  delete: false, courses: false, users: false, sms: true,  charge: true,  services: true,  servicesManage: false, reconcile: false },
-  Viewer: { register: false, payment: false, delete: false, courses: false, users: false, sms: false, charge: false, services: false, servicesManage: false, reconcile: false },
+  Admin:  { register: true,  payment: true,  delete: true,  courses: true,  users: true,  sms: true,  charge: true,  services: true,  servicesManage: true,  reconcile: true,  expenses: true,  expensesManage: true  },
+  Staff:  { register: true,  payment: true,  delete: false, courses: false, users: false, sms: true,  charge: true,  services: true,  servicesManage: false, reconcile: false, expenses: true,  expensesManage: false },
+  Viewer: { register: false, payment: false, delete: false, courses: false, users: false, sms: false, charge: false, services: false, servicesManage: false, reconcile: false, expenses: false, expensesManage: false },
 };
 
 function can(action) {
@@ -444,7 +447,7 @@ function navigate(page) {
   document.getElementById('page-title').textContent = pageTitles[page] || page;
   state.currentPage = page;
   if (page === 'register' && !state.editMode) prepRegisterForm();
-  if (page === 'fees')       renderFeeOverview();
+  if (page === 'fees')       { renderFeeOverview(); renderPaymentPlansReport(); renderFeeStructures(); }
   if (page === 'payments')   renderPayments();
   if (page === 'invoices')   renderInvoices();
   if (page === 'reports')    renderReports();
@@ -493,6 +496,11 @@ function applyData(bundle, renderMode) {
   state.reconciliations = bundle.reconciliations || [];
   state.attendance      = bundle.attendance || [];
   state.assets          = bundle.assets || [];
+  state.expenses          = bundle.expenses || [];
+  state.expenseCategories = bundle.expenseCategories || [];
+  state.stockItems        = bundle.stockItems || [];
+  state.stockMovements    = bundle.stockMovements || [];
+  state.paymentPlans      = bundle.paymentPlans || [];
   populateProgramDropdowns();
   // renderMode 'current' = only active page (background refresh)
   // renderMode 'all'     = every page (first load)
@@ -517,12 +525,12 @@ function renderCurrentPage() {
   const p = state.currentPage;
   if (p === 'dashboard') renderDashboard();
   else if (p === 'students') renderStudentsTable();
-  else if (p === 'fees')     renderFeeOverview();
+  else if (p === 'fees')     { renderFeeOverview(); renderPaymentPlansReport(); }
   else if (p === 'payments') renderPayments();
   else if (p === 'invoices') renderInvoices();
   else if (p === 'reports')  renderReports();
   else if (p === 'courses')    renderCourses();
-  else if (p === 'services')   { renderServiceTypeGrid(); renderServiceTypesTable(); filterServiceLog(); renderReconciliation(); }
+  else if (p === 'services')   { renderServiceTypeGrid(); renderServiceTypesTable(); filterServiceLog(); renderReconciliation(); renderSvcDashboard(); renderStockTable(); filterExpenseLog(); populateExpenseCategorySelects(); renderExpenseCategoriesTable(); }
   else if (p === 'attendance') initAttendancePage();
   else if (p === 'assets')     initAssetsPage();
   // Always keep dashboard stats fresh too
@@ -562,6 +570,11 @@ async function fetchFresh(silent = false) {
     reconciliations: res.reconciliations || [],
     attendance:      res.attendance      || [],
     assets:          res.assets          || [],
+    expenses:          res.expenses          || [],
+    expenseCategories: res.expenseCategories || [],
+    stockItems:        res.stockItems        || [],
+    stockMovements:    res.stockMovements    || [],
+    paymentPlans:      res.paymentPlans      || [],
   };
   saveCache(bundle);
   return bundle;
@@ -754,6 +767,37 @@ function renderDashboard() {
         '<div class="empty-state"><div class="empty-icon">&#128274;</div><p>Financial data is visible to Admins only</p></div>';
     }
   }
+
+  // Upcoming & Overdue Installments — Admin only
+  const dueEl = document.getElementById('dash-installments-due');
+  if (dueEl) {
+    if (isAdmin) {
+      const today = new Date().toISOString().split('T')[0];
+      const soonCutoff = new Date(); soonCutoff.setDate(soonCutoff.getDate() + 7);
+      const soonStr = soonCutoff.toISOString().split('T')[0];
+      const due = (state.paymentPlans || [])
+        .filter(inst => inst.status !== 'Paid' && inst.dueDate && inst.dueDate <= soonStr)
+        .sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate))
+        .slice(0, 8);
+      dueEl.innerHTML = due.length
+        ? `<table style="width:100%;font-size:13px;">${due.map(inst => {
+            const overdue = inst.dueDate < today;
+            const owed = (+inst.amount||0) - (+inst.paidAmount||0);
+            return `<tr>
+              <td style="padding:10px 14px;border-bottom:1px solid var(--cream-dk);">
+                <div style="font-weight:600;">${inst.studentName || inst.regNo}</div>
+                <div style="font-size:11.5px;color:var(--muted);">Installment #${inst.installmentNo} &middot; Due ${fmtDate(inst.dueDate)}${overdue?' <span class="badge badge-danger">Overdue</span>':''}</div>
+              </td>
+              <td style="padding:10px 14px;border-bottom:1px solid var(--cream-dk);text-align:right;font-weight:700;color:${overdue?'var(--danger)':'var(--navy)'};">
+                KES ${fmt(owed)}
+              </td></tr>`;
+          }).join('')}</table>`
+        : '<div class="empty-state"><div class="empty-icon">&#128197;</div><p>No installments due in the next 7 days</p></div>';
+    } else {
+      dueEl.innerHTML =
+        '<div class="empty-state"><div class="empty-icon">&#128274;</div><p>Financial data is visible to Admins only</p></div>';
+    }
+  }
 }
 
 // ════════════════════════════════════════════════
@@ -894,7 +938,8 @@ function viewStudent(regNo) {
       </div>
     </div>
     ${s.guardian?`<div style="font-size:13px;"><strong>Guardian:</strong> ${s.guardian}</div>`:''}
-    ${s.notes?`<div style="margin-top:8px;font-size:13px;color:var(--muted);">${s.notes}</div>`:''}`;
+    ${s.notes?`<div style="margin-top:8px;font-size:13px;color:var(--muted);">${s.notes}</div>`:''}
+    ${renderPaymentPlanSection(regNo)}`;
   document.getElementById('modal-edit-btn').style.display         = can('register') ? '' : 'none';
   document.getElementById('modal-sms-student-btn').style.display  = can('sms')      ? '' : 'none';
   document.getElementById('modal-charge-student-btn').style.display = can('charge') ? '' : 'none';
@@ -906,8 +951,115 @@ function viewStudent(regNo) {
   openModal('modal-student');
 }
 
+function renderPaymentPlanSection(regNo) {
+  const plan = (state.paymentPlans || []).filter(x => x.regNo === regNo)
+    .sort((a,b) => (+a.installmentNo||0) - (+b.installmentNo||0));
+  const today = new Date().toISOString().split('T')[0];
+  const canManage = can('charge') || can('register');
+
+  const rows = plan.map(inst => {
+    const overdue = inst.status !== 'Paid' && inst.dueDate && inst.dueDate < today;
+    const statusLabel = overdue ? 'Overdue' : inst.status;
+    const badgeClass = inst.status === 'Paid' ? 'badge-success' : overdue ? 'badge-danger' : inst.status === 'Partial' ? 'badge-warning' : 'badge-neutral';
+    return `<tr>
+      <td>#${inst.installmentNo}</td>
+      <td>${fmtDate(inst.dueDate)}</td>
+      <td>KES ${fmt(inst.amount)}</td>
+      <td>KES ${fmt(inst.paidAmount||0)}</td>
+      <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <div style="margin-top:18px;border-top:1px solid var(--border);padding-top:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h4 class="section-title" style="margin:0;">Payment Plan</h4>
+        ${canManage ? `<div class="row">
+          <button class="btn btn-outline btn-sm" onclick="openPaymentPlanModal('${regNo}')">${plan.length?'&#9999; Edit Plan':'&#128197; Set Payment Plan'}</button>
+          ${plan.length ? `<button class="btn btn-danger btn-sm" onclick="removePaymentPlan('${regNo}')">Clear Plan</button>` : ''}
+        </div>` : ''}
+      </div>
+      ${plan.length ? `
+        <div class="table-wrapper">
+          <table><thead><tr><th>#</th><th>Due Date</th><th>Amount</th><th>Paid</th><th>Status</th></tr></thead>
+          <tbody>${rows}</tbody></table>
+        </div>` : `<div style="font-size:13px;color:var(--muted);">No installment plan set up for this student yet.</div>`}
+    </div>`;
+}
+
 function infoRow(label, value) {
   return `<div><div style="font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;">${label}</div><div style="font-size:13.5px;margin-top:3px;">${value}</div></div>`;
+}
+
+// ── Payment Plans report — all installments across all students ──
+function renderPaymentPlansReport() {
+  const tbody = document.getElementById('pp-rpt-tbody');
+  if (!tbody) return;
+
+  const today = new Date().toISOString().split('T')[0];
+  const in30  = new Date(); in30.setDate(in30.getDate() + 30);
+  const in30Str = in30.toISOString().split('T')[0];
+
+  const all = (state.paymentPlans || []).map(inst => {
+    const overdue = inst.status !== 'Paid' && inst.dueDate && inst.dueDate < today;
+    return { ...inst, effectiveStatus: overdue ? 'Overdue' : inst.status, owed: Math.max(0, (+inst.amount||0) - (+inst.paidAmount||0)) };
+  });
+
+  document.getElementById('pp-rpt-students').textContent = new Set(all.map(i => i.regNo)).size;
+  document.getElementById('pp-rpt-upcoming').textContent = 'KES ' + fmt(
+    all.filter(i => i.effectiveStatus !== 'Paid' && i.effectiveStatus !== 'Overdue' && i.dueDate && i.dueDate <= in30Str)
+       .reduce((a,i) => a + i.owed, 0));
+  document.getElementById('pp-rpt-overdue').textContent = 'KES ' + fmt(
+    all.filter(i => i.effectiveStatus === 'Overdue').reduce((a,i) => a + i.owed, 0));
+
+  _ppReportAll = all;
+  filterPaymentPlansReport();
+}
+
+let _ppReportAll = [];
+
+function filterPaymentPlansReport() {
+  const q      = (document.getElementById('pp-rpt-search')?.value || '').toLowerCase();
+  const status = document.getElementById('pp-rpt-status')?.value || '';
+  const filtered = _ppReportAll.filter(i => {
+    const mq = !q || [i.studentName, i.regNo].some(v => v && v.toLowerCase().includes(q));
+    const ms = !status || i.effectiveStatus === status;
+    return mq && ms;
+  }).sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate));
+
+  const tbody = document.getElementById('pp-rpt-tbody');
+  document.getElementById('pp-rpt-count').textContent = filtered.length + ' installments';
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--muted);">No installments found</td></tr>'; return; }
+
+  tbody.innerHTML = filtered.map(i => {
+    const badgeClass = i.effectiveStatus === 'Paid' ? 'badge-success' : i.effectiveStatus === 'Overdue' ? 'badge-danger' : i.effectiveStatus === 'Partial' ? 'badge-warning' : 'badge-neutral';
+    return `<tr>
+      <td>${i.studentName||'&mdash;'}</td>
+      <td>${i.regNo}</td>
+      <td>#${i.installmentNo}</td>
+      <td>${fmtDate(i.dueDate)}</td>
+      <td>KES ${fmt(i.amount)}</td>
+      <td>KES ${fmt(i.paidAmount||0)}</td>
+      <td style="font-weight:600;${i.owed>0?'color:var(--danger);':''}">KES ${fmt(i.owed)}</td>
+      <td><span class="badge ${badgeClass}">${i.effectiveStatus}</span></td>
+      <td><button class="btn btn-outline btn-sm" onclick="viewStudent('${i.regNo}')">View</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function clearPaymentPlansReportFilter() {
+  document.getElementById('pp-rpt-search').value = '';
+  document.getElementById('pp-rpt-status').value = '';
+  filterPaymentPlansReport();
+}
+
+function exportPaymentPlansReport() {
+  if (!_ppReportAll.length) { toast('No installments to export.', 'warning'); return; }
+  downloadWorkbook([...(_ppReportAll)].sort((a,b) => new Date(a.dueDate)-new Date(b.dueDate)).map(i => ({
+    'Student': i.studentName||'', 'Reg No.': i.regNo||'', 'Installment #': i.installmentNo||'',
+    'Due Date': i.dueDate||'', 'Amount': +i.amount||0, 'Paid': +i.paidAmount||0, 'Owed': i.owed,
+    'Status': i.effectiveStatus||'',
+  })), 'Payment Plans', 'JTI_PaymentPlans');
 }
 
 function editStudent(regNo) {
@@ -990,36 +1142,61 @@ async function deleteStudentConfirmed(regNo, reason) {
 //  FEE MANAGEMENT
 // ════════════════════════════════════════════════
 function renderFeeOverview(filtered) {
-  const data = filtered || state.students;
-  const totalPaid = data.reduce((a,x)=>a+(+x.amountPaid||0),0);
-  const totalBal  = data.reduce((a,x)=>a+(+x.feeBalance||0),0);
-  const fullyPaid = data.filter(x=>(+x.feeBalance||0)===0&&(+x.totalFee||0)>0).length;
-  const withBal   = data.filter(x=>(+x.feeBalance||0)>0).length;
-  document.getElementById('fee-total-collected').textContent   = 'KES ' + fmt(totalPaid);
-  document.getElementById('fee-total-outstanding').textContent = 'KES ' + fmt(totalBal);
-  document.getElementById('fee-fully-paid').textContent        = fullyPaid;
-  document.getElementById('fee-with-balance').textContent      = withBal;
+  const isAdmin = state.user?.role === 'Admin';
+  const lockHtml = '<span class="badge badge-neutral">&#128274; Admin only</span>';
+  const today = new Date().toISOString().split('T')[0];
+
+  // Staff see only students whose last payment was today; Admin sees all
+  const allData = filtered || state.students;
+  const data = isAdmin
+    ? allData
+    : allData.filter(s => {
+        // Show student if they have a payment recorded today
+        return state.payments.some(p => p.regNo === s.regNo && dateKey(p.date) === today);
+      });
+
+  // Summary stats — financial figures Admin only
+  if (isAdmin) {
+    const totalPaid = allData.reduce((a,x)=>a+(+x.amountPaid||0),0);
+    const totalBal  = allData.reduce((a,x)=>a+(+x.feeBalance||0),0);
+    const fullyPaid = allData.filter(x=>(+x.feeBalance||0)===0&&(+x.totalFee||0)>0).length;
+    const withBal   = allData.filter(x=>(+x.feeBalance||0)>0).length;
+    document.getElementById('fee-total-collected').textContent   = 'KES ' + fmt(totalPaid);
+    document.getElementById('fee-total-outstanding').textContent = 'KES ' + fmt(totalBal);
+    document.getElementById('fee-fully-paid').textContent        = fullyPaid;
+    document.getElementById('fee-with-balance').textContent      = withBal;
+  } else {
+    document.getElementById('fee-total-collected').innerHTML   = lockHtml;
+    document.getElementById('fee-total-outstanding').innerHTML = lockHtml;
+    document.getElementById('fee-fully-paid').innerHTML        = lockHtml;
+    document.getElementById('fee-with-balance').innerHTML      = lockHtml;
+  }
+
   const tbody = document.getElementById('fee-overview-tbody');
-  if (!data.length) { tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--muted);">No students</td></tr>'; return; }
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="9" class="empty-msg">${isAdmin ? 'No students' : 'No fee payments recorded today'}</td></tr>`;
+    return;
+  }
+
   tbody.innerHTML = data.map(s => {
     const pct = s.totalFee>0?Math.min(100,Math.round((s.amountPaid/s.totalFee)*100)):0;
     const feeStatus = pct===100?'paid':pct===0?'unpaid':'partial';
     const badge     = pct===100?'badge-success':pct===0?'badge-danger':'badge-warning';
     return `<tr>
       <td><strong>${s.regNo}</strong></td><td>${s.fullName}</td><td>${s.program||'&mdash;'}</td>
-      <td>KES ${fmt(s.totalFee)}</td>
-      <td style="color:var(--success);font-weight:600;">KES ${fmt(s.amountPaid)}</td>
-      <td style="color:${+s.feeBalance>0?'var(--danger)':'var(--success)'};font-weight:600;">KES ${fmt(s.feeBalance)}</td>
+      <td>${isAdmin ? 'KES '+fmt(s.totalFee) : lockHtml}</td>
+      <td style="color:var(--success);font-weight:600;">${isAdmin ? 'KES '+fmt(s.amountPaid) : lockHtml}</td>
+      <td style="color:${+s.feeBalance>0?'var(--danger)':'var(--success)'};font-weight:600;">${isAdmin ? 'KES '+fmt(s.feeBalance) : lockHtml}</td>
       <td style="min-width:120px;">
-        <div style="display:flex;align-items:center;gap:6px;">
+        ${isAdmin ? `<div style="display:flex;align-items:center;gap:6px;">
           <div class="progress-bar" style="flex:1;"><div class="progress-fill ${pct===100?'success':pct<40?'danger':''}" style="width:${pct}%;"></div></div>
           <span style="font-size:11px;font-weight:600;">${pct}%</span>
-        </div>
+        </div>` : lockHtml}
       </td>
       <td><span class="badge ${badge}">${feeStatus}</span></td>
       <td><div class="actions-cell">
         ${can('payment') ? `<button class="btn btn-gold btn-sm" onclick="quickPay('${s.regNo}')">&#128176; Pay</button>` : ''}
-        <button class="btn btn-outline btn-sm" onclick="printStudentInvoice('${s.regNo}')">&#128196;</button>
+        ${isAdmin ? `<button class="btn btn-outline btn-sm" onclick="printStudentInvoice('${s.regNo}')">&#128196;</button>` : ''}
         ${can('sms') ? `<button class="btn btn-sms btn-sm" onclick="openSmsModal('${s.regNo}')">&#128241;</button>` : ''}
       </div></td></tr>`;
   }).join('');
@@ -1718,6 +1895,141 @@ async function submitCharge() {
   btn.innerHTML = '&#129534; Raise Invoice';
 }
 
+// ════════════════════════════════════════════════
+//  PAYMENT PLANS / INSTALLMENTS
+// ════════════════════════════════════════════════
+
+/** Working list of installment rows while the Set Payment Plan modal is open. */
+let ppRows = [];
+
+function openPaymentPlanModal(regNo) {
+  if (!can('charge') && !can('register')) { toast('Access denied.', 'error'); return; }
+  const s = state.students.find(x => x.regNo === regNo);
+  if (!s) return;
+
+  document.getElementById('pp-regno').value = regNo;
+  document.getElementById('pp-avatar').textContent = s.fullName.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('pp-student-name').textContent = s.fullName;
+  document.getElementById('pp-program').textContent = s.program || '—';
+  document.getElementById('pp-current-bal').textContent = 'KES ' + fmt(s.feeBalance);
+  document.getElementById('pp-balance-ref').textContent = 'KES ' + fmt(s.feeBalance);
+  document.getElementById('pp-split-amount').placeholder = 'Defaults to KES ' + fmt(s.feeBalance);
+  document.getElementById('pp-split-first-date').value = new Date().toISOString().split('T')[0];
+
+  // Load existing plan for this student, if any, so it can be edited rather than always starting blank
+  const existing = (state.paymentPlans || []).filter(x => x.regNo === regNo)
+    .sort((a,b) => (+a.installmentNo||0) - (+b.installmentNo||0));
+  ppRows = existing.length
+    ? existing.map(inst => ({ dueDate: toDateInputValue(inst.dueDate) || inst.dueDate, amount: +inst.amount || 0, notes: inst.notes || '' }))
+    : [];
+  renderPlanRows();
+  openModal('modal-payment-plan');
+}
+
+function generateSplitInstallments() {
+  const regNo = document.getElementById('pp-regno').value;
+  const s = state.students.find(x => x.regNo === regNo);
+  const count = Math.max(2, Math.min(24, +document.getElementById('pp-split-count').value || 3));
+  const firstDate = document.getElementById('pp-split-first-date').value || new Date().toISOString().split('T')[0];
+  const freq = document.getElementById('pp-split-freq').value;
+  const totalAmount = +document.getElementById('pp-split-amount').value || (s ? +s.feeBalance || 0 : 0);
+
+  if (!totalAmount || totalAmount <= 0) { toast('Enter a valid amount to split, or make sure this student has an outstanding balance.', 'error'); return; }
+
+  const base = Math.floor(totalAmount / count);
+  const remainder = totalAmount - base * count;
+
+  const rows = [];
+  let d = new Date(firstDate);
+  for (let i = 0; i < count; i++) {
+    const amount = base + (i === count - 1 ? remainder : 0); // last installment absorbs rounding remainder
+    rows.push({ dueDate: d.toISOString().split('T')[0], amount, notes: '' });
+    if (freq === 'weekly') d.setDate(d.getDate() + 7);
+    else if (freq === 'biweekly') d.setDate(d.getDate() + 14);
+    else d.setMonth(d.getMonth() + 1);
+  }
+  ppRows = rows;
+  renderPlanRows();
+  toast(`Generated ${count} installments.`, 'success');
+}
+
+function addPlanRow() {
+  const last = ppRows[ppRows.length - 1];
+  const nextDate = last ? new Date(last.dueDate) : new Date();
+  if (last) nextDate.setMonth(nextDate.getMonth() + 1);
+  ppRows.push({ dueDate: nextDate.toISOString().split('T')[0], amount: 0, notes: '' });
+  renderPlanRows();
+}
+
+function removePlanRow(index) {
+  ppRows.splice(index, 1);
+  renderPlanRows();
+}
+
+function updatePlanRow(index, field, value) {
+  if (!ppRows[index]) return;
+  ppRows[index][field] = field === 'amount' ? (+value || 0) : value;
+  if (field === 'amount') recalcPlanTotal();
+}
+
+function renderPlanRows() {
+  const tbody = document.getElementById('pp-rows-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = ppRows.length ? ppRows.map((r, i) => `
+    <tr>
+      <td>#${i+1}</td>
+      <td><input type="date" value="${r.dueDate||''}" oninput="updatePlanRow(${i},'dueDate',this.value)" style="width:140px;"></td>
+      <td><input type="number" value="${r.amount||0}" oninput="updatePlanRow(${i},'amount',this.value)" style="width:110px;"></td>
+      <td><input type="text" value="${(r.notes||'').replace(/"/g,'&quot;')}" oninput="updatePlanRow(${i},'notes',this.value)" placeholder="Optional" style="width:140px;"></td>
+      <td><button class="btn btn-danger btn-sm" onclick="removePlanRow(${i})">&#10005;</button></td>
+    </tr>`).join('') : '<tr><td colspan="5" class="empty-msg compact">No installments yet — use Quick Split or Add Installment</td></tr>';
+  recalcPlanTotal();
+}
+
+function recalcPlanTotal() {
+  const total = ppRows.reduce((a, r) => a + (+r.amount || 0), 0);
+  document.getElementById('pp-plan-total').textContent = 'KES ' + fmt(total);
+}
+
+async function savePaymentPlan() {
+  const regNo = document.getElementById('pp-regno').value;
+  const s = state.students.find(x => x.regNo === regNo);
+  if (!regNo || !s) { toast('Student not found.', 'error'); return; }
+  if (!ppRows.length) { toast('Add at least one installment.', 'error'); return; }
+  if (ppRows.some(r => !r.dueDate || !r.amount || r.amount <= 0)) {
+    toast('Every installment needs a due date and a valid amount.', 'error'); return;
+  }
+
+  const btn = document.getElementById('pp-save-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Saving&hellip;';
+  try {
+    const res = await apiPost('setPaymentPlan', {
+      regNo, studentName: s.fullName,
+      installments: ppRows,
+      createdBy: state.user?.fullName || state.user?.username || 'Admin',
+    });
+    if (res.success) {
+      toast(`Payment plan saved — ${res.count} installments.`, 'success');
+      closeModal('modal-payment-plan');
+      reloadAfterWrite();
+    } else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+  btn.disabled = false;
+  btn.innerHTML = '&#128190; Save Plan';
+}
+
+async function removePaymentPlan(regNo) {
+  if (!can('charge') && !can('register')) { toast('Access denied.', 'error'); return; }
+  if (!confirm('Clear this student\u2019s payment plan? This does not affect their fee balance or payment history.')) return;
+  try {
+    const res = await apiPost('deletePaymentPlan', { regNo });
+    if (res.success) { toast('Payment plan cleared.', 'success'); reloadAfterWrite(); closeModal('modal-student'); }
+    else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+
 function showChargeInvoice(res, payload, student) {
   if (!student) return;
   document.getElementById('modal-invoice-body').innerHTML = `
@@ -1912,6 +2224,22 @@ function renderFeeStructures() {
 //  REPORTS
 // ════════════════════════════════════════════════
 function renderReports() {
+  const isAdmin = state.user?.role === 'Admin';
+  const lockHtml = '<span class="badge badge-neutral">&#128274; Admin only</span>';
+
+  if (!isAdmin) {
+    // Staff see a locked placeholder for all financial report sections
+    ['report-collection-rate','report-total-billed','report-total-paid','report-total-balance']
+      .forEach(id => { document.getElementById(id).innerHTML = lockHtml; });
+    document.getElementById('report-tbody').innerHTML =
+      '<tr><td colspan="6" class="empty-msg">&#128274; Financial reports are visible to Admins only</td></tr>';
+    document.getElementById('defaulters-tbody').innerHTML =
+      '<tr><td colspan="7" class="empty-msg">&#128274; Financial reports are visible to Admins only</td></tr>';
+    const smsLogCard = document.getElementById('sms-log-card');
+    if (smsLogCard) smsLogCard.style.display = can('sms') ? '' : 'none';
+    return;
+  }
+
   const s=state.students;
   const totalBilled=s.reduce((a,x)=>a+(+x.totalFee||0),0);
   const totalPaid=s.reduce((a,x)=>a+(+x.amountPaid||0),0);
@@ -1937,7 +2265,7 @@ function renderReports() {
       <td><div style="display:flex;align-items:center;gap:8px;">
         <div class="progress-bar" style="width:80px;"><div class="progress-fill ${r===100?'success':r<50?'danger':''}" style="width:${r}%;"></div></div>${r}%
       </div></td></tr>`;
-  }).join(''):'<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted);">No data</td></tr>';
+  }).join(''):'<tr><td colspan="6" class="empty-msg compact">No data</td></tr>';
   const defaulters=s.filter(x=>(+x.feeBalance||0)>0);
   document.getElementById('defaulters-tbody').innerHTML=defaulters.length
     ?defaulters.sort((a,b)=>(+b.feeBalance||0)-(+a.feeBalance||0)).map(x=>`
@@ -2085,16 +2413,41 @@ function exportDefaulters() {
 
 /** Default seed list — used only when no service types exist yet on first load */
 const DEFAULT_SERVICE_TYPES = [
-  { name: 'Printing',       icon: '\u{1F5A8}\uFE0F', price: 10  },
-  { name: 'Photocopying',   icon: '\u{1F4C4}',        price: 5   },
-  { name: 'Scanning',       icon: '\u{1F5C2}\uFE0F',  price: 20  },
-  { name: 'Browsing',       icon: '\u{1F4BB}',        price: 50  },
-  { name: 'eCitizen',       icon: '\u{1F3DB}\uFE0F',  price: 200 },
-  { name: 'Lamination',     icon: '\u{1F4D1}',        price: 50  },
-  { name: 'Binding',        icon: '\u{1F4DA}',        price: 100 },
-  { name: 'Typesetting',    icon: '\u{2328}\uFE0F',   price: 50  },
-  { name: 'CV Writing',     icon: '\u{1F4C3}',        price: 300 },
-  { name: 'Other',          icon: '\u{2795}',          price: 0   },
+  // Print & Copy
+  { name: 'B/W Printing',        icon: '\u{1F5A8}\uFE0F', price: 10,  category: 'Print & Copy' },
+  { name: 'Colour Printing',     icon: '\u{1F3A8}',        price: 25,  category: 'Print & Copy' },
+  { name: 'Photocopying',        icon: '\u{1F4C4}',        price: 5,   category: 'Print & Copy' },
+  { name: 'Scanning',            icon: '\u{1F5C2}\uFE0F',  price: 20,  category: 'Print & Copy' },
+  { name: 'Typing / Editing',    icon: '\u{2328}\uFE0F',   price: 50,  category: 'Print & Copy' },
+  // Internet & Digital
+  { name: 'Internet Browsing',   icon: '\u{1F310}',        price: 1,   category: 'Internet & Digital' },
+  { name: 'Email Services',      icon: '\u{1F4E7}',        price: 50,  category: 'Internet & Digital' },
+  { name: 'M-Pesa Assistance',   icon: '\u{1F4F1}',        price: 50,  category: 'Internet & Digital' },
+  // Photo & Finishing
+  { name: 'Passport Photo',      icon: '\u{1F4F7}',        price: 150, category: 'Photo & Finishing' },
+  { name: 'Lamination',          icon: '\u{1F4D1}',        price: 100, category: 'Photo & Finishing' },
+  { name: 'Spiral Binding',      icon: '\u{1F4DA}',        price: 200, category: 'Photo & Finishing' },
+  { name: 'Cover Page',          icon: '\u{1F4C1}',        price: 50,  category: 'Photo & Finishing' },
+  // KRA / Tax Services
+  { name: 'KRA PIN Registration',icon: '\u{1F3E6}',        price: 300, category: 'KRA / Tax Services' },
+  { name: 'iTax Returns (P9)',   icon: '\u{1F4CA}',        price: 500, category: 'KRA / Tax Services' },
+  { name: 'Tax Compliance',      icon: '\u{2705}',         price: 500, category: 'KRA / Tax Services' },
+  { name: 'VAT Return',          icon: '\u{1F4B0}',        price: 700, category: 'KRA / Tax Services' },
+  { name: 'KRA PIN Amendment',   icon: '\u{270F}\uFE0F',   price: 300, category: 'KRA / Tax Services' },
+  { name: 'KRA Nil Returns',     icon: '\u{1F4C4}',        price: 300, category: 'KRA / Tax Services' },
+  // eCitizen / Immigration & ID
+  { name: 'eCitizen Services',   icon: '\u{1F3DB}\uFE0F',  price: 200, category: 'eCitizen / Immigration & ID' },
+  { name: 'Passport Application',icon: '\u{1F6C2}',        price: 500, category: 'eCitizen / Immigration & ID' },
+  { name: 'Good Conduct Cert.',  icon: '\u{1F46E}',        price: 500, category: 'eCitizen / Immigration & ID' },
+  { name: 'NHIF / SHA Registration', icon: '\u{2764}\uFE0F', price: 200, category: 'eCitizen / Immigration & ID' },
+  // General
+  { name: 'CV Writing',          icon: '\u{1F4C3}',        price: 300, category: 'General' },
+  { name: 'Other',               icon: '\u{2795}',         price: 0,   category: 'General' },
+];
+
+const SERVICE_CATEGORY_ORDER = [
+  'Print & Copy', 'Internet & Digital', 'Photo & Finishing',
+  'KRA / Tax Services', 'eCitizen / Immigration & ID', 'General',
 ];
 
 let _svcLogShowAll = false;
@@ -2105,28 +2458,45 @@ function initServicesPage() {
   const svcDateEl   = document.getElementById('svc-date');
   const reconDateEl = document.getElementById('recon-date');
   const logDateEl   = document.getElementById('svc-log-date');
+  const expDateEl   = document.getElementById('exp-date');
+  const expLogDateEl= document.getElementById('exp-log-date');
   if (svcDateEl && !svcDateEl.value)     svcDateEl.value   = today;
   if (reconDateEl && !reconDateEl.value) reconDateEl.value = today;
   if (logDateEl && !logDateEl.value && !_svcLogShowAll) logDateEl.value = today;
+  if (expDateEl && !expDateEl.value)     expDateEl.value   = today;
+  if (expLogDateEl && !expLogDateEl.value && !_expLogShowAll) expLogDateEl.value = today;
 
   renderServiceTypeGrid();
   renderServiceTypesTable();
   populateServiceTypeFilter();
   filterServiceLog();
   renderReconciliation();
+
+  renderSvcDashboard();
+  populateStockLinkedTypeSelect();
+  renderStockTable();
+  renderStockMovements();
+  populateExpenseCategorySelects();
+  renderExpenseCategoriesTable();
+  filterExpenseLog();
+  renderUpcomingExpenses();
 }
 
 function switchSvcTab(tabId) {
-  ['svc-record','svc-log','svc-recon','svc-types'].forEach(id => {
-    document.getElementById('tab-' + id).style.display = (id === tabId) ? 'block' : 'none';
+  const order = ['svc-dash','svc-record','svc-log','svc-stock','svc-expenses','svc-recon','svc-types'];
+  order.forEach(id => {
+    const el = document.getElementById('tab-' + id);
+    if (el) el.style.display = (id === tabId) ? 'block' : 'none';
   });
   document.querySelectorAll('#page-services .tab-btn').forEach((b,i) => {
-    const order = ['svc-record','svc-log','svc-recon','svc-types'];
     b.classList.toggle('active', order[i] === tabId);
   });
-  if (tabId === 'svc-log')   filterServiceLog();
-  if (tabId === 'svc-recon') renderReconciliation();
-  if (tabId === 'svc-types') renderServiceTypesTable();
+  if (tabId === 'svc-dash')      renderSvcDashboard();
+  if (tabId === 'svc-log')       filterServiceLog();
+  if (tabId === 'svc-stock')    { renderStockTable(); renderStockMovements(); }
+  if (tabId === 'svc-expenses')  filterExpenseLog();
+  if (tabId === 'svc-recon')     renderReconciliation();
+  if (tabId === 'svc-types')     renderServiceTypesTable();
 }
 
 /** Effective list of service types: server-saved ones, or defaults if none saved yet */
@@ -2139,11 +2509,31 @@ function renderServiceTypeGrid() {
   if (!grid) return;
   const types = effectiveServiceTypes();
   const selected = document.getElementById('svc-selected-type')?.value || '';
-  grid.innerHTML = types.map(t => `
-    <div class="service-type-chip ${t.name===selected?'selected':''}" onclick="selectServiceType('${t.name.replace(/'/g,"\\'")}')">
-      <div class="stc-icon">${t.icon||'&#128424;'}</div>
-      <div class="stc-name">${t.name}</div>
-      <div class="stc-price">KES ${fmt(t.price||0)}</div>
+
+  const groups = {};
+  types.forEach(t => {
+    const cat = t.category || 'General';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(t);
+  });
+  const orderedCats = [
+    ...SERVICE_CATEGORY_ORDER.filter(c => groups[c]),
+    ...Object.keys(groups).filter(c => !SERVICE_CATEGORY_ORDER.includes(c)),
+  ];
+
+  let n = 0;
+  grid.innerHTML = orderedCats.map(cat => `
+    <div class="svc-category-block">
+      <div class="svc-category-label">${cat}</div>
+      <div class="svc-category-grid">
+        ${groups[cat].map(t => { n++; return `
+          <div class="service-type-chip ${t.name===selected?'selected':''}" onclick="selectServiceType('${t.name.replace(/'/g,"\\'")}')">
+            <span class="stc-number">${n}</span>
+            <div class="stc-icon-box"><span class="stc-icon">${t.icon||'&#128424;'}</span></div>
+            <div class="stc-name">${t.name}</div>
+            <div class="stc-price">KES ${fmt(t.price||0)}${t.name==='Internet Browsing'?' / min':''}</div>
+          </div>`; }).join('')}
+      </div>
     </div>`).join('');
 }
 
@@ -2162,35 +2552,89 @@ function recalcServiceAmount() {
   document.getElementById('svc-amount').value = qty * price;
 }
 
-function clearServiceForm() {
+/** The current sale's cart — each entry is one line item awaiting checkout. */
+let svcCart = [];
+
+/** Reads the currently-filled item fields as a pending (not-yet-added) item, or null if incomplete. */
+function getPendingServiceItem() {
+  const serviceType = document.getElementById('svc-selected-type').value;
+  const amount = +document.getElementById('svc-amount').value;
+  if (!serviceType || !amount) return null;
+  return {
+    serviceType,
+    description: document.getElementById('svc-desc').value.trim(),
+    qty: +document.getElementById('svc-qty').value || 1,
+    unitPrice: +document.getElementById('svc-unit-price').value || 0,
+    amount,
+  };
+}
+
+function resetPendingServiceItemFields() {
   document.getElementById('svc-selected-type').value = '';
   document.getElementById('svc-desc').value = '';
   document.getElementById('svc-qty').value = 1;
   document.getElementById('svc-unit-price').value = '';
   document.getElementById('svc-amount').value = '';
+  renderServiceTypeGrid();
+}
+
+function addItemToCart() {
+  if (!can('services')) { toast('Access denied.', 'error'); return; }
+  const item = getPendingServiceItem();
+  if (!item) { toast('Select a service type and enter a valid amount first.', 'error'); return; }
+  svcCart.push(item);
+  resetPendingServiceItemFields();
+  renderSvcCart();
+  toast(item.serviceType + ' added to cart.', 'success');
+}
+
+function removeCartItem(index) {
+  svcCart.splice(index, 1);
+  renderSvcCart();
+}
+
+function renderSvcCart() {
+  const wrap  = document.getElementById('svc-cart-wrap');
+  const tbody = document.getElementById('svc-cart-tbody');
+  if (!wrap || !tbody) return;
+  if (!svcCart.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  tbody.innerHTML = svcCart.map((it, i) => `
+    <tr>
+      <td>${it.serviceType}${it.description?`<br><span style="font-size:11px;color:var(--muted);">${it.description}</span>`:''}</td>
+      <td>${it.qty}</td>
+      <td>KES ${fmt(it.unitPrice)}</td>
+      <td style="font-weight:600;">KES ${fmt(it.amount)}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="removeCartItem(${i})">&#10005;</button></td>
+    </tr>`).join('');
+  const total = svcCart.reduce((a, it) => a + (+it.amount || 0), 0);
+  document.getElementById('svc-cart-total').textContent = 'KES ' + fmt(total);
+}
+
+function clearServiceForm() {
+  svcCart = [];
+  renderSvcCart();
+  resetPendingServiceItemFields();
   document.getElementById('svc-method').value = 'Cash';
   document.getElementById('svc-customer').value = '';
   document.getElementById('svc-phone').value = '';
   document.getElementById('svc-date').value = new Date().toISOString().split('T')[0];
-  renderServiceTypeGrid();
 }
 
 async function submitService() {
   if (!can('services')) { toast('Access denied.', 'error'); return; }
   const btn = document.getElementById('svc-submit-btn');
 
-  const serviceType = document.getElementById('svc-selected-type').value;
-  const amount       = +document.getElementById('svc-amount').value;
+  // Anything still sitting in the item-entry fields but not explicitly
+  // "Add to Cart"-ed is folded into the sale automatically, so a single-item
+  // sale still works in one click like before.
+  const pending = getPendingServiceItem();
+  const items = pending ? [...svcCart, pending] : [...svcCart];
 
-  if (!serviceType) { toast('Select a service type.', 'error'); return; }
-  if (!amount || amount <= 0) { toast('Enter a valid amount.', 'error'); return; }
+  if (!items.length) { toast('Select a service type and amount, or add items to the cart.', 'error'); return; }
 
   const payload = {
-    serviceType,
-    description: document.getElementById('svc-desc').value.trim(),
-    qty:         +document.getElementById('svc-qty').value || 1,
-    unitPrice:   +document.getElementById('svc-unit-price').value || 0,
-    amount,
+    items,
     method:      document.getElementById('svc-method').value,
     customer:    document.getElementById('svc-customer').value.trim(),
     phone:       document.getElementById('svc-phone').value.trim(),
@@ -2201,21 +2645,29 @@ async function submitService() {
   btn.disabled = true;
   btn.innerHTML = '<span class="loader"></span> Saving&hellip;';
   try {
-    const res = await apiPost('recordService', payload);
+    const res = await apiPost('recordServiceSale', payload);
     if (res.success) {
-      toast('Service recorded!', 'success');
+      toast(`Sale recorded! ${res.itemCount} item(s), KES ${fmt(res.totalAmount)}`, 'success');
       reloadAfterWrite();
-      showServiceReceipt(payload, res.receiptNo);
+      showServiceReceipt(items, payload, res.receiptNo);
       clearServiceForm();
     } else {
       toast('Error: ' + (res.error || 'Unknown'), 'error');
     }
   } catch (e) { toast('Failed: ' + e.message, 'error'); }
   btn.disabled = false;
-  btn.innerHTML = '&#128179; Record &amp; Print Receipt';
+  btn.innerHTML = '&#128179; Complete Sale &amp; Print Receipt';
 }
 
-function showServiceReceipt(p, rcpNo) {
+/** Stores the data behind the currently-open service receipt so the PDF
+ *  export can use it directly instead of re-parsing the receipt's HTML —
+ *  necessary now that a receipt can list several line items. */
+let _lastServiceReceipt = null;
+
+function showServiceReceipt(items, p, rcpNo) {
+  _lastServiceReceipt = { items, p, rcpNo };
+  const total = items.reduce((a, it) => a + (+it.amount || 0), 0);
+
   document.getElementById('modal-svc-receipt-body').innerHTML = `
     <div class="receipt-wrap" id="svc-receipt-print-area">
       ${receiptBrandHeaderHtml('Office Services Receipt')}
@@ -2223,78 +2675,72 @@ function showServiceReceipt(p, rcpNo) {
       <div class="receipt-row"><span class="rl">Receipt No.</span><span class="rr">${rcpNo||'&mdash;'}</span></div>
       <div class="receipt-row"><span class="rl">Date</span><span class="rr">${fmtDate(p.date)}</span></div>
       <hr class="receipt-divider">
-      <div class="receipt-row"><span class="rl">Service</span><span class="rr">${p.serviceType}</span></div>
-      ${p.description?`<div class="receipt-row"><span class="rl">Description</span><span class="rr" style="max-width:200px;text-align:right;">${p.description}</span></div>`:''}
-      <div class="receipt-row"><span class="rl">Quantity</span><span class="rr">${p.qty}</span></div>
-      <div class="receipt-row"><span class="rl">Unit Price</span><span class="rr">KES ${fmt(p.unitPrice)}</span></div>
+      ${items.map(it => `
+        <div class="receipt-row"><span class="rl">${it.serviceType}${(+it.qty||1)>1?` &times;${it.qty}`:''}</span><span class="rr">KES ${fmt(it.amount)}</span></div>
+        ${it.description?`<div class="receipt-row" style="margin-top:-6px;"><span class="rl" style="font-size:11px;color:var(--muted);">${it.description}</span><span class="rr"></span></div>`:''}
+      `).join('')}
       <hr class="receipt-divider">
       <div class="receipt-row"><span class="rl">Payment Method</span><span class="rr">${p.method}</span></div>
       ${p.customer?`<div class="receipt-row"><span class="rl">Customer</span><span class="rr">${p.customer}</span></div>`:''}
       ${p.phone?`<div class="receipt-row"><span class="rl">Phone</span><span class="rr">${p.phone}</span></div>`:''}
-      <div class="receipt-total"><span>Amount Paid</span><span>KES ${fmt(p.amount)}</span></div>
+      <div class="receipt-total"><span>Total Amount Paid</span><span>KES ${fmt(total)}</span></div>
       <div class="receipt-stamp">Thank you for visiting our office.<br>${BRAND.name} &middot; ${BRAND.branch}</div>
       ${receiptContactFooterHtml()}
     </div>`;
   openModal('modal-svc-receipt');
 }
 
+/** Re-opens a past receipt — gathers every Services row sharing that
+ *  receiptNo (a multi-item sale spans several rows) back into one receipt. */
 function showServiceReceiptById(receiptNo) {
-  const r = state.services.find(x => x.receiptNo === receiptNo);
-  if (!r) { toast('Receipt not found.', 'error'); return; }
-  showServiceReceipt(r, r.receiptNo);
+  const items = state.services.filter(x => x.receiptNo === receiptNo);
+  if (!items.length) { toast('Receipt not found.', 'error'); return; }
+  showServiceReceipt(items, items[0], receiptNo);
 }
 
 function downloadServiceReceiptPdf() {
-  const area = document.getElementById('svc-receipt-print-area');
-  if (!area) { toast('No receipt open.', 'error'); return; }
-
-  const data = {};
-  area.querySelectorAll('.receipt-row').forEach(row => {
-    const spans = row.querySelectorAll('span');
-    if (spans.length >= 2) data[spans[0].textContent.trim()] = spans[1].textContent.trim();
-  });
-  const totalSpans = area.querySelectorAll('.receipt-total span');
-  const totalLabel = totalSpans[0]?.textContent.trim() || 'Amount Paid';
-  const totalValue = totalSpans[1]?.textContent.trim() || '';
-  const stampLines = (area.querySelector('.receipt-stamp')?.innerText || '').split('\n').filter(Boolean);
+  if (!_lastServiceReceipt) { toast('No receipt open.', 'error'); return; }
+  const { items, p, rcpNo } = _lastServiceReceipt;
+  const total = items.reduce((a, it) => a + (+it.amount || 0), 0);
 
   const doc = _newDoc();
   let y = _drawHeader(doc, 'Service Receipt');
 
   y = _sectionLabel(doc, y, 'Receipt Details');
-  y = _row(doc, y, 'Receipt No.', data['Receipt No.'] || '—', { shade: true });
-  y = _row(doc, y, 'Date',        data['Date']        || '—');
+  y = _row(doc, y, 'Receipt No.', rcpNo || '—', { shade: true });
+  y = _row(doc, y, 'Date', fmtDate(p.date) || '—');
   y += 3;
 
   y = _divider(doc, y);
 
-  y = _sectionLabel(doc, y, 'Service Details');
-  y = _row(doc, y, 'Service',     data['Service']     || '—', { shade: true });
-  if (data['Description']) y = _row(doc, y, 'Description', data['Description']);
-  y = _row(doc, y, 'Quantity',    data['Quantity']    || '1');
-  y = _row(doc, y, 'Unit Price',  data['Unit Price']  || '—');
+  y = _sectionLabel(doc, y, items.length > 1 ? `Items (${items.length})` : 'Service Details');
+  items.forEach((it, i) => {
+    y = _row(doc, y, it.serviceType + ((+it.qty||1) > 1 ? ` x${it.qty}` : ''), 'KES ' + fmt(it.amount), { shade: i % 2 === 0 });
+    if (it.description) y = _row(doc, y, '', it.description);
+  });
   y += 3;
 
   y = _divider(doc, y);
 
   y = _sectionLabel(doc, y, 'Payment Details');
-  y = _row(doc, y, 'Method', data['Payment Method'] || '—', { shade: true });
-  if (data['Customer']) y = _row(doc, y, 'Customer', data['Customer']);
-  if (data['Phone'])    y = _row(doc, y, 'Phone',    data['Phone']);
+  y = _row(doc, y, 'Method', p.method || '—', { shade: true });
+  if (p.customer) y = _row(doc, y, 'Customer', p.customer);
+  if (p.phone)    y = _row(doc, y, 'Phone', p.phone);
   y += 3;
 
   y = _divider(doc, y, false);
 
-  y = _totalBar(doc, y, totalLabel, totalValue);
+  y = _totalBar(doc, y, 'Total Amount Paid', 'KES ' + fmt(total));
   y += 4;
 
   _footer(doc, y, [
-    ...stampLines,
+    'Thank you for visiting our office.',
+    BRAND.name + ' \u00b7 ' + BRAND.branch,
     'Generated: ' + new Date().toLocaleDateString('en-KE', { day: '2-digit', month: 'long', year: 'numeric' }),
   ]);
 
-  const rcpNo = (data['Receipt No.'] || 'service-receipt').replace(/[/\\]/g, '-');
-  _save(doc, 'JTI_ServiceReceipt_' + rcpNo + '.pdf');
+  const rcpSafe = (rcpNo || 'service-receipt').replace(/[/\\]/g, '-');
+  _save(doc, 'JTI_ServiceReceipt_' + rcpSafe + '.pdf');
 }
 
 // ── Admin: Edit / Delete service transactions (duty segregation) ──
@@ -2304,8 +2750,13 @@ function downloadServiceReceiptPdf() {
 
 function openEditServiceModal(receiptNo) {
   if (!can('servicesManage')) { toast('Only an Admin can edit service transactions.', 'error'); return; }
-  const s = state.services.find(x => x.receiptNo === receiptNo);
-  if (!s) { toast('Transaction not found.', 'error'); return; }
+  const items = state.services.filter(x => x.receiptNo === receiptNo);
+  if (!items.length) { toast('Transaction not found.', 'error'); return; }
+  if (items.length > 1) {
+    toast('This sale has multiple items — editing individual line items isn\u2019t supported yet. Delete the sale and re-record it instead.', 'error');
+    return;
+  }
+  const s = items[0];
 
   document.getElementById('esvc-receipt-no').value      = s.receiptNo;
   document.getElementById('esvc-receipt-display').value = s.receiptNo;
@@ -2362,9 +2813,11 @@ async function saveEditedService() {
 
 async function deleteServiceTransaction(receiptNo) {
   if (!can('servicesManage')) { toast('Only an Admin can delete service transactions.', 'error'); return; }
-  const s = state.services.find(x => x.receiptNo === receiptNo);
-  if (!s) return;
-  const reason = prompt(`Delete transaction ${receiptNo} (KES ${fmt(s.amount)})?\n\nEnter a reason for this deletion (required for audit log):`);
+  const items = state.services.filter(x => x.receiptNo === receiptNo);
+  if (!items.length) return;
+  const total = items.reduce((a, s) => a + (+s.amount || 0), 0);
+  const itemLabel = items.length > 1 ? `${items.length} items, KES ${fmt(total)} total` : `KES ${fmt(total)}`;
+  const reason = prompt(`Delete sale ${receiptNo} (${itemLabel})?\n\nThis removes ${items.length > 1 ? 'all items on this receipt' : 'this transaction'}. Enter a reason for this deletion (required for audit log):`);
   if (reason === null) return; // cancelled
   if (!reason.trim()) { toast('A reason is required to delete a transaction.', 'error'); return; }
 
@@ -2374,7 +2827,7 @@ async function deleteServiceTransaction(receiptNo) {
       deletedBy: state.user?.fullName || state.user?.username || 'Admin',
       deleteReason: reason.trim(),
     });
-    if (res.success) { toast('Transaction deleted.', 'success'); reloadAfterWrite(); }
+    if (res.success) { toast('Sale deleted.', 'success'); reloadAfterWrite(); }
     else toast('Error: ' + (res.error || 'Unknown'), 'error');
   } catch (e) { toast('Failed: ' + e.message, 'error'); }
 }
@@ -2395,11 +2848,13 @@ function renderServiceLog(filtered) {
   const tbody = document.getElementById('svc-log-tbody');
   document.getElementById('svc-log-count').textContent = data.length + ' records';
   if (!data.length) { tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--muted);">No service transactions found</td></tr>'; return; }
+  const countByReceipt = {};
+  state.services.forEach(s => { countByReceipt[s.receiptNo] = (countByReceipt[s.receiptNo] || 0) + 1; });
   tbody.innerHTML = [...data].sort((a,b) => new Date(b.createdAt||b.date) - new Date(a.createdAt||a.date)).map((s,i) => `
     <tr>
       <td>${data.length - i}</td>
       <td>${fmtDate(s.date)}</td>
-      <td><strong>${s.receiptNo||'&mdash;'}</strong>${s.editedAt ? '<br><span class="badge badge-warning" style="margin-top:3px;" title="Edited by '+(s.editedBy||'Admin')+' on '+fmtDate(s.editedAt)+'">&#9999; Edited</span>' : ''}</td>
+      <td><strong>${s.receiptNo||'&mdash;'}</strong>${countByReceipt[s.receiptNo] > 1 ? ` <span class="badge badge-info" title="Part of a multi-item sale">${countByReceipt[s.receiptNo]} items</span>` : ''}${s.editedAt ? '<br><span class="badge badge-warning" style="margin-top:3px;" title="Edited by '+(s.editedBy||'Admin')+' on '+fmtDate(s.editedAt)+'">&#9999; Edited</span>' : ''}</td>
       <td><span class="badge badge-purple">${s.serviceType}</span></td>
       <td style="font-size:12.5px;">${s.description||'&mdash;'}</td>
       <td>${s.qty||1}</td>
@@ -2493,7 +2948,12 @@ function renderReconciliation() {
   const dayFeeCashTx = state.payments.filter(p => p.method === 'Cash' && dateKey(p.date) === date);
   const feeCash = dayFeeCashTx.reduce((a, p) => a + (+p.amount || 0), 0);
 
-  const systemCashTotal = svcCash + feeCash;
+  // Cash expenses paid out of the same drawer reduce the cash that should
+  // physically be on hand, so they're netted out of the expected total.
+  const dayCashExpenses = state.expenses.filter(e => e.method === 'Cash' && dateKey(e.date) === date);
+  const cashExpensesTotal = dayCashExpenses.reduce((a, e) => a + (+e.amount || 0), 0);
+
+  const systemCashTotal = svcCash + feeCash - cashExpensesTotal;
 
   document.getElementById('recon-tx-count').textContent = dayTx.length;
   document.getElementById('recon-total').textContent    = 'KES ' + fmt(total);
@@ -2556,7 +3016,23 @@ function renderReconciliation() {
   document.getElementById('recon-system-cash-display').value = 'KES ' + fmt(systemCashTotal);
   document.getElementById('recon-cash-source-breakdown').innerHTML = `
     <div class="method-pill"><span class="mp-dot"></span>Office Services Cash: <strong>&nbsp;KES ${fmt(svcCash)}</strong></div>
-    <div class="method-pill"><span class="mp-dot"></span>Fee Payments Cash: <strong>&nbsp;KES ${fmt(feeCash)}</strong></div>`;
+    <div class="method-pill"><span class="mp-dot"></span>Fee Payments Cash: <strong>&nbsp;KES ${fmt(feeCash)}</strong></div>
+    <div class="method-pill" style="color:var(--danger);"><span class="mp-dot" style="background:var(--danger);"></span>Less: Cash Expenses: <strong>&nbsp;-KES ${fmt(cashExpensesTotal)}</strong></div>`;
+
+  // Cash expenses (drawer-affecting) transactions table
+  const expBody = document.getElementById('recon-cash-exp-tbody');
+  if (expBody) {
+    expBody.innerHTML = dayCashExpenses.length
+      ? [...dayCashExpenses].sort((a,b) => new Date(a.createdAt||a.date) - new Date(b.createdAt||b.date)).map(e => `
+          <tr>
+            <td>${fmtTime(e.createdAt) || '&mdash;'}</td>
+            <td><span class="badge badge-purple">${e.category}</span></td>
+            <td style="font-size:12.5px;">${e.description||'&mdash;'}</td>
+            <td style="font-weight:600;color:var(--danger);">-KES ${fmt(e.amount)}</td>
+            <td style="font-size:12px;color:var(--muted);">${e.recordedBy||'&mdash;'}</td>
+          </tr>`).join('')
+      : '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);">No cash expenses for this date</td></tr>';
+  }
 
   const countedInput = document.getElementById('recon-counted-cash');
   const notesInput    = document.getElementById('recon-notes');
@@ -2733,11 +3209,12 @@ function renderServiceTypesTable() {
   const tbody = document.getElementById('svc-types-tbody');
   if (!tbody) return;
   const types = effectiveServiceTypes();
-  if (!types.length) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--muted);">No service types yet</td></tr>'; return; }
+  if (!types.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--muted);">No service types yet</td></tr>'; return; }
   tbody.innerHTML = types.map(t => `
     <tr>
       <td style="font-size:18px;">${t.icon||'&#128424;'}</td>
       <td>${t.name}</td>
+      <td><span class="badge badge-purple">${t.category||'General'}</span></td>
       <td>KES ${fmt(t.price||0)}</td>
       <td><div class="actions-cell">
         ${can('services') ? `<button class="btn btn-outline btn-sm" onclick="editServiceType('${t.name.replace(/'/g,"\\'")}')">&#9999; Edit</button>` : ''}
@@ -2754,6 +3231,7 @@ function editServiceType(name) {
   document.getElementById('svct-name').value           = t.name;
   document.getElementById('svct-icon').value            = t.icon || '';
   document.getElementById('svct-price').value           = t.price || '';
+  document.getElementById('svct-category').value        = t.category || 'General';
   document.getElementById('svct-edit-mode').value       = 'true';
   document.getElementById('svct-original-name').value   = t.name;
   document.getElementById('svct-form-title').textContent = 'Edit Service Type';
@@ -2764,6 +3242,7 @@ function editServiceType(name) {
 
 function clearServiceTypeForm() {
   ['svct-name','svct-icon','svct-price'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('svct-category').value        = 'General';
   document.getElementById('svct-edit-mode').value       = 'false';
   document.getElementById('svct-original-name').value   = '';
   document.getElementById('svct-form-title').textContent = 'Add Service Type';
@@ -2776,6 +3255,7 @@ async function saveServiceType() {
   const name     = document.getElementById('svct-name').value.trim();
   const icon     = document.getElementById('svct-icon').value.trim() || '\u{1F4C4}';
   const price    = +document.getElementById('svct-price').value || 0;
+  const category = document.getElementById('svct-category').value || 'General';
   const editMode = document.getElementById('svct-edit-mode').value === 'true';
   const origName = document.getElementById('svct-original-name').value;
 
@@ -2787,7 +3267,7 @@ async function saveServiceType() {
 
   try {
     const action  = editMode ? 'updateServiceType' : 'addServiceType';
-    const payload = editMode ? { originalName: origName, name, icon, price } : { name, icon, price };
+    const payload = editMode ? { originalName: origName, name, icon, price, category } : { name, icon, price, category };
     const res = await apiPost(action, payload);
     if (res.success) {
       toast(editMode ? 'Service type updated!' : 'Service type saved!', 'success');
@@ -2809,6 +3289,975 @@ async function deleteServiceType(name) {
     else toast('Error: ' + res.error, 'error');
   } catch (e) { toast('Failed: ' + e.message, 'error'); }
 }
+
+// ════════════════════════════════════════════════
+//  SERVICES DASHBOARD (income vs expenses, top sellers)
+// ════════════════════════════════════════════════
+
+function renderSvcDashboard() {
+  const dashEl = document.getElementById('dash-today-income');
+  if (!dashEl) return;
+  const today = new Date().toISOString().split('T')[0];
+
+  const todaySvc = state.services.filter(s => dateKey(s.date) === today);
+  const todayIncome = todaySvc.reduce((a, s) => a + (+s.amount || 0), 0);
+  const todayExp = state.expenses.filter(e => dateKey(e.date) === today)
+    .reduce((a, e) => a + (+e.amount || 0), 0);
+  const net = todayIncome - todayExp;
+
+  document.getElementById('dash-today-income').textContent = 'KES ' + fmt(todayIncome);
+  document.getElementById('dash-today-expenses').textContent = 'KES ' + fmt(todayExp);
+  const netEl = document.getElementById('dash-today-net');
+  netEl.textContent = (net < 0 ? '-KES ' + fmt(Math.abs(net)) : 'KES ' + fmt(net));
+  netEl.style.color = net < 0 ? 'var(--danger)' : 'var(--success)';
+
+  document.getElementById('dash-today-orders').textContent = new Set(todaySvc.map(s => s.receiptNo)).size;
+  document.getElementById('dash-all-transactions').textContent = new Set(state.services.map(s => s.receiptNo)).size;
+
+  // Top services today
+  const byType = {};
+  todaySvc.forEach(s => {
+    const k = s.serviceType || 'Other';
+    if (!byType[k]) byType[k] = { count: 0, total: 0 };
+    byType[k].count++;
+    byType[k].total += (+s.amount || 0);
+  });
+  const topRows = Object.entries(byType).sort((a,b) => b[1].total - a[1].total).slice(0, 8);
+  document.getElementById('dash-top-services-tbody').innerHTML = topRows.length
+    ? topRows.map(([name, v]) => `<tr><td>${name}</td><td>${v.count}</td><td style="font-weight:600;">KES ${fmt(v.total)}</td></tr>`).join('')
+    : '<tr><td colspan="3" class="empty-msg compact">No services recorded today</td></tr>';
+
+  // Method split today
+  const byMethod = {};
+  todaySvc.forEach(s => { const k = s.method || 'Cash'; byMethod[k] = (byMethod[k]||0) + (+s.amount||0); });
+  const methodEntries = Object.entries(byMethod);
+  document.getElementById('dash-method-split').innerHTML = methodEntries.length
+    ? methodEntries.map(([m, v]) => `<div class="method-pill"><span class="mp-dot"></span>${m}: <strong>&nbsp;KES ${fmt(v)}</strong></div>`).join('')
+    : '<div style="color:var(--muted);font-size:13px;">No transactions today</div>';
+
+  // Last 7 days income vs expenses
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().split('T')[0]);
+  }
+  const rows = days.map(d => {
+    const inc = state.services.filter(s => dateKey(s.date) === d).reduce((a,s) => a + (+s.amount||0), 0);
+    const exp = state.expenses.filter(e => dateKey(e.date) === d).reduce((a,e) => a + (+e.amount||0), 0);
+    return { d, inc, exp, net: inc - exp };
+  });
+  document.getElementById('dash-7day-tbody').innerHTML = rows.map(r => `
+    <tr>
+      <td>${fmtDate(r.d)}</td>
+      <td style="color:var(--success);font-weight:600;">KES ${fmt(r.inc)}</td>
+      <td style="color:var(--danger);font-weight:600;">KES ${fmt(r.exp)}</td>
+      <td style="font-weight:700;${r.net<0?'color:var(--danger);':''}">${r.net<0?'-KES '+fmt(Math.abs(r.net)):'KES '+fmt(r.net)}</td>
+    </tr>`).join('');
+
+  // Low stock alerts
+  const low = (state.stockItems || []).filter(it => (+it.currentStock || 0) <= (+it.reorderLevel || 0));
+  const lowCard = document.getElementById('dash-lowstock-card');
+  if (low.length) {
+    lowCard.style.display = '';
+    document.getElementById('dash-lowstock-tbody').innerHTML = low.map(it => `
+      <tr><td>${it.name}</td><td style="color:var(--danger);font-weight:700;">${it.currentStock} ${it.unit||''}</td><td>${it.reorderLevel} ${it.unit||''}</td></tr>`).join('');
+  } else {
+    lowCard.style.display = 'none';
+  }
+
+  const fromEl = document.getElementById('pl-month-from');
+  const toEl   = document.getElementById('pl-month-to');
+  const curMonth = new Date().toISOString().slice(0, 7);
+  if (fromEl && !fromEl.value) fromEl.value = curMonth;
+  if (toEl && !toEl.value)     toEl.value   = curMonth;
+  renderMonthlyPL();
+}
+
+// ════════════════════════════════════════════════
+//  MONTHLY PROFIT & LOSS (supports a From/To month range)
+// ════════════════════════════════════════════════
+
+/** Returns an array of "YYYY-MM" strings from fromMonth to toMonth inclusive. */
+function _monthsInRange(fromMonth, toMonth) {
+  const months = [];
+  let [y, m] = fromMonth.split('-').map(Number);
+  const [ey, em] = toMonth.split('-').map(Number);
+  let guard = 0;
+  while ((y < ey || (y === ey && m <= em)) && guard < 240) {
+    months.push(y + '-' + String(m).padStart(2, '0'));
+    m++; if (m > 12) { m = 1; y++; }
+    guard++;
+  }
+  return months;
+}
+
+/**
+ * Computes a P&L breakdown across a "YYYY-MM" \u2192 "YYYY-MM" range (inclusive),
+ * entirely from already-loaded state (no extra server round-trip needed).
+ * Income = Service income by serviceType, optionally + Fee/Tuition payments.
+ * Expenses = Expenses by category. Also returns a per-month breakdown so
+ * multi-month selections can be inspected month by month.
+ */
+function computeMonthlyPL(fromMonth, toMonth, includeFees) {
+  if (toMonth < fromMonth) { const t = fromMonth; fromMonth = toMonth; toMonth = t; }
+  const inRange = dateStr => {
+    if (!dateStr) return false;
+    const ym = String(dateStr).slice(0, 7);
+    return ym >= fromMonth && ym <= toMonth;
+  };
+
+  const svcInRange = state.services.filter(s => inRange(s.date));
+  const incomeByType = {};
+  svcInRange.forEach(s => {
+    const k = s.serviceType || 'Other';
+    incomeByType[k] = (incomeByType[k] || 0) + (+s.amount || 0);
+  });
+
+  let feeTotal = 0;
+  if (includeFees) {
+    feeTotal = (state.payments || []).filter(p => inRange(p.date)).reduce((a, p) => a + (+p.amount || 0), 0);
+  }
+
+  const expInRange = state.expenses.filter(e => inRange(e.date));
+  const expenseByCategory = {};
+  expInRange.forEach(e => {
+    const k = e.category || 'Other';
+    expenseByCategory[k] = (expenseByCategory[k] || 0) + (+e.amount || 0);
+  });
+
+  const serviceIncomeTotal = Object.values(incomeByType).reduce((a, v) => a + v, 0);
+  const totalIncome   = serviceIncomeTotal + feeTotal;
+  const totalExpenses = Object.values(expenseByCategory).reduce((a, v) => a + v, 0);
+
+  // Per-month breakdown, useful when the range spans more than one month
+  const months = _monthsInRange(fromMonth, toMonth);
+  const monthly = months.map(ym => {
+    const mIncome = svcInRange.filter(s => String(s.date).slice(0,7) === ym).reduce((a,s) => a + (+s.amount||0), 0)
+      + (includeFees ? (state.payments||[]).filter(p => String(p.date).slice(0,7) === ym).reduce((a,p)=>a+(+p.amount||0),0) : 0);
+    const mExpenses = expInRange.filter(e => String(e.date).slice(0,7) === ym).reduce((a,e) => a + (+e.amount||0), 0);
+    return { month: ym, income: mIncome, expenses: mExpenses, net: mIncome - mExpenses };
+  });
+
+  return {
+    fromMonth, toMonth, months, monthly,
+    incomeByType, feeTotal, expenseByCategory,
+    serviceIncomeTotal, totalIncome, totalExpenses,
+    netProfit: totalIncome - totalExpenses,
+  };
+}
+
+function _currentPLParams() {
+  const fromMonth = document.getElementById('pl-month-from')?.value || new Date().toISOString().slice(0, 7);
+  const toMonth   = document.getElementById('pl-month-to')?.value   || fromMonth;
+  const includeFees = !!document.getElementById('pl-include-fees')?.checked;
+  return { fromMonth, toMonth, includeFees };
+}
+
+function applyPLPreset() {
+  const preset = document.getElementById('pl-preset')?.value;
+  if (!preset || preset === 'custom') return;
+  const now = new Date();
+  const ym = d => d.toISOString().slice(0, 7);
+  let from, to;
+  if (preset === 'this') {
+    from = to = ym(now);
+  } else if (preset === 'last') {
+    const d = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    from = to = ym(d);
+  } else if (preset === 'last3') {
+    from = ym(new Date(now.getFullYear(), now.getMonth() - 2, 1));
+    to   = ym(now);
+  } else if (preset === 'last6') {
+    from = ym(new Date(now.getFullYear(), now.getMonth() - 5, 1));
+    to   = ym(now);
+  } else if (preset === 'ytd') {
+    from = now.getFullYear() + '-01';
+    to   = ym(now);
+  }
+  document.getElementById('pl-month-from').value = from;
+  document.getElementById('pl-month-to').value   = to;
+  renderMonthlyPL();
+}
+
+function onPLRangeChange() {
+  document.getElementById('pl-preset').value = 'custom';
+  renderMonthlyPL();
+}
+
+function renderMonthlyPL() {
+  const totalIncomeEl = document.getElementById('pl-total-income');
+  if (!totalIncomeEl) return;
+  const { fromMonth, toMonth, includeFees } = _currentPLParams();
+  const pl = computeMonthlyPL(fromMonth, toMonth, includeFees);
+
+  document.getElementById('pl-period-label').textContent = 'Total Income (' + _rangeLabel(pl.fromMonth, pl.toMonth) + ')';
+  totalIncomeEl.textContent = 'KES ' + fmt(pl.totalIncome);
+  document.getElementById('pl-total-expenses').textContent = 'KES ' + fmt(pl.totalExpenses);
+  const netEl = document.getElementById('pl-net');
+  netEl.textContent = (pl.netProfit < 0 ? '-KES ' + fmt(Math.abs(pl.netProfit)) : 'KES ' + fmt(pl.netProfit));
+  netEl.style.color = pl.netProfit < 0 ? 'var(--danger)' : 'var(--success)';
+
+  const incomeRows = Object.entries(pl.incomeByType).sort((a, b) => b[1] - a[1]);
+  if (pl.feeTotal > 0) incomeRows.push(['Fee / Tuition Payments', pl.feeTotal]);
+  document.getElementById('pl-income-tbody').innerHTML = incomeRows.length
+    ? incomeRows.map(([name, amt]) => `<tr><td>${name}</td><td style="font-weight:600;">KES ${fmt(amt)}</td><td>${pl.totalIncome ? Math.round(amt/pl.totalIncome*100) : 0}%</td></tr>`).join('')
+    : '<tr><td colspan="3" class="empty-msg compact">No income recorded for this period</td></tr>';
+
+  const expenseRows = Object.entries(pl.expenseByCategory).sort((a, b) => b[1] - a[1]);
+  document.getElementById('pl-expense-tbody').innerHTML = expenseRows.length
+    ? expenseRows.map(([name, amt]) => `<tr><td><span class="badge badge-purple">${name}</span></td><td style="font-weight:600;color:var(--danger);">KES ${fmt(amt)}</td><td>${pl.totalExpenses ? Math.round(amt/pl.totalExpenses*100) : 0}%</td></tr>`).join('')
+    : '<tr><td colspan="3" class="empty-msg compact">No expenses recorded for this period</td></tr>';
+
+  // Month-by-month breakdown only shown when the range spans 2+ months
+  const wrap = document.getElementById('pl-monthly-breakdown-wrap');
+  if (pl.months.length > 1) {
+    wrap.style.display = '';
+    document.getElementById('pl-monthly-tbody').innerHTML = pl.monthly.map(m => `
+      <tr>
+        <td>${_monthLabel(m.month)}</td>
+        <td style="color:var(--success);font-weight:600;">KES ${fmt(m.income)}</td>
+        <td style="color:var(--danger);font-weight:600;">KES ${fmt(m.expenses)}</td>
+        <td style="font-weight:700;${m.net<0?'color:var(--danger);':''}">${m.net<0?'-KES '+fmt(Math.abs(m.net)):'KES '+fmt(m.net)}</td>
+      </tr>`).join('');
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+function _monthLabel(monthStr) {
+  const [y, m] = monthStr.split('-').map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString('en-KE', { month: 'long', year: 'numeric' });
+}
+
+function _rangeLabel(fromMonth, toMonth) {
+  return fromMonth === toMonth ? _monthLabel(fromMonth) : (_monthLabel(fromMonth) + ' \u2013 ' + _monthLabel(toMonth));
+}
+
+function exportMonthlyPLExcel() {
+  const { fromMonth, toMonth, includeFees } = _currentPLParams();
+  const pl = computeMonthlyPL(fromMonth, toMonth, includeFees);
+  const label = _rangeLabel(pl.fromMonth, pl.toMonth);
+
+  const summaryRows = [
+    { 'Item': 'Period', 'Amount (KES)': label },
+    { 'Item': 'Total Income', 'Amount (KES)': pl.totalIncome },
+    { 'Item': 'Total Expenses', 'Amount (KES)': pl.totalExpenses },
+    { 'Item': 'Net Profit / (Loss)', 'Amount (KES)': pl.netProfit },
+  ];
+  const incomeRows = Object.entries(pl.incomeByType).sort((a,b)=>b[1]-a[1])
+    .map(([name, amt]) => ({ 'Source': name, 'Amount (KES)': amt }));
+  if (pl.feeTotal > 0) incomeRows.push({ 'Source': 'Fee / Tuition Payments', 'Amount (KES)': pl.feeTotal });
+  incomeRows.push({ 'Source': 'TOTAL INCOME', 'Amount (KES)': pl.totalIncome });
+
+  const expenseRows = Object.entries(pl.expenseByCategory).sort((a,b)=>b[1]-a[1])
+    .map(([name, amt]) => ({ 'Category': name, 'Amount (KES)': amt }));
+  expenseRows.push({ 'Category': 'TOTAL EXPENSES', 'Amount (KES)': pl.totalExpenses });
+
+  if (!incomeRows.length && !expenseRows.length) { toast('No data to export for this period.', 'warning'); return; }
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), 'Summary');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(incomeRows), 'Income');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(expenseRows), 'Expenses');
+  if (pl.months.length > 1) {
+    const monthlyRows = pl.monthly.map(m => ({
+      'Month': _monthLabel(m.month), 'Income (KES)': m.income, 'Expenses (KES)': m.expenses, 'Net (KES)': m.net,
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(monthlyRows), 'Monthly Breakdown');
+  }
+  XLSX.writeFile(wb, `PL_${pl.fromMonth}_to_${pl.toMonth}.xlsx`);
+  toast('Exported to Excel!', 'success');
+}
+
+function exportMonthlyPLPdf() {
+  const { fromMonth, toMonth, includeFees } = _currentPLParams();
+  const pl = computeMonthlyPL(fromMonth, toMonth, includeFees);
+  const label = _rangeLabel(pl.fromMonth, pl.toMonth);
+
+  if (!pl.totalIncome && !pl.totalExpenses) { toast('No data to export for this period.', 'warning'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+  const W = 210, PAD = 16;
+  let y = 0;
+
+  // Header bar
+  doc.setFillColor(...PDF.navy);
+  doc.rect(0, 0, W, 30, 'F');
+  doc.setFillColor(...PDF.gold);
+  doc.rect(0, 30, W, 2, 'F');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(255,255,255);
+  doc.text(BRAND.name, PAD, 13);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...PDF.goldLt);
+  doc.text(BRAND.branch + ' \u2014 Cyber Cafe / Services', PAD, 19);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(255,255,255);
+  doc.text('PROFIT & LOSS STATEMENT', W - PAD, 13, { align: 'right' });
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...PDF.goldLt);
+  doc.text(label, W - PAD, 19, { align: 'right' });
+
+  y = 42;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...PDF.muted);
+  doc.text('Generated ' + new Date().toLocaleString('en-KE'), PAD, y);
+  y += 8;
+
+  // Summary boxes
+  const boxW = (W - PAD*2 - 8*2) / 3;
+  const boxes = [
+    { label: 'TOTAL INCOME',  value: pl.totalIncome,  color: PDF.success },
+    { label: 'TOTAL EXPENSES', value: pl.totalExpenses, color: PDF.danger },
+    { label: 'NET PROFIT / (LOSS)', value: pl.netProfit, color: pl.netProfit < 0 ? PDF.danger : PDF.success },
+  ];
+  boxes.forEach((b, i) => {
+    const bx = PAD + i * (boxW + 8);
+    doc.setFillColor(...PDF.cream);
+    doc.setDrawColor(...PDF.border);
+    doc.roundedRect(bx, y, boxW, 20, 2, 2, 'FD');
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...PDF.muted);
+    doc.text(b.label, bx + 4, y + 7);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(...b.color);
+    const valStr = (b.value < 0 ? '-KES ' : 'KES ') + fmt(Math.abs(b.value));
+    doc.text(valStr, bx + 4, y + 16);
+  });
+  y += 30;
+
+  // Income table
+  const incomeRows = Object.entries(pl.incomeByType).sort((a,b)=>b[1]-a[1]);
+  if (pl.feeTotal > 0) incomeRows.push(['Fee / Tuition Payments', pl.feeTotal]);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(...PDF.navy);
+  doc.text('Income by Source', PAD, y);
+  y += 6;
+  doc.autoTable({
+    startY: y, margin: { left: PAD, right: PAD },
+    head: [['Source', 'Amount (KES)', '%']],
+    body: incomeRows.length
+      ? incomeRows.map(([name, amt]) => [name, fmt(amt), pl.totalIncome ? Math.round(amt/pl.totalIncome*100)+'%' : '0%'])
+      : [['No income recorded', '-', '-']],
+    foot: [['TOTAL INCOME', fmt(pl.totalIncome), '100%']],
+    theme: 'grid',
+    headStyles: { fillColor: PDF.navy, textColor: 255, fontSize: 9 },
+    footStyles: { fillColor: PDF.cream, textColor: PDF.navy, fontStyle: 'bold', fontSize: 9 },
+    bodyStyles: { fontSize: 8.5, textColor: PDF.text },
+    columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' } },
+  });
+  y = doc.lastAutoTable.finalY + 12;
+
+  // Expense table
+  const expenseRows = Object.entries(pl.expenseByCategory).sort((a,b)=>b[1]-a[1]);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(...PDF.navy);
+  doc.text('Expenses by Category', PAD, y);
+  y += 6;
+  doc.autoTable({
+    startY: y, margin: { left: PAD, right: PAD },
+    head: [['Category', 'Amount (KES)', '%']],
+    body: expenseRows.length
+      ? expenseRows.map(([name, amt]) => [name, fmt(amt), pl.totalExpenses ? Math.round(amt/pl.totalExpenses*100)+'%' : '0%'])
+      : [['No expenses recorded', '-', '-']],
+    foot: [['TOTAL EXPENSES', fmt(pl.totalExpenses), '100%']],
+    theme: 'grid',
+    headStyles: { fillColor: PDF.navy, textColor: 255, fontSize: 9 },
+    footStyles: { fillColor: PDF.cream, textColor: PDF.navy, fontStyle: 'bold', fontSize: 9 },
+    bodyStyles: { fontSize: 8.5, textColor: PDF.text },
+    columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' } },
+  });
+  y = doc.lastAutoTable.finalY + 12;
+
+  // Month-by-month breakdown table (only when range spans 2+ months)
+  if (pl.months.length > 1) {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(...PDF.navy);
+    doc.text('Month-by-Month Breakdown', PAD, y);
+    y += 6;
+    doc.autoTable({
+      startY: y, margin: { left: PAD, right: PAD },
+      head: [['Month', 'Income (KES)', 'Expenses (KES)', 'Net (KES)']],
+      body: pl.monthly.map(m => [_monthLabel(m.month), fmt(m.income), fmt(m.expenses), (m.net<0?'-':'')+fmt(Math.abs(m.net))]),
+      theme: 'grid',
+      headStyles: { fillColor: PDF.navy, textColor: 255, fontSize: 9 },
+      bodyStyles: { fontSize: 8.5, textColor: PDF.text },
+      columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' } },
+    });
+    y = doc.lastAutoTable.finalY + 12;
+  } else {
+    y += 2;
+  }
+
+  // Net result banner
+  doc.setFillColor(...(pl.netProfit < 0 ? PDF.danger : PDF.success));
+  doc.roundedRect(PAD, y, W - PAD*2, 16, 2, 2, 'F');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(255,255,255);
+  doc.text('NET ' + (pl.netProfit < 0 ? 'LOSS' : 'PROFIT') + ' FOR ' + label.toUpperCase(), PAD + 5, y + 10);
+  const netStr = (pl.netProfit < 0 ? '-KES ' : 'KES ') + fmt(Math.abs(pl.netProfit));
+  doc.text(netStr, W - PAD - 5, y + 10, { align: 'right' });
+
+  // Footer
+  const pageH = doc.internal.pageSize.getHeight();
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...PDF.muted);
+  doc.text(`${BRAND.name} \u00b7 ${BRAND.branch} \u00b7 ${BRAND.phone1} \u00b7 ${BRAND.email}`, W/2, pageH - 10, { align: 'center' });
+
+  doc.save(`PL_${pl.fromMonth}_to_${pl.toMonth}.pdf`);
+  toast('P&L report downloaded!', 'success');
+}
+
+
+
+// ════════════════════════════════════════════════
+//  STOCK / INVENTORY MODULE
+// ════════════════════════════════════════════════
+
+function populateStockLinkedTypeSelect() {
+  const sel = document.getElementById('stock-linked-type');
+  if (!sel) return;
+  const current = sel.value;
+  const types = effectiveServiceTypes();
+  sel.innerHTML = '<option value="">&mdash; None &mdash;</option>' +
+    types.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+  if (current) sel.value = current;
+}
+
+function renderStockTable() {
+  const tbody = document.getElementById('stock-tbody');
+  if (!tbody) return;
+  const items = state.stockItems || [];
+  if (!items.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">No stock items yet</td></tr>'; return; }
+
+  tbody.innerHTML = items.map(it => {
+    const low = (+it.currentStock || 0) <= (+it.reorderLevel || 0);
+    return `
+    <tr>
+      <td>${it.name}${it.linkedServiceType ? `<br><span class="badge badge-purple" style="margin-top:3px;">${it.linkedServiceType}</span>` : ''}</td>
+      <td style="font-weight:700;${low?'color:var(--danger);':''}">${it.currentStock} ${it.unit||''}${low?' &#9888;&#65039;':''}</td>
+      <td>${it.reorderLevel} ${it.unit||''}</td>
+      <td>KES ${fmt(it.unitCost)}</td>
+      <td><div class="actions-cell">
+        <button class="btn btn-outline btn-sm" onclick="promptRestock('${it.itemId}')" title="Restock">&#8593; Restock</button>
+        <button class="btn btn-outline btn-sm" onclick="promptConsume('${it.itemId}')" title="Use">&#8595; Use</button>
+        ${can('servicesManage') ? `<button class="btn btn-primary btn-sm" onclick="editStockItem('${it.itemId}')">&#9999;</button>` : ''}
+        ${can('servicesManage') ? `<button class="btn btn-danger btn-sm" onclick="deleteStockItemRow('${it.itemId}')">&#128465;</button>` : ''}
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderStockMovements() {
+  const tbody = document.getElementById('stock-mov-tbody');
+  if (!tbody) return;
+  const movs = [...(state.stockMovements || [])].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 100);
+  if (!movs.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty-msg compact">No movements yet</td></tr>'; return; }
+  tbody.innerHTML = movs.map(m => `
+    <tr>
+      <td>${fmtDate(m.createdAt)} ${fmtTime(m.createdAt)}</td>
+      <td>${m.itemName||'&mdash;'}</td>
+      <td><span class="badge ${m.type==='Restock'?'badge-success':m.type==='Consumption'?'badge-info':'badge-neutral'}">${m.type}</span></td>
+      <td>${m.qty}</td>
+      <td>${m.balanceAfter}</td>
+      <td style="font-size:12.5px;">${m.reason||'&mdash;'}</td>
+      <td style="font-size:12px;color:var(--muted);">${m.recordedBy||'&mdash;'}</td>
+    </tr>`).join('');
+}
+
+function clearStockForm() {
+  document.getElementById('stock-item-id').value = '';
+  document.getElementById('stock-edit-mode').value = 'false';
+  ['stock-name','stock-unit','stock-opening','stock-reorder','stock-cost'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('stock-linked-type').value = '';
+  document.getElementById('stock-form-title').textContent = 'Add Stock Item';
+  document.getElementById('stock-save-btn').textContent = 'Save Item';
+  document.getElementById('stock-cancel-btn').style.display = 'none';
+}
+
+function editStockItem(itemId) {
+  if (!can('servicesManage')) { toast('Only an Admin can edit stock items.', 'error'); return; }
+  const it = (state.stockItems || []).find(x => x.itemId === itemId);
+  if (!it) return;
+  document.getElementById('stock-item-id').value = it.itemId;
+  document.getElementById('stock-edit-mode').value = 'true';
+  document.getElementById('stock-name').value = it.name;
+  document.getElementById('stock-unit').value = it.unit;
+  document.getElementById('stock-opening').value = it.currentStock;
+  document.getElementById('stock-opening').disabled = true;
+  document.getElementById('stock-reorder').value = it.reorderLevel;
+  document.getElementById('stock-cost').value = it.unitCost;
+  document.getElementById('stock-linked-type').value = it.linkedServiceType || '';
+  document.getElementById('stock-form-title').textContent = 'Edit Stock Item';
+  document.getElementById('stock-save-btn').textContent = 'Update Item';
+  document.getElementById('stock-cancel-btn').style.display = '';
+}
+
+async function saveStockItem() {
+  if (!can('servicesManage') && document.getElementById('stock-edit-mode').value === 'true') {
+    toast('Only an Admin can edit stock items.', 'error'); return;
+  }
+  const editMode = document.getElementById('stock-edit-mode').value === 'true';
+  const itemId   = document.getElementById('stock-item-id').value;
+  const name     = document.getElementById('stock-name').value.trim();
+  const unit     = document.getElementById('stock-unit').value.trim();
+  const opening  = +document.getElementById('stock-opening').value || 0;
+  const reorder  = +document.getElementById('stock-reorder').value || 0;
+  const cost     = +document.getElementById('stock-cost').value || 0;
+  const linked   = document.getElementById('stock-linked-type').value;
+
+  if (!name || !unit) { toast('Item name and unit are required.', 'error'); return; }
+
+  const btn = document.getElementById('stock-save-btn');
+  btn.disabled = true;
+  try {
+    const action = editMode ? 'updateStockItem' : 'addStockItem';
+    const payload = editMode
+      ? { itemId, name, unit, reorderLevel: reorder, unitCost: cost, linkedServiceType: linked }
+      : { name, unit, currentStock: opening, reorderLevel: reorder, unitCost: cost, linkedServiceType: linked, addedBy: state.user?.fullName || 'System' };
+    const res = await apiPost(action, payload);
+    if (res.success) {
+      toast(editMode ? 'Item updated!' : 'Item added!', 'success');
+      document.getElementById('stock-opening').disabled = false;
+      clearStockForm();
+      reloadAfterWrite();
+    } else toast('Error: ' + res.error, 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+  btn.disabled = false;
+}
+
+async function deleteStockItemRow(itemId) {
+  if (!can('servicesManage')) { toast('Only an Admin can delete stock items.', 'error'); return; }
+  if (!confirm('Delete this stock item? Movement history will remain for records.')) return;
+  try {
+    const res = await apiPost('deleteStockItem', { itemId });
+    if (res.success) { toast('Item deleted.', 'success'); reloadAfterWrite(); }
+    else toast('Error: ' + res.error, 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+function promptRestock(itemId) {
+  if (!can('services')) { toast('Access denied.', 'error'); return; }
+  const qty = prompt('Quantity to add (restock):');
+  if (!qty) return;
+  const cost = prompt('Total cost of this restock (KES, optional):', '0') || '0';
+  const reason = prompt('Reason / supplier (optional):', 'Restock') || 'Restock';
+  applyStockMovement(itemId, 'restockItem', +qty, +cost, reason);
+}
+
+function promptConsume(itemId) {
+  if (!can('services')) { toast('Access denied.', 'error'); return; }
+  const qty = prompt('Quantity used:');
+  if (!qty) return;
+  const reason = prompt('Reason (e.g. linked service job):', 'Consumption') || 'Consumption';
+  applyStockMovement(itemId, 'consumeStock', +qty, 0, reason);
+}
+
+async function applyStockMovement(itemId, action, qty, cost, reason) {
+  try {
+    const res = await apiPost(action, {
+      itemId, qty, cost, reason,
+      recordedBy: state.user?.fullName || state.user?.username || 'System',
+    });
+    if (res.success) { toast('Stock updated — new balance: ' + res.newStock, 'success'); reloadAfterWrite(); }
+    else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+// ════════════════════════════════════════════════
+//  EXPENSES MODULE
+// ════════════════════════════════════════════════
+
+const DEFAULT_EXPENSE_CATEGORIES = [
+  { name: 'Rent',                  icon: '\u{1F3E2}' },
+  { name: 'Electricity (KPLC)',    icon: '\u{26A1}'  },
+  { name: 'Internet / WiFi',       icon: '\u{1F4F6}' },
+  { name: 'Staff Salaries',        icon: '\u{1F465}' },
+  { name: 'Airtime & Data',        icon: '\u{1F4F1}' },
+  { name: 'Stationery & Supplies', icon: '\u{1F4CE}' },
+  { name: 'Printer/Toner & Ink',   icon: '\u{1F5A8}\uFE0F' },
+  { name: 'Equipment Repair',      icon: '\u{1F6E0}\uFE0F' },
+  { name: 'Cleaning & Sanitation', icon: '\u{1F9F9}' },
+  { name: 'Licenses & Permits',    icon: '\u{1F4DC}' },
+  { name: 'Transport',             icon: '\u{1F697}' },
+  { name: 'Security',              icon: '\u{1F512}' },
+  { name: 'Other',                 icon: '\u{2795}' },
+];
+
+function effectiveExpenseCategories() {
+  return state.expenseCategories && state.expenseCategories.length ? state.expenseCategories : DEFAULT_EXPENSE_CATEGORIES;
+}
+
+function populateExpenseCategorySelects() {
+  const cats = effectiveExpenseCategories();
+  ['exp-category', 'exp-log-category-filter'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const current = sel.value;
+    const optHtml = cats.map(c => `<option value="${c.name}">${c.icon||''} ${c.name}</option>`).join('');
+    sel.innerHTML = id === 'exp-log-category-filter' ? '<option value="">All Categories</option>' + optHtml : optHtml;
+    if (current) sel.value = current;
+  });
+}
+
+function onExpenseCategoryChange() { /* reserved for future default-amount presets */ }
+
+function toggleRecurrenceFields() {
+  const isRecurring = document.getElementById('exp-recurring').value === 'Yes';
+  document.getElementById('exp-freq-group').style.display = isRecurring ? '' : 'none';
+  document.getElementById('exp-duedate-group').style.display = isRecurring ? '' : 'none';
+}
+
+/** The current expense batch's cart — each entry is one line item awaiting save. */
+let expCart = [];
+
+function getPendingExpenseItem() {
+  const category = document.getElementById('exp-category').value;
+  const amount = +document.getElementById('exp-amount').value;
+  if (!category || !amount) return null;
+  return {
+    category,
+    amount,
+    description: document.getElementById('exp-desc').value.trim(),
+  };
+}
+
+function resetPendingExpenseItemFields() {
+  document.getElementById('exp-amount').value = '';
+  document.getElementById('exp-desc').value = '';
+}
+
+function addExpenseItemToCart() {
+  if (!can('expenses')) { toast('Access denied.', 'error'); return; }
+  const item = getPendingExpenseItem();
+  if (!item) { toast('Select a category and enter a valid amount first.', 'error'); return; }
+  expCart.push(item);
+  resetPendingExpenseItemFields();
+  renderExpCart();
+  toast(item.category + ' added to cart.', 'success');
+}
+
+function removeExpCartItem(index) {
+  expCart.splice(index, 1);
+  renderExpCart();
+}
+
+function renderExpCart() {
+  const wrap  = document.getElementById('exp-cart-wrap');
+  const tbody = document.getElementById('exp-cart-tbody');
+  if (!wrap || !tbody) return;
+  if (!expCart.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  tbody.innerHTML = expCart.map((it, i) => `
+    <tr>
+      <td><span class="badge badge-purple">${it.category}</span></td>
+      <td style="font-size:12.5px;">${it.description||'&mdash;'}</td>
+      <td style="font-weight:600;color:var(--danger);">KES ${fmt(it.amount)}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="removeExpCartItem(${i})">&#10005;</button></td>
+    </tr>`).join('');
+  const total = expCart.reduce((a, it) => a + (+it.amount || 0), 0);
+  document.getElementById('exp-cart-total').textContent = 'KES ' + fmt(total);
+}
+
+function clearExpenseForm() {
+  expCart = [];
+  renderExpCart();
+  resetPendingExpenseItemFields();
+  document.getElementById('exp-method').value = 'Cash';
+  document.getElementById('exp-paidto').value = '';
+  document.getElementById('exp-paidby').value = '';
+  document.getElementById('exp-recurring').value = 'No';
+  document.getElementById('exp-freq').value = 'Monthly';
+  document.getElementById('exp-duedate').value = '';
+  document.getElementById('exp-date').value = new Date().toISOString().split('T')[0];
+  const fileEl = document.getElementById('exp-receipt-file');
+  if (fileEl) fileEl.value = '';
+  toggleRecurrenceFields();
+}
+
+async function submitExpense() {
+  if (!can('expenses')) { toast('Access denied.', 'error'); return; }
+  const btn = document.getElementById('exp-submit-btn');
+
+  // Anything still sitting in the item-entry fields but not explicitly
+  // "Add to Cart"-ed is folded in automatically, so a single-item expense
+  // still works in one click like before.
+  const pending = getPendingExpenseItem();
+  const items = pending ? [...expCart, pending] : [...expCart];
+
+  if (!items.length) { toast('Select a category and amount, or add items to the cart.', 'error'); return; }
+
+  const recurring = document.getElementById('exp-recurring').value;
+  const payload = {
+    items,
+    method:      document.getElementById('exp-method').value,
+    date:        document.getElementById('exp-date').value || new Date().toISOString().split('T')[0],
+    paidTo:      document.getElementById('exp-paidto').value.trim(),
+    paidBy:      document.getElementById('exp-paidby').value.trim(),
+    recurring,
+    recurrenceFreq: recurring === 'Yes' ? document.getElementById('exp-freq').value : '',
+    dueDate:        recurring === 'Yes' ? document.getElementById('exp-duedate').value : '',
+    recordedBy:  state.user?.fullName || state.user?.username || 'System',
+  };
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span> Saving&hellip;';
+  try {
+    const res = await apiPost('addExpenseBatch', payload);
+    if (res.success) {
+      const fileInput = document.getElementById('exp-receipt-file');
+      if (fileInput && fileInput.files && fileInput.files[0]) {
+        await uploadExpenseReceiptFile(res.expenseIds, fileInput.files[0], res.batchId);
+      }
+      toast(`Expense${res.itemCount>1?'s':''} recorded! ${res.itemCount} item(s), KES ${fmt(res.totalAmount)}`, 'success');
+      reloadAfterWrite();
+      clearExpenseForm();
+    } else {
+      toast('Error: ' + (res.error || 'Unknown'), 'error');
+    }
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+  btn.disabled = false;
+  btn.innerHTML = '&#128181; Record Expense(s)';
+}
+
+async function uploadExpenseReceiptFile(expenseIds, file, batchId) {
+  const maxMB = 10;
+  if (file.size > maxMB * 1024 * 1024) { toast(`Receipt too large. Max ${maxMB}MB — expense(s) were still saved.`, 'warning'); return; }
+  try {
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload  = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+    const ids = Array.isArray(expenseIds) ? expenseIds : [expenseIds];
+    await apiPost('attachReceiptToExpenses', {
+      expenseIds: ids, batchId, fileName: file.name, mimeType: file.type || 'application/octet-stream', base64Data: base64,
+    });
+  } catch (e) { console.warn('Receipt upload failed:', e); }
+}
+
+let _expLogShowAll = false;
+
+function filterExpenseLog() {
+  const q    = (document.getElementById('exp-log-search')?.value || '').toLowerCase();
+  const date = document.getElementById('exp-log-date')?.value || '';
+  const cat  = document.getElementById('exp-log-category-filter')?.value || '';
+  const filtered = (state.expenses || []).filter(e => {
+    const mq = !q || [e.description, e.category, e.paidTo, e.paidBy].some(v => v && v.toLowerCase().includes(q));
+    const md = !date || dateKey(e.date) === date;
+    const mc = !cat || e.category === cat;
+    return mq && md && mc;
+  });
+  renderExpenseLog(filtered);
+}
+
+function renderExpenseLog(filtered) {
+  const data  = filtered || state.expenses || [];
+  const tbody = document.getElementById('exp-log-tbody');
+  if (!tbody) return;
+  document.getElementById('exp-log-count').textContent = data.length + ' records';
+  const total = data.reduce((a, e) => a + (+e.amount || 0), 0);
+  document.getElementById('exp-log-total').textContent = 'KES ' + fmt(total);
+
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--muted);">No expenses found</td></tr>'; return; }
+  const countByBatch = {};
+  (state.expenses || []).forEach(e => { if (e.batchId) countByBatch[e.batchId] = (countByBatch[e.batchId] || 0) + 1; });
+  tbody.innerHTML = [...data].sort((a,b) => new Date(b.createdAt||b.date) - new Date(a.createdAt||a.date)).map((e,i) => `
+    <tr>
+      <td>${data.length - i}</td>
+      <td>${fmtDate(e.date)}</td>
+      <td><span class="badge badge-purple">${e.category}</span>${e.recurring==='Yes'?' <span class="badge badge-info" title="Recurring expense">&#128257;</span>':''}${e.batchId && countByBatch[e.batchId]>1?` <span class="badge badge-warning" title="Part of a multi-item expense batch">${countByBatch[e.batchId]} items</span>`:''}</td>
+      <td style="font-size:12.5px;">${e.description||'&mdash;'}${e.receiptUrl?` <a href="${e.receiptUrl}" target="_blank" title="View receipt">&#128206;</a>`:''}</td>
+      <td style="font-weight:700;color:var(--danger);">KES ${fmt(e.amount)}</td>
+      <td><span class="badge badge-info">${e.method}</span></td>
+      <td>${e.paidTo||'&mdash;'}</td>
+      <td style="font-size:12px;color:var(--muted);">${e.recordedBy||'&mdash;'}</td>
+      <td><div class="actions-cell">
+        ${can('expensesManage') ? `<button class="btn btn-primary btn-sm" onclick="openEditExpenseModal('${e.expenseId}')">&#9999;</button>` : ''}
+        ${can('expensesManage') ? `<button class="btn btn-danger btn-sm" onclick="deleteExpenseTransaction('${e.expenseId}')">&#128465;</button>` : ''}
+      </div></td>
+    </tr>`).join('');
+}
+
+function toggleExpenseLogShowAll() {
+  _expLogShowAll = !_expLogShowAll;
+  const dateEl = document.getElementById('exp-log-date');
+  const btn    = document.getElementById('exp-log-showall-btn');
+  if (_expLogShowAll) {
+    dateEl.value = ''; dateEl.disabled = true;
+    btn.innerHTML = '&#128197; Today Only'; btn.classList.add('btn-gold');
+  } else {
+    dateEl.disabled = false; dateEl.value = new Date().toISOString().split('T')[0];
+    btn.innerHTML = '&#128197; Show All Dates'; btn.classList.remove('btn-gold');
+  }
+  filterExpenseLog();
+}
+
+function clearExpenseLogFilter() {
+  document.getElementById('exp-log-search').value = '';
+  document.getElementById('exp-log-category-filter').value = '';
+  if (!_expLogShowAll) document.getElementById('exp-log-date').value = new Date().toISOString().split('T')[0];
+  else document.getElementById('exp-log-date').value = '';
+  filterExpenseLog();
+}
+
+function exportExpenseLog() {
+  const data = state.expenses || [];
+  if (!data.length) { toast('No expenses to export.', 'warning'); return; }
+  downloadWorkbook([...data].sort((a,b) => new Date(b.date)-new Date(a.date)).map(e => ({
+    'Date': e.date||'', 'Category': e.category||'', 'Description': e.description||'',
+    'Amount': +e.amount||0, 'Method': e.method||'', 'Paid To': e.paidTo||'', 'Paid By': e.paidBy||'',
+    'Recurring': e.recurring||'No', 'Recorded By': e.recordedBy||'',
+  })), 'Expenses', 'JTI_Expenses');
+}
+
+function openEditExpenseModal(expenseId) {
+  if (!can('expensesManage')) { toast('Only an Admin can edit expenses.', 'error'); return; }
+  const e = (state.expenses || []).find(x => x.expenseId === expenseId);
+  if (!e) return;
+
+  document.getElementById('eexp-expense-id').value = e.expenseId;
+  document.getElementById('eexp-category').innerHTML = effectiveExpenseCategories().map(c => `<option value="${c.name}">${c.icon||''} ${c.name}</option>`).join('');
+  document.getElementById('eexp-category').value = e.category;
+  document.getElementById('eexp-desc').value = e.description || '';
+  document.getElementById('eexp-amount').value = e.amount;
+  document.getElementById('eexp-method').value = e.method || 'Cash';
+  document.getElementById('eexp-date').value = toDateInputValue(e.date) || e.date;
+  document.getElementById('eexp-paidto').value = e.paidTo || '';
+  document.getElementById('eexp-reason').value = '';
+  openModal('modal-edit-expense');
+}
+
+async function saveEditedExpense() {
+  if (!can('expensesManage')) { toast('Only an Admin can edit expenses.', 'error'); return; }
+  const expenseId = document.getElementById('eexp-expense-id').value;
+  const amount = +document.getElementById('eexp-amount').value;
+  const reason = document.getElementById('eexp-reason').value.trim();
+  if (!amount || amount <= 0) { toast('Enter a valid amount.', 'error'); return; }
+  if (!reason) { toast('A reason for the edit is required (audit log).', 'error'); return; }
+
+  const payload = {
+    expenseId,
+    category:    document.getElementById('eexp-category').value,
+    description: document.getElementById('eexp-desc').value.trim(),
+    amount,
+    method:      document.getElementById('eexp-method').value,
+    date:        document.getElementById('eexp-date').value,
+    paidTo:      document.getElementById('eexp-paidto').value.trim(),
+    editReason:  reason,
+    editedBy:    state.user?.fullName || state.user?.username || 'Admin',
+  };
+
+  const btn = document.getElementById('eexp-save-btn');
+  btn.disabled = true;
+  try {
+    const res = await apiPost('updateExpense', payload);
+    if (res.success) { toast('Expense updated and logged.', 'success'); closeModal('modal-edit-expense'); reloadAfterWrite(); }
+    else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+  btn.disabled = false;
+}
+
+async function deleteExpenseTransaction(expenseId) {
+  if (!can('expensesManage')) { toast('Only an Admin can delete expenses.', 'error'); return; }
+  const e = (state.expenses || []).find(x => x.expenseId === expenseId);
+  if (!e) return;
+  const reason = prompt(`Delete expense "${e.category}" (KES ${fmt(e.amount)})?\n\nEnter a reason for this deletion (required for audit log):`);
+  if (reason === null) return;
+  if (!reason.trim()) { toast('A reason is required to delete an expense.', 'error'); return; }
+  try {
+    const res = await apiPost('deleteExpense', {
+      expenseId, deletedBy: state.user?.fullName || state.user?.username || 'Admin', deleteReason: reason.trim(),
+    });
+    if (res.success) { toast('Expense deleted.', 'success'); reloadAfterWrite(); }
+    else toast('Error: ' + (res.error || 'Unknown'), 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+function renderUpcomingExpenses() {
+  const card = document.getElementById('exp-upcoming-card');
+  if (!card) return;
+  const upcoming = (state.expenses || []).filter(e => e.recurring === 'Yes' && e.dueDate)
+    .sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate));
+  if (!upcoming.length) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  document.getElementById('exp-upcoming-tbody').innerHTML = upcoming.map(e => {
+    const daysLeft = Math.ceil((new Date(e.dueDate) - new Date()) / 86400000);
+    const overdue = daysLeft < 0;
+    return `<tr>
+      <td><span class="badge badge-purple">${e.category}</span></td>
+      <td style="font-size:12.5px;">${e.description||'&mdash;'}</td>
+      <td style="font-weight:600;">KES ${fmt(e.amount)}</td>
+      <td>${e.recurrenceFreq||'&mdash;'}</td>
+      <td style="${overdue?'color:var(--danger);font-weight:700;':''}">${fmtDate(e.dueDate)}${overdue?' (overdue)':daysLeft<=3?' (soon)':''}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Expense Categories management ────────────────────────
+
+function renderExpenseCategoriesTable() {
+  const tbody = document.getElementById('excat-tbody');
+  if (!tbody) return;
+  const cats = effectiveExpenseCategories();
+  tbody.innerHTML = cats.map(c => `
+    <tr>
+      <td style="font-size:18px;">${c.icon||'&#128176;'}</td>
+      <td>${c.name}</td>
+      <td><div class="actions-cell">
+        <button class="btn btn-outline btn-sm" onclick="editExpenseCategory('${c.name.replace(/'/g,"\\'")}')">&#9999;</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteExpenseCategoryRow('${c.name.replace(/'/g,"\\'")}')">&#128465;</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+function openExpenseCategoryManager() {
+  renderExpenseCategoriesTable();
+  clearExpenseCategoryForm();
+  openModal('modal-expense-categories');
+}
+
+function clearExpenseCategoryForm() {
+  document.getElementById('excat-name').value = '';
+  document.getElementById('excat-icon').value = '';
+  document.getElementById('excat-edit-mode').value = 'false';
+  document.getElementById('excat-original-name').value = '';
+  document.getElementById('excat-form-title').textContent = 'Add Category';
+  document.getElementById('excat-save-btn').textContent = 'Save Category';
+  document.getElementById('excat-cancel-btn').style.display = 'none';
+}
+
+function editExpenseCategory(name) {
+  const c = effectiveExpenseCategories().find(x => x.name === name);
+  if (!c) return;
+  document.getElementById('excat-name').value = c.name;
+  document.getElementById('excat-icon').value = c.icon || '';
+  document.getElementById('excat-edit-mode').value = 'true';
+  document.getElementById('excat-original-name').value = c.name;
+  document.getElementById('excat-form-title').textContent = 'Edit Category';
+  document.getElementById('excat-save-btn').textContent = 'Update Category';
+  document.getElementById('excat-cancel-btn').style.display = '';
+}
+
+async function saveExpenseCategory() {
+  const name = document.getElementById('excat-name').value.trim();
+  const icon = document.getElementById('excat-icon').value.trim() || '\u{1F4B0}';
+  const editMode = document.getElementById('excat-edit-mode').value === 'true';
+  const origName = document.getElementById('excat-original-name').value;
+  if (!name) { toast('Category name is required.', 'error'); return; }
+
+  try {
+    const action = editMode ? 'updateExpenseCategory' : 'addExpenseCategory';
+    const payload = editMode ? { originalName: origName, name, icon } : { name, icon };
+    const res = await apiPost(action, payload);
+    if (res.success) {
+      toast(editMode ? 'Category updated!' : 'Category saved!', 'success');
+      reloadAfterWrite();
+      clearExpenseCategoryForm();
+    } else toast('Error: ' + res.error, 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+}
+
+async function deleteExpenseCategoryRow(name) {
+  if (!confirm('Delete category "' + name + '"?')) return;
+  try {
+    const res = await apiPost('deleteExpenseCategory', { name });
+    if (res.success) { toast('Deleted.', 'success'); reloadAfterWrite(); clearExpenseCategoryForm(); }
+    else toast('Error: ' + res.error, 'error');
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+}
+
 
 // ════════════════════════════════════════════════
 //  ASSET LEDGER MODULE
@@ -2844,29 +4293,44 @@ function switchAssetTab(tabId) {
 // ── Stats ─────────────────────────────────────────────────
 
 function renderAssetStats() {
+  const isAdmin = state.user?.role === 'Admin';
   const assets = state.assets || [];
   const active   = assets.filter(a => a.status === 'Active').length;
   const repair   = assets.filter(a => a.status === 'Under Repair').length;
   const disposed = assets.filter(a => a.status === 'Disposed').length;
   const lost     = assets.filter(a => a.status === 'Lost').length;
-  const totalCost = assets.reduce((s, a) => s + (+a.purchaseCost || 0), 0);
 
   document.getElementById('asset-stat-active').textContent   = active;
   document.getElementById('asset-stat-repair').textContent   = repair;
   document.getElementById('asset-stat-disposed').textContent = disposed;
   document.getElementById('asset-stat-lost').textContent     = lost;
-  document.getElementById('asset-stat-cost').textContent     = 'KES ' + fmt(totalCost);
+
+  if (isAdmin) {
+    const totalCost = assets.reduce((s, a) => s + (+a.purchaseCost || 0), 0);
+    document.getElementById('asset-stat-cost').textContent = 'KES ' + fmt(totalCost);
+  } else {
+    document.getElementById('asset-stat-cost').innerHTML =
+      '<span class="badge badge-neutral">&#128274; Admin only</span>';
+  }
 }
 
 // ── Register ──────────────────────────────────────────────
 
 function filterAssets() {
+  const isAdmin = state.user?.role === 'Admin';
+  const today   = new Date().toISOString().split('T')[0];
   const q    = (document.getElementById('asset-search')?.value || '').toLowerCase();
   const cat  = document.getElementById('asset-filter-category')?.value || '';
   const stat = document.getElementById('asset-filter-status')?.value || '';
   const cond = document.getElementById('asset-filter-condition')?.value || '';
 
-  const filtered = (state.assets || []).filter(a => {
+  const allAssets = state.assets || [];
+  // Staff see only assets added or updated today
+  const pool = isAdmin
+    ? allAssets
+    : allAssets.filter(a => dateKey(a.createdAt) === today || dateKey(a.editedAt) === today);
+
+  const filtered = pool.filter(a => {
     const mq = !q || [a.name, a.assetId, a.assetTag, a.serialNo, a.location, a.assignedTo, a.supplier]
       .some(v => v && v.toLowerCase().includes(q));
     return mq
@@ -2880,12 +4344,14 @@ function filterAssets() {
 }
 
 function renderAssetsTable(data) {
+  const isAdmin = state.user?.role === 'Admin';
+  const lockHtml = '<span class="badge badge-neutral">&#128274; Admin only</span>';
   data = data || state.assets || [];
   document.getElementById('asset-count').textContent = data.length + ' assets';
 
   const tbody = document.getElementById('asset-tbody');
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="11" class="empty-msg">No assets found</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="11" class="empty-msg">${isAdmin ? 'No assets found' : 'No assets added or updated today'}</td></tr>`;
     return;
   }
 
@@ -2904,7 +4370,7 @@ function renderAssetsTable(data) {
       <td>${a.location||'&mdash;'}</td>
       <td>${a.assignedTo||'&mdash;'}</td>
       <td>${fmtDate(a.purchaseDate)}</td>
-      <td>${a.purchaseCost ? 'KES '+fmt(a.purchaseCost) : '&mdash;'}</td>
+      <td>${isAdmin ? (a.purchaseCost ? 'KES '+fmt(a.purchaseCost) : '&mdash;') : lockHtml}</td>
       <td><span class="badge ${assetConditionBadge(a.condition)}">${a.condition||'&mdash;'}</span></td>
       <td><span class="badge ${assetStatusBadge(a.status)}">${a.status||'Active'}</span></td>
       <td><div class="actions-cell">

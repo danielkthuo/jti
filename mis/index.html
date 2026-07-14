@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>JTI College Management System</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="Styles.css">
+  <link rel="stylesheet" href="styles.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 
@@ -194,6 +195,10 @@
           <div class="card-header"><h3>Recent Office Services</h3><button class="btn btn-outline btn-sm" onclick="navigate('services')">View All</button></div>
           <div class="card-body flush"><div id="recent-services"><div class="empty-state"><div class="loader panel"></div></div></div></div>
         </div>
+        <div class="card">
+          <div class="card-header"><h3>&#128197; Upcoming &amp; Overdue Installments</h3><span style="font-size:12px;color:var(--muted);">Next 7 days</span></div>
+          <div class="card-body flush"><div id="dash-installments-due"><div class="empty-state"><div class="loader panel"></div></div></div></div>
+        </div>
       </div>
     </div>
 
@@ -261,6 +266,7 @@
       <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('fee-overview','fees')">Overview</button>
         <button class="tab-btn" onclick="switchTab('fee-record','fees')">Record Payment</button>
+        <button class="tab-btn" onclick="switchTab('fee-plans','fees')">Payment Plans</button>
         <button class="tab-btn" onclick="switchTab('fee-structures','fees')">Fee Structures</button>
       </div>
       <div id="tab-fee-overview">
@@ -312,6 +318,42 @@
           </div>
         </div>
       </div>
+      <div id="tab-fee-plans" style="display:none;">
+        <div class="recon-summary-bar mb-4">
+          <div class="rsb-item"><span class="rsb-label">Students on a Plan</span><span class="rsb-value" id="pp-rpt-students">0</span></div>
+          <div class="rsb-divider"></div>
+          <div class="rsb-item"><span class="rsb-label">Due in Next 30 Days</span><span class="rsb-value" id="pp-rpt-upcoming">KES 0</span></div>
+          <div class="rsb-divider"></div>
+          <div class="rsb-item"><span class="rsb-label">Overdue</span><span class="rsb-value" id="pp-rpt-overdue">KES 0</span></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>All Installments</h3>
+            <div class="row">
+              <span id="pp-rpt-count" class="badge badge-info">&mdash;</span>
+              <button class="btn btn-outline btn-sm" onclick="exportPaymentPlansReport()">&#128190; Export</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="filter-bar">
+              <div class="search-input"><span class="search-icon">&#128269;</span><input type="text" id="pp-rpt-search" placeholder="Search by student name or reg no&hellip;" oninput="filterPaymentPlansReport()"></div>
+              <select id="pp-rpt-status" onchange="filterPaymentPlansReport()">
+                <option value="">All Statuses</option>
+                <option value="Overdue">Overdue</option>
+                <option value="Pending">Pending</option>
+                <option value="Partial">Partial</option>
+                <option value="Paid">Paid</option>
+              </select>
+              <button class="btn btn-outline btn-sm" onclick="clearPaymentPlansReportFilter()">&#10005; Clear</button>
+            </div>
+            <div class="table-wrapper">
+              <table><thead><tr><th>Student</th><th>Reg No.</th><th>Installment</th><th>Due Date</th><th>Amount</th><th>Paid</th><th>Owed</th><th>Status</th><th></th></tr></thead>
+              <tbody id="pp-rpt-tbody"><tr><td colspan="9" class="empty-msg">Loading&hellip;</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div id="tab-fee-structures" style="display:none;">
         <div class="card card-md mb-5">
           <div class="card-header"><h3>Add Fee Structure</h3></div>
@@ -422,15 +464,115 @@
     <!-- OFFICE SERVICES -->
     <div class="page" id="page-services">
       <div class="tabs">
+        <button class="tab-btn" onclick="switchSvcTab('svc-dash')">&#128202; Dashboard</button>
         <button class="tab-btn active" onclick="switchSvcTab('svc-record')">Record Service</button>
         <button class="tab-btn" onclick="switchSvcTab('svc-log')">Daily Log</button>
+        <button class="tab-btn" onclick="switchSvcTab('svc-stock')">&#128230; Stock</button>
+        <button class="tab-btn" onclick="switchSvcTab('svc-expenses')">&#128181; Expenses</button>
         <button class="tab-btn" onclick="switchSvcTab('svc-recon')">Daily Reconciliation</button>
         <button class="tab-btn" onclick="switchSvcTab('svc-types')">Service Price List</button>
       </div>
 
+      <!-- TAB: Dashboard -->
+      <div id="tab-svc-dash" style="display:none;">
+        <div class="recon-summary-bar" style="margin-bottom:18px;">
+          <div class="rsb-item"><span class="rsb-label">Today&rsquo;s Service Income</span><span class="rsb-value" id="dash-today-income">KES 0</span></div>
+          <div class="rsb-divider"></div>
+          <div class="rsb-item"><span class="rsb-label">Today&rsquo;s Expenses</span><span class="rsb-value" id="dash-today-expenses">KES 0</span></div>
+          <div class="rsb-divider"></div>
+          <div class="rsb-item"><span class="rsb-label">Net Cash Today</span><span class="rsb-value" id="dash-today-net">KES 0</span></div>
+          <div class="rsb-divider"></div>
+          <div class="rsb-item"><span class="rsb-label">Today&rsquo;s Orders</span><span class="rsb-value" id="dash-today-orders">0</span></div>
+          <div class="rsb-divider"></div>
+          <div class="rsb-item"><span class="rsb-label">All Transactions</span><span class="rsb-value" id="dash-all-transactions">0</span></div>
+        </div>
+        <div class="form-table-layout">
+          <div class="card">
+            <div class="card-header"><h3>Top Services Today</h3></div>
+            <div class="card-body flush">
+              <table><thead><tr><th>Service</th><th>Count</th><th>Total</th></tr></thead>
+              <tbody id="dash-top-services-tbody"><tr><td colspan="3" class="empty-msg compact">No data</td></tr></tbody></table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Payment Method Split (Today)</h3></div>
+            <div class="card-body">
+              <div class="method-breakdown" id="dash-method-split"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card mt-4">
+          <div class="card-header"><h3>Last 7 Days &mdash; Income vs Expenses</h3></div>
+          <div class="card-body flush">
+            <table><thead><tr><th>Date</th><th>Service Income</th><th>Expenses</th><th>Net</th></tr></thead>
+            <tbody id="dash-7day-tbody"><tr><td colspan="4" class="empty-msg compact">No data</td></tr></tbody></table>
+          </div>
+        </div>
+        <div class="card mt-4" id="dash-lowstock-card" style="display:none;">
+          <div class="card-header"><h3>&#9888;&#65039; Low Stock Alerts</h3></div>
+          <div class="card-body flush">
+            <table><thead><tr><th>Item</th><th>Current Stock</th><th>Reorder Level</th></tr></thead>
+            <tbody id="dash-lowstock-tbody"></tbody></table>
+          </div>
+        </div>
+
+        <div class="card mt-4">
+          <div class="card-header">
+            <h3>&#128200; Monthly Profit &amp; Loss</h3>
+            <div class="row">
+              <select id="pl-preset" onchange="applyPLPreset()">
+                <option value="custom">Custom Range</option>
+                <option value="this">This Month</option>
+                <option value="last">Last Month</option>
+                <option value="last3">Last 3 Months</option>
+                <option value="last6">Last 6 Months</option>
+                <option value="ytd">Year to Date</option>
+              </select>
+              <span style="font-size:12.5px;color:var(--muted);">From</span>
+              <input type="month" id="pl-month-from" onchange="onPLRangeChange()">
+              <span style="font-size:12.5px;color:var(--muted);">To</span>
+              <input type="month" id="pl-month-to" onchange="onPLRangeChange()">
+              <label class="checkbox-inline" style="font-size:12.5px;color:var(--muted);">
+                <input type="checkbox" id="pl-include-fees" onchange="renderMonthlyPL()"> Include Fee/Tuition Income
+              </label>
+              <button class="btn btn-outline btn-sm" onclick="exportMonthlyPLExcel()">&#128190; Excel</button>
+              <button class="btn btn-primary btn-sm" onclick="exportMonthlyPLPdf()">&#128196; PDF Report</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="recon-summary-bar mb-4">
+              <div class="rsb-item"><span class="rsb-label" id="pl-period-label">Total Income</span><span class="rsb-value" id="pl-total-income">KES 0</span></div>
+              <div class="rsb-divider"></div>
+              <div class="rsb-item"><span class="rsb-label">Total Expenses</span><span class="rsb-value" id="pl-total-expenses">KES 0</span></div>
+              <div class="rsb-divider"></div>
+              <div class="rsb-item"><span class="rsb-label">Net Profit / Loss</span><span class="rsb-value" id="pl-net">KES 0</span></div>
+            </div>
+            <div class="form-table-layout">
+              <div>
+                <h4 class="section-title">Income by Source</h4>
+                <table><thead><tr><th>Source</th><th>Amount</th><th>%</th></tr></thead>
+                <tbody id="pl-income-tbody"><tr><td colspan="3" class="empty-msg compact">No income recorded</td></tr></tbody></table>
+              </div>
+              <div>
+                <h4 class="section-title">Expenses by Category</h4>
+                <table><thead><tr><th>Category</th><th>Amount</th><th>%</th></tr></thead>
+                <tbody id="pl-expense-tbody"><tr><td colspan="3" class="empty-msg compact">No expenses recorded</td></tr></tbody></table>
+              </div>
+            </div>
+            <div id="pl-monthly-breakdown-wrap" style="display:none;">
+              <h4 class="section-title mt-4">Month-by-Month Breakdown</h4>
+              <div class="table-wrapper">
+                <table><thead><tr><th>Month</th><th>Income</th><th>Expenses</th><th>Net</th></tr></thead>
+                <tbody id="pl-monthly-tbody"></tbody></table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- TAB: Record Service -->
       <div id="tab-svc-record">
-        <div class="card card-lg">
+        <div class="card">
           <div class="card-header"><h3>New Walk-in Service</h3></div>
           <div class="card-body">
             <label style="display:block;margin-bottom:8px;">Select Service Type *</label>
@@ -442,6 +584,23 @@
               <div class="form-group"><label>Quantity</label><input type="number" id="svc-qty" value="1" min="1" oninput="recalcServiceAmount()"></div>
               <div class="form-group"><label>Unit Price (KES)</label><input type="number" id="svc-unit-price" placeholder="0" oninput="recalcServiceAmount()"></div>
               <div class="form-group"><label>Amount (KES) *</label><input type="number" id="svc-amount" placeholder="0"></div>
+            </div>
+            <div class="row end mt-4">
+              <button class="btn btn-outline" onclick="addItemToCart()">&#128722; Add to Cart</button>
+            </div>
+
+            <div id="svc-cart-wrap" style="display:none;margin-top:8px;">
+              <h4 class="section-title">Cart &mdash; This Sale</h4>
+              <div class="table-wrapper">
+                <table><thead><tr><th>Service</th><th>Qty</th><th>Unit Price</th><th>Amount</th><th></th></tr></thead>
+                <tbody id="svc-cart-tbody"></tbody></table>
+              </div>
+              <div class="recon-summary-bar mt-4" style="margin-bottom:0;">
+                <div class="rsb-item"><span class="rsb-label">Cart Total</span><span class="rsb-value" id="svc-cart-total">KES 0</span></div>
+              </div>
+            </div>
+
+            <div class="form-grid" style="margin-top:18px;">
               <div class="form-group"><label>Payment Method</label>
                 <select id="svc-method"><option>Cash</option><option>M-Pesa</option><option>Bank Transfer</option></select>
               </div>
@@ -452,7 +611,7 @@
 
             <div class="row end mt-4">
               <button class="btn btn-outline" onclick="clearServiceForm()">Clear</button>
-              <button class="btn btn-success" id="svc-submit-btn" onclick="submitService()">&#128179; Record &amp; Print Receipt</button>
+              <button class="btn btn-success" id="svc-submit-btn" onclick="submitService()">&#128179; Complete Sale &amp; Print Receipt</button>
             </div>
           </div>
         </div>
@@ -480,6 +639,136 @@
               <table><thead><tr><th>#</th><th>Date</th><th>Receipt No.</th><th>Service</th><th>Description</th><th>Qty</th><th>Amount</th><th>Method</th><th>Customer</th><th>Recorded By</th><th>Actions</th></tr></thead>
               <tbody id="svc-log-tbody"><tr><td colspan="11" class="empty-msg">Loading&hellip;</td></tr></tbody></table>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Stock / Inventory -->
+      <div id="tab-svc-stock" style="display:none;">
+        <div class="form-table-layout">
+          <div class="card">
+            <div class="card-header"><h3 id="stock-form-title">Add Stock Item</h3></div>
+            <div class="card-body">
+              <input type="hidden" id="stock-edit-mode" value="false">
+              <input type="hidden" id="stock-item-id" value="">
+              <div class="form-grid">
+                <div class="form-group full"><label>Item Name *</label><input type="text" id="stock-name" placeholder="e.g. A4 Printing Paper"></div>
+                <div class="form-group"><label>Unit *</label><input type="text" id="stock-unit" placeholder="e.g. reams, sheets, pcs"></div>
+                <div class="form-group"><label>Opening Stock</label><input type="number" id="stock-opening" placeholder="0"></div>
+                <div class="form-group"><label>Reorder Level</label><input type="number" id="stock-reorder" placeholder="e.g. 5"></div>
+                <div class="form-group"><label>Unit Cost (KES)</label><input type="number" id="stock-cost" placeholder="0"></div>
+                <div class="form-group full"><label>Linked Service Type</label>
+                  <select id="stock-linked-type"><option value="">&mdash; None &mdash;</option></select>
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:14px;">
+                <button class="btn btn-outline" id="stock-cancel-btn" onclick="clearStockForm()" style="display:none;">Cancel</button>
+                <button class="btn btn-primary" id="stock-save-btn" style="flex:1;" onclick="saveStockItem()">Save Item</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Inventory</h3></div>
+            <div class="card-body flush">
+              <table><thead><tr><th>Item</th><th>Stock</th><th>Reorder Lvl</th><th>Unit Cost</th><th>Actions</th></tr></thead>
+              <tbody id="stock-tbody"><tr><td colspan="5" class="empty-msg">No stock items yet</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-4">
+          <div class="card-header"><h3>Stock Movements</h3></div>
+          <div class="card-body flush">
+            <table><thead><tr><th>Date</th><th>Item</th><th>Type</th><th>Qty</th><th>Balance After</th><th>Reason</th><th>By</th></tr></thead>
+            <tbody id="stock-mov-tbody"><tr><td colspan="7" class="empty-msg compact">No movements yet</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Expenses -->
+      <div id="tab-svc-expenses" style="display:none;">
+        <div class="card card-lg">
+          <div class="card-header"><h3>Record Expense</h3></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group"><label>Category *</label>
+                <select id="exp-category" onchange="onExpenseCategoryChange()"></select>
+              </div>
+              <div class="form-group"><label>Amount (KES) *</label><input type="number" id="exp-amount" placeholder="0"></div>
+              <div class="form-group full"><label>Description</label><input type="text" id="exp-desc" placeholder="e.g. KPLC token purchase, June rent&hellip;"></div>
+            </div>
+            <div class="row end mt-4">
+              <button class="btn btn-outline" onclick="addExpenseItemToCart()">&#128722; Add to Cart</button>
+            </div>
+
+            <div id="exp-cart-wrap" style="display:none;margin-top:8px;">
+              <h4 class="section-title">Cart &mdash; This Batch</h4>
+              <div class="table-wrapper">
+                <table><thead><tr><th>Category</th><th>Description</th><th>Amount</th><th></th></tr></thead>
+                <tbody id="exp-cart-tbody"></tbody></table>
+              </div>
+              <div class="recon-summary-bar mt-4" style="margin-bottom:0;">
+                <div class="rsb-item"><span class="rsb-label">Cart Total</span><span class="rsb-value" id="exp-cart-total">KES 0</span></div>
+              </div>
+            </div>
+
+            <div class="form-grid" style="margin-top:18px;">
+              <div class="form-group"><label>Payment Method</label>
+                <select id="exp-method"><option>Cash</option><option>M-Pesa</option><option>Bank Transfer</option></select>
+              </div>
+              <div class="form-group"><label>Date</label><input type="date" id="exp-date"></div>
+              <div class="form-group"><label>Paid To (Supplier/Vendor)</label><input type="text" id="exp-paidto" placeholder="Optional"></div>
+              <div class="form-group"><label>Paid By</label><input type="text" id="exp-paidby" placeholder="Optional, staff name"></div>
+              <div class="form-group"><label>Recurring?</label>
+                <select id="exp-recurring" onchange="toggleRecurrenceFields()"><option value="No">No</option><option value="Yes">Yes</option></select>
+              </div>
+              <div class="form-group" id="exp-freq-group" style="display:none;"><label>Recurrence</label>
+                <select id="exp-freq"><option>Weekly</option><option>Monthly</option><option>Quarterly</option><option>Annually</option></select>
+              </div>
+              <div class="form-group" id="exp-duedate-group" style="display:none;"><label>Next Due Date</label><input type="date" id="exp-duedate"></div>
+              <div class="form-group full"><label>Receipt / Photo (optional)</label><input type="file" id="exp-receipt-file" accept="image/*,application/pdf">
+                <small style="color:var(--muted);">If you added several items above, this one receipt is attached to all of them.</small>
+              </div>
+            </div>
+            <div class="row end mt-4">
+              <button class="btn btn-outline" onclick="clearExpenseForm()">Clear</button>
+              <button class="btn btn-success" id="exp-submit-btn" onclick="submitExpense()">&#128181; Record Expense(s)</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-4">
+          <div class="card-header">
+            <h3>Expense Log</h3>
+            <div class="row">
+              <span id="exp-log-count" class="badge badge-info">&mdash;</span>
+              <button class="btn btn-outline btn-sm" onclick="exportExpenseLog()">&#128190; Export Excel</button>
+              <button class="btn btn-outline btn-sm" onclick="openExpenseCategoryManager()">&#9881;&#65039; Categories</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="filter-bar">
+              <div class="search-input"><span class="search-icon">&#128269;</span><input type="text" id="exp-log-search" placeholder="Search by category, description, vendor&hellip;" oninput="filterExpenseLog()"></div>
+              <input type="date" id="exp-log-date" onchange="filterExpenseLog()" title="Filter by date">
+              <select id="exp-log-category-filter" onchange="filterExpenseLog()"><option value="">All Categories</option></select>
+              <button class="btn btn-outline btn-sm" id="exp-log-showall-btn" onclick="toggleExpenseLogShowAll()">&#128197; Show All Dates</button>
+              <button class="btn btn-outline btn-sm" onclick="clearExpenseLogFilter()">&#10005; Clear</button>
+            </div>
+            <div class="recon-summary-bar mb-4">
+              <div class="rsb-item"><span class="rsb-label">Total (filtered)</span><span class="rsb-value" id="exp-log-total">KES 0</span></div>
+            </div>
+            <div class="table-wrapper">
+              <table><thead><tr><th>#</th><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Method</th><th>Paid To</th><th>Recorded By</th><th>Actions</th></tr></thead>
+              <tbody id="exp-log-tbody"><tr><td colspan="9" class="empty-msg">Loading&hellip;</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-4" id="exp-upcoming-card" style="display:none;">
+          <div class="card-header"><h3>&#9200; Upcoming Recurring Expenses</h3></div>
+          <div class="card-body flush">
+            <table><thead><tr><th>Category</th><th>Description</th><th>Amount</th><th>Frequency</th><th>Next Due</th></tr></thead>
+            <tbody id="exp-upcoming-tbody"></tbody></table>
           </div>
         </div>
       </div>
@@ -559,6 +848,12 @@
               <tbody id="recon-fee-cash-tbody"><tr><td colspan="5" class="empty-msg compact">No cash fee payments</td></tr></tbody></table>
             </div>
 
+            <h4 class="section-title">Cash Expenses for Selected Date (deducted from expected cash)</h4>
+            <div class="table-wrapper mb-6">
+              <table id="recon-cash-exp-table"><thead><tr><th>Time</th><th>Category</th><th>Description</th><th>Amount</th><th>Recorded By</th></tr></thead>
+              <tbody id="recon-cash-exp-tbody"><tr><td colspan="5" class="empty-msg compact">No cash expenses</td></tr></tbody></table>
+            </div>
+
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
               <h4 style="font-family:var(--font-h);font-size:13.5px;color:var(--navy);">&#128203; Reconciliation History</h4>
               <button class="btn btn-outline btn-sm" onclick="exportReconciliationHistory()">&#128190; Export History</button>
@@ -581,8 +876,18 @@
               <input type="hidden" id="svct-original-name" value="">
               <div class="form-grid">
                 <div class="form-group full"><label>Service Name *</label><input type="text" id="svct-name" placeholder="e.g. Printing (per page)"></div>
-                <div class="form-group full"><label>Icon (emoji)</label><input type="text" id="svct-icon" placeholder="e.g. &#128424;" maxlength="4"></div>
-                <div class="form-group full"><label>Default Price (KES)</label><input type="number" id="svct-price" placeholder="e.g. 10"></div>
+                <div class="form-group"><label>Icon (emoji)</label><input type="text" id="svct-icon" placeholder="e.g. &#128424;" maxlength="4"></div>
+                <div class="form-group"><label>Default Price (KES)</label><input type="number" id="svct-price" placeholder="e.g. 10"></div>
+                <div class="form-group full"><label>Category</label>
+                  <select id="svct-category">
+                    <option value="Print & Copy">Print &amp; Copy</option>
+                    <option value="Internet & Digital">Internet &amp; Digital</option>
+                    <option value="Photo & Finishing">Photo &amp; Finishing</option>
+                    <option value="KRA / Tax Services">KRA / Tax Services</option>
+                    <option value="eCitizen / Immigration & ID">eCitizen / Immigration &amp; ID</option>
+                    <option value="General">General</option>
+                  </select>
+                </div>
               </div>
               <div style="display:flex;gap:10px;margin-top:14px;">
                 <button class="btn btn-outline" id="svct-cancel-btn" onclick="clearServiceTypeForm()" style="display:none;">Cancel</button>
@@ -593,8 +898,8 @@
           <div class="card">
             <div class="card-header"><h3>Service Price List</h3></div>
             <div class="card-body flush">
-              <table><thead><tr><th>Icon</th><th>Service Name</th><th>Default Price</th><th>Actions</th></tr></thead>
-              <tbody id="svc-types-tbody"><tr><td colspan="4" class="empty-msg">No service types yet</td></tr></tbody></table>
+              <table><thead><tr><th>Icon</th><th>Service Name</th><th>Category</th><th>Default Price</th><th>Actions</th></tr></thead>
+              <tbody id="svc-types-tbody"><tr><td colspan="5" class="empty-msg">No service types yet</td></tr></tbody></table>
             </div>
           </div>
         </div>
@@ -1146,6 +1451,61 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-payment-plan">
+  <div class="modal size-lg">
+    <div class="modal-header">
+      <h2>&#128197; Set Payment Plan</h2>
+      <button class="btn-close" onclick="closeModal('modal-payment-plan')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="pp-regno" value="">
+      <div class="student-fee-header" style="padding:12px 14px;margin-bottom:16px;">
+        <div class="student-avatar" id="pp-avatar" style="width:40px;height:40px;font-size:13px;">&mdash;</div>
+        <div>
+          <div class="val-label" id="pp-student-name">&mdash;</div>
+          <div class="text-sm text-muted" id="pp-program">&mdash;</div>
+        </div>
+        <div style="margin-left:auto;text-align:right;">
+          <div class="text-xs text-muted">Current Balance</div>
+          <div class="val-danger" id="pp-current-bal">&mdash;</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header"><h3>Quick Split</h3></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group"><label>Number of Installments</label><input type="number" id="pp-split-count" value="3" min="2" max="24"></div>
+            <div class="form-group"><label>First Due Date</label><input type="date" id="pp-split-first-date"></div>
+            <div class="form-group"><label>Frequency</label>
+              <select id="pp-split-freq"><option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="biweekly">Every 2 Weeks</option></select>
+            </div>
+            <div class="form-group"><label>Amount to Split</label><input type="number" id="pp-split-amount" placeholder="Defaults to balance"></div>
+          </div>
+          <button class="btn btn-outline btn-sm mt-4" onclick="generateSplitInstallments()">&#9889; Generate Installments</button>
+        </div>
+      </div>
+
+      <h4 class="section-title">Installments</h4>
+      <div class="table-wrapper">
+        <table><thead><tr><th>#</th><th>Due Date</th><th>Amount (KES)</th><th>Notes</th><th></th></tr></thead>
+        <tbody id="pp-rows-tbody"></tbody></table>
+      </div>
+      <button class="btn btn-outline btn-sm mt-4" onclick="addPlanRow()">&#43; Add Installment</button>
+
+      <div class="recon-summary-bar mt-4" style="margin-bottom:0;">
+        <div class="rsb-item"><span class="rsb-label">Plan Total</span><span class="rsb-value" id="pp-plan-total">KES 0</span></div>
+        <div class="rsb-divider"></div>
+        <div class="rsb-item"><span class="rsb-label">Balance Due</span><span class="rsb-value" id="pp-balance-ref">KES 0</span></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-payment-plan')">Cancel</button>
+      <button class="btn btn-primary" id="pp-save-btn" onclick="savePaymentPlan()">&#128190; Save Plan</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-bulk-sms">
   <div class="modal size-sm">
     <div class="modal-header"><h2>&#128241; Bulk SMS — Defaulters</h2><button class="btn-close" onclick="closeModal('modal-bulk-sms')">&times;</button></div>
@@ -1227,6 +1587,64 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-edit-payment')">Cancel</button>
       <button class="btn btn-primary" id="epay-save-btn" onclick="saveEditedPayment()">&#128190; Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-edit-expense">
+  <div class="modal size-lg">
+    <div class="modal-header"><h2>&#9999; Edit Expense</h2><button class="btn-close" onclick="closeModal('modal-edit-expense')">&times;</button></div>
+    <div class="modal-body">
+      <div class="notice warning mb-4">
+        <div class="notice-icon">&#9888;&#65039;</div>
+        <div><div class="notice-title">Admin-only action</div><div class="notice-body">This edit will be logged with your name and timestamp for audit purposes.</div></div>
+      </div>
+      <input type="hidden" id="eexp-expense-id">
+      <div class="form-grid">
+        <div class="form-group"><label>Category</label><select id="eexp-category"></select></div>
+        <div class="form-group"><label>Amount (KES) *</label><input type="number" id="eexp-amount"></div>
+        <div class="form-group full"><label>Description</label><input type="text" id="eexp-desc"></div>
+        <div class="form-group"><label>Payment Method</label>
+          <select id="eexp-method"><option>Cash</option><option>M-Pesa</option><option>Bank Transfer</option></select>
+        </div>
+        <div class="form-group"><label>Date</label><input type="date" id="eexp-date"></div>
+        <div class="form-group full"><label>Paid To</label><input type="text" id="eexp-paidto"></div>
+        <div class="form-group full"><label>Reason for Edit *</label><input type="text" id="eexp-reason" placeholder="e.g. Corrected amount entry error"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-edit-expense')">Cancel</button>
+      <button class="btn btn-primary" id="eexp-save-btn" onclick="saveEditedExpense()">&#128190; Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-expense-categories">
+  <div class="modal size-lg">
+    <div class="modal-header"><h2>&#9881;&#65039; Expense Categories</h2><button class="btn-close" onclick="closeModal('modal-expense-categories')">&times;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="excat-edit-mode" value="false">
+      <input type="hidden" id="excat-original-name" value="">
+      <div class="card mb-4">
+        <div class="card-header"><h3 id="excat-form-title">Add Category</h3></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group"><label>Icon (emoji)</label><input type="text" id="excat-icon" placeholder="e.g. 💡" maxlength="4"></div>
+            <div class="form-group"><label>Category Name *</label><input type="text" id="excat-name" placeholder="e.g. Water Bill"></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:14px;">
+            <button class="btn btn-outline" id="excat-cancel-btn" onclick="clearExpenseCategoryForm()" style="display:none;">Cancel</button>
+            <button class="btn btn-primary" id="excat-save-btn" style="flex:1;" onclick="saveExpenseCategory()">Save Category</button>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table><thead><tr><th>Icon</th><th>Name</th><th>Actions</th></tr></thead>
+        <tbody id="excat-tbody"></tbody></table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-expense-categories')">Close</button>
     </div>
   </div>
 </div>
