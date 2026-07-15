@@ -1017,6 +1017,9 @@ function renderPaymentPlansReport() {
 }
 
 let _ppReportAll = [];
+let ppRptPage = 1;
+const PP_RPT_PAGE_SIZE = 50;
+let _ppReportFilteredCache = [];
 
 function filterPaymentPlansReport() {
   const q      = (document.getElementById('pp-rpt-search')?.value || '').toLowerCase();
@@ -1027,11 +1030,30 @@ function filterPaymentPlansReport() {
     return mq && ms;
   }).sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate));
 
+  _ppReportFilteredCache = filtered;
+  ppRptPage = 1;
+  renderPaymentPlansReportTable(filtered);
+}
+
+function goToPpRptPage(page) {
+  ppRptPage = page;
+  renderPaymentPlansReportTable(_ppReportFilteredCache);
+}
+
+function renderPaymentPlansReportTable(filtered) {
   const tbody = document.getElementById('pp-rpt-tbody');
   document.getElementById('pp-rpt-count').textContent = filtered.length + ' installments';
-  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--muted);">No installments found</td></tr>'; return; }
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--muted);">No installments found</td></tr>';
+    renderPaginationBar('pp-rpt-pagination', 0, 1, PP_RPT_PAGE_SIZE, 'goToPpRptPage');
+    return;
+  }
 
-  tbody.innerHTML = filtered.map(i => {
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PP_RPT_PAGE_SIZE));
+  if (ppRptPage > totalPages) ppRptPage = totalPages;
+  const pageRows = paginateSlice(filtered, ppRptPage, PP_RPT_PAGE_SIZE);
+
+  tbody.innerHTML = pageRows.map(i => {
     const badgeClass = i.effectiveStatus === 'Paid' ? 'badge-success' : i.effectiveStatus === 'Overdue' ? 'badge-danger' : i.effectiveStatus === 'Partial' ? 'badge-warning' : 'badge-neutral';
     return `<tr>
       <td>${i.studentName||'&mdash;'}</td>
@@ -1045,6 +1067,7 @@ function filterPaymentPlansReport() {
       <td><button class="btn btn-outline btn-sm" onclick="viewStudent('${i.regNo}')">View</button></td>
     </tr>`;
   }).join('');
+  renderPaginationBar('pp-rpt-pagination', filtered.length, ppRptPage, PP_RPT_PAGE_SIZE, 'goToPpRptPage');
 }
 
 function clearPaymentPlansReportFilter() {
@@ -2843,16 +2866,28 @@ function populateServiceTypeFilter() {
   if (current) sel.value = current;
 }
 
+let svcLogPage = 1;
+const SVC_LOG_PAGE_SIZE = 50;
+let _svcLogFilteredCache = [];
+
 function renderServiceLog(filtered) {
-  const data  = filtered || state.services;
+  const data  = filtered || _svcLogFilteredCache || state.services;
   const tbody = document.getElementById('svc-log-tbody');
   document.getElementById('svc-log-count').textContent = data.length + ' records';
-  if (!data.length) { tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--muted);">No service transactions found</td></tr>'; return; }
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--muted);">No service transactions found</td></tr>';
+    renderPaginationBar('svc-log-pagination', 0, 1, SVC_LOG_PAGE_SIZE, 'goToSvcLogPage');
+    return;
+  }
   const countByReceipt = {};
   state.services.forEach(s => { countByReceipt[s.receiptNo] = (countByReceipt[s.receiptNo] || 0) + 1; });
-  tbody.innerHTML = [...data].sort((a,b) => new Date(b.createdAt||b.date) - new Date(a.createdAt||a.date)).map((s,i) => `
+  const sorted = [...data].sort((a,b) => new Date(b.createdAt||b.date) - new Date(a.createdAt||a.date));
+  const totalPages = Math.max(1, Math.ceil(sorted.length / SVC_LOG_PAGE_SIZE));
+  if (svcLogPage > totalPages) svcLogPage = totalPages;
+  const pageRows = paginateSlice(sorted, svcLogPage, SVC_LOG_PAGE_SIZE);
+  tbody.innerHTML = pageRows.map((s,i) => `
     <tr>
-      <td>${data.length - i}</td>
+      <td>${sorted.length - ((svcLogPage-1)*SVC_LOG_PAGE_SIZE) - i}</td>
       <td>${fmtDate(s.date)}</td>
       <td><strong>${s.receiptNo||'&mdash;'}</strong>${countByReceipt[s.receiptNo] > 1 ? ` <span class="badge badge-info" title="Part of a multi-item sale">${countByReceipt[s.receiptNo]} items</span>` : ''}${s.editedAt ? '<br><span class="badge badge-warning" style="margin-top:3px;" title="Edited by '+(s.editedBy||'Admin')+' on '+fmtDate(s.editedAt)+'">&#9999; Edited</span>' : ''}</td>
       <td><span class="badge badge-purple">${s.serviceType}</span></td>
@@ -2868,6 +2903,12 @@ function renderServiceLog(filtered) {
         ${can('servicesManage') ? `<button class="btn btn-danger btn-sm" onclick="deleteServiceTransaction('${s.receiptNo}')">&#128465;</button>` : ''}
       </div></td>
     </tr>`).join('');
+  renderPaginationBar('svc-log-pagination', sorted.length, svcLogPage, SVC_LOG_PAGE_SIZE, 'goToSvcLogPage');
+}
+
+function goToSvcLogPage(page) {
+  svcLogPage = page;
+  renderServiceLog(_svcLogFilteredCache);
 }
 
 function filterServiceLog() {
@@ -2880,6 +2921,8 @@ function filterServiceLog() {
     const mt = !type || s.serviceType === type;
     return mq && md && mt;
   });
+  _svcLogFilteredCache = filtered;
+  svcLogPage = 1;
   renderServiceLog(filtered);
 }
 
@@ -4028,6 +4071,9 @@ async function uploadExpenseReceiptFile(expenseIds, file, batchId) {
 }
 
 let _expLogShowAll = false;
+let expLogPage = 1;
+const EXP_LOG_PAGE_SIZE = 50;
+let _expLogFilteredCache = [];
 
 function filterExpenseLog() {
   const q    = (document.getElementById('exp-log-search')?.value || '').toLowerCase();
@@ -4039,23 +4085,38 @@ function filterExpenseLog() {
     const mc = !cat || e.category === cat;
     return mq && md && mc;
   });
+  _expLogFilteredCache = filtered;
+  expLogPage = 1;
   renderExpenseLog(filtered);
 }
 
+function goToExpLogPage(page) {
+  expLogPage = page;
+  renderExpenseLog(_expLogFilteredCache);
+}
+
 function renderExpenseLog(filtered) {
-  const data  = filtered || state.expenses || [];
+  const data  = filtered || _expLogFilteredCache || state.expenses || [];
   const tbody = document.getElementById('exp-log-tbody');
   if (!tbody) return;
   document.getElementById('exp-log-count').textContent = data.length + ' records';
   const total = data.reduce((a, e) => a + (+e.amount || 0), 0);
   document.getElementById('exp-log-total').textContent = 'KES ' + fmt(total);
 
-  if (!data.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--muted);">No expenses found</td></tr>'; return; }
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--muted);">No expenses found</td></tr>';
+    renderPaginationBar('exp-log-pagination', 0, 1, EXP_LOG_PAGE_SIZE, 'goToExpLogPage');
+    return;
+  }
   const countByBatch = {};
   (state.expenses || []).forEach(e => { if (e.batchId) countByBatch[e.batchId] = (countByBatch[e.batchId] || 0) + 1; });
-  tbody.innerHTML = [...data].sort((a,b) => new Date(b.createdAt||b.date) - new Date(a.createdAt||a.date)).map((e,i) => `
+  const sorted = [...data].sort((a,b) => new Date(b.createdAt||b.date) - new Date(a.createdAt||a.date));
+  const totalPages = Math.max(1, Math.ceil(sorted.length / EXP_LOG_PAGE_SIZE));
+  if (expLogPage > totalPages) expLogPage = totalPages;
+  const pageRows = paginateSlice(sorted, expLogPage, EXP_LOG_PAGE_SIZE);
+  tbody.innerHTML = pageRows.map((e,i) => `
     <tr>
-      <td>${data.length - i}</td>
+      <td>${sorted.length - ((expLogPage-1)*EXP_LOG_PAGE_SIZE) - i}</td>
       <td>${fmtDate(e.date)}</td>
       <td><span class="badge badge-purple">${e.category}</span>${e.recurring==='Yes'?' <span class="badge badge-info" title="Recurring expense">&#128257;</span>':''}${e.batchId && countByBatch[e.batchId]>1?` <span class="badge badge-warning" title="Part of a multi-item expense batch">${countByBatch[e.batchId]} items</span>`:''}</td>
       <td style="font-size:12.5px;">${e.description||'&mdash;'}${e.receiptUrl?` <a href="${e.receiptUrl}" target="_blank" title="View receipt">&#128206;</a>`:''}</td>
@@ -4068,6 +4129,7 @@ function renderExpenseLog(filtered) {
         ${can('expensesManage') ? `<button class="btn btn-danger btn-sm" onclick="deleteExpenseTransaction('${e.expenseId}')">&#128465;</button>` : ''}
       </div></td>
     </tr>`).join('');
+  renderPaginationBar('exp-log-pagination', sorted.length, expLogPage, EXP_LOG_PAGE_SIZE, 'goToExpLogPage');
 }
 
 function toggleExpenseLogShowAll() {
@@ -5203,6 +5265,36 @@ function calcHours(timeIn, timeOut) {
 // ════════════════════════════════════════════════
 //  UTILS
 // ════════════════════════════════════════════════
+/**
+ * Reusable pagination for large tables (Daily Log, Expense Log, Payment
+ * Plans report, and any future long list) so the DOM only ever holds one
+ * page's worth of rows regardless of how many transactions have piled up
+ * over months/years of use — filtering/search still runs against the full
+ * in-memory array, only the rendered slice is bounded.
+ */
+function paginateSlice(array, page, pageSize) {
+  const start = (page - 1) * pageSize;
+  return array.slice(start, start + pageSize);
+}
+
+function renderPaginationBar(containerId, totalItems, page, pageSize, onPageChangeFn) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!totalItems) { el.innerHTML = ''; return; }
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const start = (page - 1) * pageSize + 1;
+  const end   = Math.min(totalItems, page * pageSize);
+  el.innerHTML = `
+    <div class="pagination-bar">
+      <span class="pagination-info">Showing ${start}&ndash;${end} of ${totalItems}</span>
+      <div class="pagination-btns">
+        <button class="btn btn-outline btn-sm" ${page<=1?'disabled':''} onclick="${onPageChangeFn}(${page-1})">&larr; Prev</button>
+        <span class="pagination-page">Page ${page} of ${totalPages}</span>
+        <button class="btn btn-outline btn-sm" ${page>=totalPages?'disabled':''} onclick="${onPageChangeFn}(${page+1})">Next &rarr;</button>
+      </div>
+    </div>`;
+}
+
 function fmt(n) { return Number(n||0).toLocaleString('en-KE'); }
 /** Normalises any date-ish value (Date object, ISO string, "2026-06-20", etc.)
  *  to a plain "YYYY-MM-DD" key for reliable same-day comparisons. Returns ''
