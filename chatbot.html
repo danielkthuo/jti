@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>Joshcab AI Assistant</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+background:#f4f6f9;
+}
+
+/* Floating Button */
+
+#chatButton{
+
+position:fixed;
+
+right:20px;
+
+bottom:20px;
+
+width:65px;
+
+height:65px;
+
+border-radius:50%;
+
+background:#25D366;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+font-size:30px;
+
+cursor:pointer;
+
+color:#fff;
+
+box-shadow:0 8px 20px rgba(0,0,0,.25);
+
+transition:.3s;
+
+z-index:9999;
+
+}
+
+#chatButton:hover{
+
+transform:scale(1.08);
+
+}
+
+/* Window */
+
+#chatWindow{
+
+position:fixed;
+
+bottom:95px;
+
+right:20px;
+
+width:min(380px,95vw);
+
+height:min(650px,85vh);
+
+background:#fff;
+
+border-radius:18px;
+
+overflow:hidden;
+
+display:none;
+
+box-shadow:0 15px 40px rgba(0,0,0,.25);
+
+flex-direction:column;
+
+z-index:9999;
+
+}
+
+/* Header */
+
+#header{
+
+background:#0B5ED7;
+
+color:white;
+
+padding:15px;
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+}
+
+#title{
+
+display:flex;
+
+flex-direction:column;
+
+}
+
+#title b{
+
+font-size:18px;
+
+}
+
+#title small{
+
+opacity:.9;
+
+font-size:12px;
+
+}
+
+#close{
+
+cursor:pointer;
+
+font-size:24px;
+
+}
+
+/* Messages */
+
+#messages{
+
+flex:1;
+
+overflow-y:auto;
+
+padding:15px;
+
+background:#F8F9FA;
+
+}
+
+.message{
+
+margin:12px 0;
+
+display:flex;
+
+flex-direction:column;
+
+animation:fade .2s;
+
+}
+
+.user{
+
+align-items:flex-end;
+
+}
+
+.bot{
+
+align-items:flex-start;
+
+}
+
+.bubble{
+
+max-width:85%;
+
+padding:12px 15px;
+
+border-radius:18px;
+
+line-height:1.5;
+
+word-wrap:break-word;
+
+}
+
+.user .bubble{
+
+background:#DCF8C6;
+
+}
+
+.bot .bubble{
+
+background:#fff;
+
+border:1px solid #ddd;
+
+}
+
+.time{
+
+font-size:11px;
+
+color:#888;
+
+margin-top:4px;
+
+}
+
+/* Typing */
+
+.typing{
+
+display:flex;
+
+gap:4px;
+
+padding:10px;
+
+}
+
+.typing span{
+
+width:8px;
+
+height:8px;
+
+background:#999;
+
+border-radius:50%;
+
+animation:typing 1s infinite;
+
+}
+
+.typing span:nth-child(2){
+
+animation-delay:.2s;
+
+}
+
+.typing span:nth-child(3){
+
+animation-delay:.4s;
+
+}
+
+@keyframes typing{
+
+0%{opacity:.2;}
+
+50%{opacity:1;}
+
+100%{opacity:.2;}
+
+}
+
+@keyframes fade{
+
+from{
+
+opacity:0;
+
+transform:translateY(8px);
+
+}
+
+to{
+
+opacity:1;
+
+transform:translateY(0);
+
+}
+
+}
+
+/* Suggestions */
+
+#suggestions{
+
+display:flex;
+
+flex-wrap:wrap;
+
+gap:8px;
+
+padding:10px;
+
+background:#fff;
+
+border-top:1px solid #eee;
+
+}
+
+.suggest{
+
+background:#EEF4FF;
+
+border:1px solid #D7E3FF;
+
+padding:7px 12px;
+
+border-radius:20px;
+
+cursor:pointer;
+
+font-size:13px;
+
+}
+
+.suggest:hover{
+
+background:#DCE8FF;
+
+}
+
+/* Footer */
+
+#footer{
+
+display:flex;
+
+padding:10px;
+
+background:white;
+
+border-top:1px solid #ddd;
+
+}
+
+#message{
+
+flex:1;
+
+padding:11px;
+
+border:1px solid #ccc;
+
+border-radius:8px;
+
+outline:none;
+
+font-size:14px;
+
+}
+
+#send{
+
+margin-left:8px;
+
+padding:11px 18px;
+
+background:#0B5ED7;
+
+border:none;
+
+border-radius:8px;
+
+color:white;
+
+cursor:pointer;
+
+}
+
+#send:hover{
+
+background:#084298;
+
+}
+
+#send:disabled{
+
+opacity:.6;
+
+cursor:not-allowed;
+
+}
+
+a{
+
+color:#0B5ED7;
+
+text-decoration:none;
+
+font-weight:bold;
+
+}
+
+@media(max-width:600px){
+
+#chatWindow{
+
+right:10px;
+
+left:10px;
+
+width:auto;
+
+bottom:85px;
+
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="chatButton">
+
+💬
+
+</div>
+
+<div id="chatWindow">
+
+<div id="header">
+
+<div id="title">
+
+<b>Joshcab AI</b>
+
+<small>Online Assistant</small>
+
+</div>
+
+<div id="close">
+
+×
+
+</div>
+
+</div>
+
+<div id="messages">
+
+</div>
+
+<div id="suggestions">
+
+<div class="suggest">Computer Packages</div>
+
+<div class="suggest">Course Fees</div>
+
+<div class="suggest">Website Development</div>
+
+<div class="suggest">Accounting Services</div>
+
+</div>
+
+<div id="footer">
+
+<input
+
+id="message"
+
+type="text"
+
+placeholder="Ask me anything...">
+
+<button id="send">
+
+Send
+
+</button>
+
+</div>
+
+</div>
+<script>
+
+/****************************************************
+ CONFIGURATION
+****************************************************/
+
+const WEBAPP_URL =
+"https://script.google.com/macros/s/AKfycbyRtkRTEEED2-c7Hff_R96eSWE3mzgLCh3uGum_spkT6LW6eopoHCYcYrZNYtAtCM1W/exec";
+
+/****************************************************
+ ELEMENTS
+****************************************************/
+
+const chatButton = document.getElementById("chatButton");
+const chatWindow = document.getElementById("chatWindow");
+const closeBtn = document.getElementById("close");
+
+const messages = document.getElementById("messages");
+const input = document.getElementById("message");
+const send = document.getElementById("send");
+
+const suggestions =
+document.querySelectorAll(".suggest");
+
+/****************************************************
+ SESSION
+****************************************************/
+
+let sessionId =
+localStorage.getItem("joshcab_session");
+
+if(!sessionId){
+
+sessionId =
+crypto.randomUUID();
+
+localStorage.setItem(
+
+"joshcab_session",
+
+sessionId
+
+);
+
+}
+
+/****************************************************
+ LOAD CHAT
+****************************************************/
+
+const history =
+localStorage.getItem("joshcab_history");
+
+if(history){
+
+messages.innerHTML = history;
+
+}else{
+
+welcome();
+
+}
+
+/****************************************************
+ EVENTS
+****************************************************/
+
+chatButton.onclick=function(){
+
+chatWindow.style.display="flex";
+
+input.focus();
+
+};
+
+closeBtn.onclick=function(){
+
+chatWindow.style.display="none";
+
+};
+
+send.onclick=function(){
+
+sendMessage();
+
+};
+
+input.addEventListener(
+
+"keypress",
+
+function(e){
+
+if(e.key==="Enter"){
+
+sendMessage();
+
+}
+
+}
+
+);
+
+suggestions.forEach(function(btn){
+
+btn.onclick=function(){
+
+input.value=this.innerText;
+
+sendMessage();
+
+};
+
+});
+
+/****************************************************
+ WELCOME
+****************************************************/
+
+function welcome(){
+
+addMessage(
+
+"bot",
+
+"👋 Welcome to Joshcab Training Institute.\n\nHow may I help you today?"
+
+);
+
+}
+
+/****************************************************
+ TIME
+****************************************************/
+
+function now(){
+
+return new Date()
+
+.toLocaleTimeString([],{
+
+hour:"2-digit",
+
+minute:"2-digit"
+
+});
+
+}
+
+/****************************************************
+ MESSAGE
+****************************************************/
+
+function addMessage(type,text){
+
+const wrapper=
+
+document.createElement("div");
+
+wrapper.className=
+
+"message "+type;
+
+const bubble=
+
+document.createElement("div");
+
+bubble.className="bubble";
+
+bubble.innerHTML=
+
+format(text);
+
+const time=
+
+document.createElement("div");
+
+time.className="time";
+
+time.innerText=now();
+
+wrapper.appendChild(bubble);
+
+wrapper.appendChild(time);
+
+messages.appendChild(wrapper);
+
+scrollBottom();
+
+saveHistory();
+
+}
+
+/****************************************************
+ TYPING
+****************************************************/
+
+function showTyping(){
+
+const wrap=
+
+document.createElement("div");
+
+wrap.className="message bot";
+
+wrap.id="typing";
+
+wrap.innerHTML=`
+
+<div class="bubble">
+
+<div class="typing">
+
+<span></span>
+
+<span></span>
+
+<span></span>
+
+</div>
+
+</div>
+
+`;
+
+messages.appendChild(wrap);
+
+scrollBottom();
+
+}
+
+function removeTyping(){
+
+const t=
+
+document.getElementById("typing");
+
+if(t){
+
+t.remove();
+
+}
+
+}
+
+/****************************************************
+ SEND
+****************************************************/
+
+let sending=false;
+
+async function sendMessage(){
+
+const text=
+
+input.value.trim();
+
+if(
+
+text===""||
+
+sending
+
+){
+
+return;
+
+}
+
+sending=true;
+
+send.disabled=true;
+
+input.disabled=true;
+
+addMessage(
+
+"user",
+
+text
+
+);
+
+input.value="";
+
+showTyping();
+
+try{
+
+const response=
+
+await fetch(
+
+WEBAPP_URL+
+
+"?session="+
+
+encodeURIComponent(sessionId)+
+
+"&message="+
+
+encodeURIComponent(text)
+
+);
+
+const data=
+
+await response.json();
+
+removeTyping();
+
+addMessage(
+
+"bot",
+
+data.reply
+
+);
+
+}catch(err){
+
+removeTyping();
+
+addMessage(
+
+"bot",
+
+"⚠ Unable to reach the server.\nPlease try again."
+
+);
+
+}
+
+send.disabled=false;
+
+input.disabled=false;
+
+input.focus();
+
+sending=false;
+
+}
+
+/****************************************************
+ FORMAT
+****************************************************/
+
+function format(text){
+
+return escapeHtml(text)
+
+.replace(/\n/g,"<br>")
+
+.replace(
+
+/(https?:\/\/[^\s<]+)/g,
+
+'<a href="$1" target="_blank">$1</a>'
+
+);
+
+}
+
+function escapeHtml(str){
+
+return str
+
+.replace(/&/g,"&amp;")
+
+.replace(/</g,"&lt;")
+
+.replace(/>/g,"&gt;")
+
+.replace(/"/g,"&quot;")
+
+.replace(/'/g,"&#039;");
+
+}
+
+/****************************************************
+ STORAGE
+****************************************************/
+
+function saveHistory(){
+
+localStorage.setItem(
+
+"joshcab_history",
+
+messages.innerHTML
+
+);
+
+}
+
+function scrollBottom(){
+
+messages.scrollTop=
+
+messages.scrollHeight;
+
+}
+
+</script>
+
+</body>
+
+</html>
