@@ -10,6 +10,7 @@
 ****************************************************/
 
 (function(){
+"use strict";
 
 /****************************************************
  WAIT FOR DOM
@@ -74,6 +75,53 @@ const KB_ICONS = {
 "General FAQ": "❓"
 };
 
+/****************************************************
+ SAFE STORAGE HELPERS
+ localStorage can throw in some private-browsing modes
+ or when storage is disabled/full. Wrapping every call
+ keeps the widget from crashing the host page in those
+ cases — behavior is otherwise identical (falls back to
+ "no cache"/"no history" exactly as before).
+****************************************************/
+
+function safeGetItem(key){
+try{
+return localStorage.getItem(key);
+}catch(e){
+return null;
+}
+}
+
+function safeSetItem(key, value){
+try{
+localStorage.setItem(key, value);
+return true;
+}catch(e){
+return false;
+}
+}
+
+/****************************************************
+ UUID HELPER
+ crypto.randomUUID() isn't available on some older
+ browsers/insecure (non-HTTPS) contexts. Fall back to a
+ RFC4122-ish generator so session IDs still work there.
+****************************************************/
+
+function generateUUID(){
+if(window.crypto && typeof window.crypto.randomUUID === "function"){
+try{
+return window.crypto.randomUUID();
+}catch(e){
+// fall through to manual generation
+}
+}
+return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c){
+const r = Math.random() * 16 | 0;
+const v = c === "x" ? r : (r & 0x3 | 0x8);
+return v.toString(16);
+});
+}
 
 /****************************************************
  STYLES
@@ -88,6 +136,7 @@ box-shadow:0 8px 20px rgba(0,0,0,.25);transition:.3s;z-index:9999;
 font-family:Arial,Helvetica,sans-serif;
 }
 #jti-chatButton:hover{transform:scale(1.08);}
+#jti-chatButton:focus-visible{outline:3px solid #0B5ED7;outline-offset:2px;}
 
 #jti-chatWindow{
 position:fixed;bottom:95px;right:20px;width:min(380px,95vw);
@@ -104,6 +153,7 @@ justify-content:space-between;align-items:center;
 #jti-title b{font-size:18px;}
 #jti-title small{opacity:.9;font-size:12px;}
 #jti-close{cursor:pointer;font-size:24px;}
+#jti-close:focus-visible{outline:2px solid #fff;outline-offset:2px;}
 
 #jti-messages{flex:1;overflow-y:auto;padding:15px;background:#F8F9FA;}
 
@@ -133,6 +183,7 @@ display:flex;align-items:center;gap:8px;color:#0B5ED7;font-weight:bold;
 border-top:1px solid #eee;padding-top:8px;font-size:14px;
 }
 .jti-menu-trigger:hover .jti-menu-btn{text-decoration:underline;}
+.jti-menu-trigger:focus-visible{outline:2px solid #0B5ED7;outline-offset:2px;}
 
 #jti-footer{display:flex;padding:10px;background:white;border-top:1px solid #ddd;}
 #jti-message{flex:1;padding:11px;border:1px solid #ccc;border-radius:8px;outline:none;font-size:14px;}
@@ -168,6 +219,7 @@ border-bottom:1px solid #eee;flex-shrink:0;
 display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;
 }
 .jti-panel-row:hover{background:#F8F9FA;}
+.jti-panel-row:focus-visible{outline:2px solid #0B5ED7;outline-offset:-2px;background:#F8F9FA;}
 .jti-panel-row-icon{font-size:22px;flex-shrink:0;}
 .jti-panel-row-text{flex:1;}
 .jti-panel-row-title{font-size:14.5px;color:#111;font-weight:600;}
@@ -187,33 +239,35 @@ document.head.appendChild(styleTag);
 
 /****************************************************
  MARKUP
+ (aria attributes added for screen-reader support;
+ no visual or structural change)
 ****************************************************/
 
 const html = `
-<div id="jti-chatButton">\ud83d\udcac</div>
+<div id="jti-chatButton" role="button" tabindex="0" aria-label="Open chat">\ud83d\udcac</div>
 
-<div id="jti-chatWindow">
+<div id="jti-chatWindow" role="dialog" aria-modal="false" aria-label="Joshcab AI chat">
   <div id="jti-header">
     <div id="jti-title">
       <b>Joshcab AI</b>
       <small>Online Assistant</small>
     </div>
-    <div id="jti-close">\u00d7</div>
+    <div id="jti-close" role="button" tabindex="0" aria-label="Close chat">\u00d7</div>
   </div>
 
-  <div id="jti-messages"></div>
+  <div id="jti-messages" role="log" aria-live="polite"></div>
 
   <div id="jti-footer">
-    <input id="jti-message" type="text" placeholder="Ask me anything...">
-    <button id="jti-send">Send</button>
+    <input id="jti-message" type="text" placeholder="Ask me anything..." aria-label="Type your message">
+    <button id="jti-send" type="button">Send</button>
   </div>
 
   <div id="jti-panel-overlay">
-    <div id="jti-panel">
+    <div id="jti-panel" role="dialog" aria-label="View services">
       <div id="jti-panel-header">
-        <div id="jti-panel-back">\u2039</div>
+        <div id="jti-panel-back" role="button" tabindex="0" aria-label="Back to categories">\u2039</div>
         <div id="jti-panel-title">View Services</div>
-        <div id="jti-panel-close">\u00d7</div>
+        <div id="jti-panel-close" role="button" tabindex="0" aria-label="Close services panel">\u00d7</div>
       </div>
       <div id="jti-panel-list"></div>
     </div>
@@ -249,18 +303,18 @@ const panelClose = document.getElementById("jti-panel-close");
  SESSION
 ****************************************************/
 
-let sessionId = localStorage.getItem("joshcab_session");
+let sessionId = safeGetItem("joshcab_session");
 
 if(!sessionId){
-sessionId = crypto.randomUUID();
-localStorage.setItem("joshcab_session", sessionId);
+sessionId = generateUUID();
+safeSetItem("joshcab_session", sessionId);
 }
 
 /****************************************************
  LOAD CHAT (shared across every page via localStorage)
 ****************************************************/
 
-const history = localStorage.getItem("joshcab_history");
+const history = safeGetItem("joshcab_history");
 
 if(history){
 messages.innerHTML = history;
@@ -272,18 +326,35 @@ welcome();
  EVENTS
 ****************************************************/
 
-chatButton.onclick = function(){
+chatButton.addEventListener("click", function(){
 chatWindow.style.display = "flex";
 input.focus();
-};
+});
 
-closeBtn.onclick = function(){
+// Keyboard support for the round chat-launcher (it's a div
+// with role="button", so Enter/Space need to be wired up
+// manually to behave like a real button).
+chatButton.addEventListener("keydown", function(e){
+if(e.key === "Enter" || e.key === " "){
+e.preventDefault();
+chatButton.click();
+}
+});
+
+closeBtn.addEventListener("click", function(){
 chatWindow.style.display = "none";
-};
+});
 
-send.onclick = function(){
+closeBtn.addEventListener("keydown", function(e){
+if(e.key === "Enter" || e.key === " "){
+e.preventDefault();
+closeBtn.click();
+}
+});
+
+send.addEventListener("click", function(){
 sendMessage();
-};
+});
 
 input.addEventListener("keypress", function(e){
 if(e.key === "Enter"){
@@ -291,13 +362,37 @@ sendMessage();
 }
 });
 
-panelOverlay.onclick = function(e){
+// Esc closes whichever layer is open (panel first, else window) —
+// purely an accessibility/convenience addition, doesn't affect any
+// existing click-driven flow.
+document.addEventListener("keydown", function(e){
+if(e.key !== "Escape"){ return; }
+if(panelOverlay.style.display === "block"){
+closePanel();
+}else if(chatWindow.style.display === "flex"){
+chatWindow.style.display = "none";
+}
+});
+
+panelOverlay.addEventListener("click", function(e){
 if(e.target === panelOverlay){ closePanel(); }
-};
-panelClose.onclick = closePanel;
-panelBack.onclick = function(){
+});
+panelClose.addEventListener("click", closePanel);
+panelClose.addEventListener("keydown", function(e){
+if(e.key === "Enter" || e.key === " "){
+e.preventDefault();
+closePanel();
+}
+});
+panelBack.addEventListener("click", function(){
 openCategoryList();
-};
+});
+panelBack.addEventListener("keydown", function(e){
+if(e.key === "Enter" || e.key === " "){
+e.preventDefault();
+openCategoryList();
+}
+});
 
 /****************************************************
  WELCOME
@@ -354,11 +449,20 @@ wrapper.className = "jti-message jti-bot";
 
 const bubble = document.createElement("div");
 bubble.className = "jti-bubble jti-menu-trigger";
+bubble.setAttribute("role", "button");
+bubble.setAttribute("tabindex", "0");
+bubble.setAttribute("aria-label", "View services");
 bubble.innerHTML = `
 <div class="jti-menu-label">Select a service from the list below to proceed:</div>
 <div class="jti-menu-btn">\u2630 View Services</div>
 `;
-bubble.onclick = openCategoryList;
+bubble.addEventListener("click", openCategoryList);
+bubble.addEventListener("keydown", function(e){
+if(e.key === "Enter" || e.key === " "){
+e.preventDefault();
+openCategoryList();
+}
+});
 
 const time = document.createElement("div");
 time.className = "jti-time";
@@ -380,23 +484,18 @@ let kbMemoryCache = null; // in-memory for this page view once fetched
 
 function getCachedKB(){
 try{
-const raw = localStorage.getItem(KB_CACHE_KEY);
-const time = parseInt(localStorage.getItem(KB_CACHE_TIME_KEY) || "0", 10);
+const raw = safeGetItem(KB_CACHE_KEY);
+const time = parseInt(safeGetItem(KB_CACHE_TIME_KEY) || "0", 10);
 if(!raw){ return null; }
-if(Date.now() - time > KB_CACHE_TTL_MS){ return { data: JSON.parse(raw), stale: true }; }
-return { data: JSON.parse(raw), stale: false };
+return { data: JSON.parse(raw), stale: Date.now() - time > KB_CACHE_TTL_MS };
 }catch(e){
 return null;
 }
 }
 
 function setCachedKB(data){
-try{
-localStorage.setItem(KB_CACHE_KEY, JSON.stringify(data));
-localStorage.setItem(KB_CACHE_TIME_KEY, String(Date.now()));
-}catch(e){
-// storage full or unavailable - fine, we still have kbMemoryCache
-}
+safeSetItem(KB_CACHE_KEY, JSON.stringify(data));
+safeSetItem(KB_CACHE_TIME_KEY, String(Date.now()));
 }
 
 async function fetchKB(){
@@ -485,6 +584,8 @@ const subtitle = cat.items.length + (cat.items.length === 1 ? " topic" : " topic
 
 const row = document.createElement("div");
 row.className = "jti-panel-row";
+row.setAttribute("role", "button");
+row.setAttribute("tabindex", "0");
 row.innerHTML = `
 <div class="jti-panel-row-icon">${icon}</div>
 <div class="jti-panel-row-text">
@@ -493,9 +594,15 @@ row.innerHTML = `
 </div>
 <div class="jti-panel-row-radio"></div>
 `;
-row.onclick = function(){
+row.addEventListener("click", function(){
 openQuestionList(cat);
-};
+});
+row.addEventListener("keydown", function(e){
+if(e.key === "Enter" || e.key === " "){
+e.preventDefault();
+openQuestionList(cat);
+}
+});
 panelList.appendChild(row);
 });
 }
@@ -508,6 +615,8 @@ panelList.innerHTML = "";
 cat.items.forEach(function(item){
 const row = document.createElement("div");
 row.className = "jti-panel-row";
+row.setAttribute("role", "button");
+row.setAttribute("tabindex", "0");
 row.innerHTML = `
 <div class="jti-panel-row-icon">\ud83d\udcac</div>
 <div class="jti-panel-row-text">
@@ -515,9 +624,15 @@ row.innerHTML = `
 </div>
 <div class="jti-panel-row-radio"></div>
 `;
-row.onclick = function(){
+row.addEventListener("click", function(){
 selectQuestion(item);
-};
+});
+row.addEventListener("keydown", function(e){
+if(e.key === "Enter" || e.key === " "){
+e.preventDefault();
+selectQuestion(item);
+}
+});
 panelList.appendChild(row);
 });
 }
@@ -609,7 +724,7 @@ sending = false;
 function format(text){
 return escapeHtml(text)
 .replace(/\n/g, "<br>")
-.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank">$1</a>');
+.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
 }
 
 function escapeHtml(str){
@@ -626,7 +741,7 @@ return String(str)
 ****************************************************/
 
 function saveHistory(){
-localStorage.setItem("joshcab_history", messages.innerHTML);
+safeSetItem("joshcab_history", messages.innerHTML);
 }
 
 function scrollBottom(){
