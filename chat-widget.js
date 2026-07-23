@@ -705,10 +705,12 @@ const data = await response.json();
 
 removeTyping();
 addMessage("bot", data.reply);
+addMenuTrigger();
 
 }catch(err){
 removeTyping();
 addMessage("bot", "\u26a0 Unable to reach the server.\nPlease try again.");
+addMenuTrigger();
 }
 
 send.disabled = false;
