@@ -634,5 +634,4 @@ messages.scrollTop = messages.scrollHeight;
 }
 
 } // end init()
-
 })();
