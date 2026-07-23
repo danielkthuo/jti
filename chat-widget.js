@@ -632,6 +632,7 @@ localStorage.setItem("joshcab_history", messages.innerHTML);
 function scrollBottom(){
 messages.scrollTop = messages.scrollHeight;
 }
+
 } // end init()
 
 })();
